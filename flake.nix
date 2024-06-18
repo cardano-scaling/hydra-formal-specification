@@ -23,7 +23,9 @@
               texlive.combined.scheme-full
             ];
             buildPhase = ''
-              pdflatex hydra-protocol.tex
+              HOME=./. pdflatex hydra-protocol.tex
+              HOME=./. pdflatex hydra-protocol.tex
+              HOME=./. pdflatex hydra-protocol.tex
             '';
             installPhase = ''
               mkdir $out
