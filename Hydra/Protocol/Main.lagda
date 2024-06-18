@@ -66,6 +66,11 @@ Date: \today
 
 \begin{code}
 module Hydra.Protocol.Main where
+
+data HydraState : Set where
+  Idle         : HydraState
+  Open         : HydraState
+  Closed       : HydraState
 \end{code}
 
 \subsection{Test Subsection}
