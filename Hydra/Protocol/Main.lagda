@@ -69,8 +69,6 @@ module Hydra.Protocol.Main where
 
 open import Data.Nat
 
-open import Ledger.Utxo
-
 data HydraState : Set where
   Idle         : HydraState
   Open         : HydraState
