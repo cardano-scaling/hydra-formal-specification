@@ -14,23 +14,42 @@
         "x86_64-linux"
       ];
       perSystem = { pkgs, ... }:
-        {
-          packages.default = pkgs.stdenv.mkDerivation {
-            pname = "hydra-formal-specification";
-            version = "0.0.1";
-            src = ./.;
-            nativeBuildInputs = with pkgs; [
-              texlive.combined.scheme-full
-            ];
-            buildPhase = ''
-              HOME=./. pdflatex hydra-protocol.tex
-              HOME=./. pdflatex hydra-protocol.tex
-              HOME=./. pdflatex hydra-protocol.tex
-            '';
-            installPhase = ''
-              mkdir $out
-              cp hydra-protocol.pdf $out/
-            '';
+        rec {
+          packages = {
+            hydra-agda-spec = pkgs.agdaPackages.mkDerivation { 
+              pname = "hydra-formal-specification";
+              version = "0.0.1";
+              src = ./.;
+              buildInputs = [ pkgs.agda ];
+              meta = { };
+              buildPhase = ''
+                agda --latex Hydra/Protocol/Main.lagda
+              '';
+              installPhase = ''
+                mkdir $out
+                cp -r latex/* $out/
+              '';
+            };
+
+            default = pkgs.stdenv.mkDerivation {
+              pname = "hydra-formal-specification";
+              version = "0.0.1";
+              src = ./.;
+              nativeBuildInputs = with pkgs; [
+                texlive.combined.scheme-full
+              ];
+              buildInputs = [ packages.hydra-agda-spec ];
+              buildPhase = ''
+                cp ${packages.hydra-agda-spec}/* -r .
+                HOME=./. pdflatex Hydra/Protocol/Main.tex
+                HOME=./. pdflatex Hydra/Protocol/Main.tex
+                HOME=./. pdflatex Hydra/Protocol/Main.tex
+              '';
+              installPhase = ''
+                mkdir $out
+                cp Main.pdf $out/hydra-protocol.pdf
+              '';
+            };
           };
         };
     };

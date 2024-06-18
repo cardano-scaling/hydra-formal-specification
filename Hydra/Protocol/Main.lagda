@@ -2,6 +2,7 @@
 \usepackage{titlesec}
 \usepackage{etoolbox}
 \usepackage{lipsum}
+\usepackage{agda}
 
 \setcounter{secnumdepth}{5}
 \setcounter{tocdepth}{1}
@@ -62,7 +63,11 @@ Date: \today
 \chapter{Test Chapter}
 
 \section{Test Section}
-\lipsum[2]
+
+\begin{code}
+module Hydra.Protocol.Main where
+\end{code}
+
 \subsection{Test Subsection}
 \lipsum[2]
 \paragraph{}% acts like a numbered subsection without title
