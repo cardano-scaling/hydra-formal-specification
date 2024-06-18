@@ -19,11 +19,11 @@
         in
         rec {
           packages = {
-            hydra-agda-spec = agdaPackages.mkDerivation { 
+            hydra-agda-spec = agdaPackages.mkDerivation {
               pname = "hydra-formal-specification";
               version = "0.0.1";
               src = ./.;
-              buildInputs = [ agdaPackages.standard-library agdaPackages.formal-ledger ];
+              buildInputs = with agdaPackages; [ standard-library standard-library-classes standard-library-meta ];
               meta = { };
               buildPhase = ''
                 agda --latex Hydra/Protocol/Main.lagda
