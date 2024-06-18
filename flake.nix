@@ -20,7 +20,7 @@
               pname = "hydra-formal-specification";
               version = "0.0.1";
               src = ./.;
-              buildInputs = [ pkgs.agda ];
+              buildInputs = [ pkgs.agdaPackages.standard-library ];
               meta = { };
               buildPhase = ''
                 agda --latex Hydra/Protocol/Main.lagda

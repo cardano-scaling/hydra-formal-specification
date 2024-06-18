@@ -1,0 +1,4 @@
+name: hydra-formal-specification
+depend:
+  standard-library
+include: .
