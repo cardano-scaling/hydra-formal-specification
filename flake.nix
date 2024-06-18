@@ -14,13 +14,16 @@
         "x86_64-linux"
       ];
       perSystem = { pkgs, ... }:
+        let
+          agdaPackages = pkgs.callPackage ./initial-packages.nix { Agda = pkgs.haskellPackages.Agda; nixpkgs = inputs.nixpkgs; };
+        in
         rec {
           packages = {
-            hydra-agda-spec = pkgs.agdaPackages.mkDerivation { 
+            hydra-agda-spec = agdaPackages.mkDerivation { 
               pname = "hydra-formal-specification";
               version = "0.0.1";
               src = ./.;
-              buildInputs = [ pkgs.agda ];
+              buildInputs = [ agdaPackages.standard-library agdaPackages.formal-ledger ];
               meta = { };
               buildPhase = ''
                 agda --latex Hydra/Protocol/Main.lagda
