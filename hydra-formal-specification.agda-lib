@@ -1,4 +1,6 @@
 name: hydra-formal-specification
 depend:
   standard-library
+  standard-library-classes
+  standard-library-meta
 include: .
