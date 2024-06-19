@@ -1,5 +1,6 @@
 name: hydra-formal-specification
 depend:
+  formal-ledger
   standard-library
   standard-library-classes
   standard-library-meta

@@ -23,7 +23,7 @@
               pname = "hydra-formal-specification";
               version = "0.0.1";
               src = ./.;
-              buildInputs = with agdaPackages; [ standard-library standard-library-classes standard-library-meta ];
+              buildInputs = with agdaPackages; [ standard-library standard-library-classes standard-library-meta formal-ledger ];
               meta = { };
               buildPhase = ''
                 agda --latex Hydra/Protocol/Main.lagda
@@ -44,9 +44,9 @@
               buildInputs = [ packages.hydra-agda-spec ];
               buildPhase = ''
                 cp ${packages.hydra-agda-spec}/* -r .
-                HOME=./. pdflatex Hydra/Protocol/Main.tex
-                HOME=./. pdflatex Hydra/Protocol/Main.tex
-                HOME=./. pdflatex Hydra/Protocol/Main.tex
+                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
+                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
+                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
               '';
               installPhase = ''
                 mkdir $out
