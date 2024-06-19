@@ -97,6 +97,7 @@ helloWorld' _ _ = false
 helloWorld : PlutusScript
 helloWorld = 777 , applyScript helloWorld'
 
+
 initEnv : UTxOEnv
 initEnv = createEnv 0
 
@@ -227,9 +228,38 @@ opaque
 
   _ : failExample ≡ failure "¬ feesOK pp tx utxo ≡ true"
   _ = refl
+
+
+open import Effect.Monad
+open import Effect.Monad.Identity
+open import Effect.Monad.Identity.Instances
+open import Effect.Monad.Reader
+open import Effect.Monad.Reader.Instances
+
+data CounterParty : Set where
+  Client : CounterParty
+  Chain : CounterParty
+
+data Message : Set where
+  Init : Message
+  NewTx : Message
+
+open RawMonad {{...}}
+open RawMonadReader {{...}}
+
+on_from_,_ : Message -> CounterParty -> Reader String String -> ComputationResult String String
+on x from f , k = success $ runReader k "foo"
+
+f : ComputationResult String String
+f = on Init from Client , do
+      ask
+
+_ : f ≡ success "foo"
+_ = refl
+
 \end{code}
 \subsection{Test Subsection}
-\lipsum[2]
+
 \paragraph{}% acts like a numbered subsection without title
 \lipsum[2]
 \subsubsection{Test Subsubsection}
