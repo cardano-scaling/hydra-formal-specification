@@ -144,7 +144,7 @@ succeedTx = record { body = record
                 wits = record { vkSigs = fromListᵐ ((5 , 12) ∷ []) ;
                                 -- signature now is first number + txId ≡ second number
                                 -- first number is needs to be the id for the script
-        		     scripts = Ledger.Prelude.fromList ((inj₂ helloWorld) ∷ []) ;
+                                scripts = Ledger.Prelude.fromList ((inj₂ helloWorld) ∷ []) ;
                                 txdats = ∅ ;
                                 txrdmrs = fromListᵐ (((Spend , 6) , "Hello World" , (5 , 5)) ∷ []) } ;
                 isValid = true ;
