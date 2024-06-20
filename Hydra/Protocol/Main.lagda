@@ -262,8 +262,28 @@ _ = refl
 
 \paragraph{}% acts like a numbered subsection without title
 \lipsum[2]
-\subsubsection{Test Subsubsection}
-\lipsum[2]
+\subsubsection{Variables}
+\begin{code}
+
+open import Agda.Builtin.Nat public
+  using (zero; suc) renaming (Nat to ℕ)
+
+ℍ = String
+
+variable
+  ν^ : ℕ
+  ν⁻ : ℕ
+  s^ : ℕ
+  s⁻ : ℕ
+  σ⁻ : ℍ
+  𝓤^ : List UTxO
+  𝓤⁻ : List UTxO
+  Σ^ : List (ℕ × ℍ)
+  𝓛^ : List UTxO
+  𝓣^ : List Tx
+  tx𝜔 : Maybe Tx
+
+\end{code}
 \subparagraph{}% acts like a numbered subsubsection without title
 \lipsum[2]
 \subsubsection{Test Subsubsection}
