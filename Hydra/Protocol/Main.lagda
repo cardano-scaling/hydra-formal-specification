@@ -239,10 +239,22 @@ open import Effect.Monad.Reader.Instances
 data CounterParty : Set where
   Client : CounterParty
   Chain : CounterParty
+  -- TODO: add missing index
+  Party : CounterParty
 
 data Message : Set where
   Init : Message
-  NewTx : Message
+  InitialTx : Message
+  CommitTx : Message
+  CollectComTx : Message
+  ReqTx : Message
+  ReqDec : Message
+  ReqSn : Message
+  DecrementTx : Message
+  AckSn : Message
+  Close : Message
+  CloseTx : Message
+  ContestTx : Message
 
 open RawMonad {{...}}
 open RawMonadReader {{...}}
