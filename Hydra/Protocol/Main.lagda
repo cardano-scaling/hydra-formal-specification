@@ -264,6 +264,11 @@ on x from f , k = success $ runReader k "foo"
 
 f : ComputationResult String String
 f = on Init from Client , do
+      -- 𝑛 ← |𝑘H₋ˢᵉᵗᵘᵖ|
+      -- 𝑘H˜  ← MS-AVK|𝑘H₋ˢᵉᵗᵘᵖ|
+      -- 𝑘C₋ ← 𝑘C₋ˢᵉᵗᵘᵖ
+      -- 𝛵 ← 𝛵ˢᵉᵗᵘᵖ
+      -- postTx (init, 𝑛, 𝑘H˜, 𝑘C, 𝛵)
       ask
 
 _ : f ≡ success "foo"
