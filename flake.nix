@@ -4,6 +4,10 @@
 
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
+    formal-ledger = {
+      url = "github:IntersectMBO/formal-ledger-specifications";
+      flake = false;
+    };
     nixpkgs.url = "github:nixos/nixpkgs";
   };
 
@@ -26,7 +30,8 @@
               buildInputs = with agdaPackages; [ standard-library standard-library-classes standard-library-meta formal-ledger ];
               meta = { };
               buildPhase = ''
-                agda --latex Hydra/Protocol/Main.lagda
+                cp ${inputs.formal-ledger}/src/latex/* latex/ -r
+                agda --latex Hydra/Protocol/Main.lagda --latex-dir latex
               '';
               installPhase = ''
                 mkdir $out

@@ -18,6 +18,22 @@
         "type": "github"
       }
     },
+    "formal-ledger": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1718812337,
+        "narHash": "sha256-3zAxfOEs/Ff5g13493iZGGhcvYaSOJNkQLN/G3/AhiY=",
+        "owner": "IntersectMBO",
+        "repo": "formal-ledger-specifications",
+        "rev": "6129d97a0419f8d920e3ed63e192f34cbaf65cc6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IntersectMBO",
+        "repo": "formal-ledger-specifications",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1718717814,
@@ -48,6 +64,7 @@
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
+        "formal-ledger": "formal-ledger",
         "nixpkgs": "nixpkgs"
       }
     }

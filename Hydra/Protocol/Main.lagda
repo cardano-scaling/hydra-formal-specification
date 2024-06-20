@@ -2,8 +2,8 @@
 \usepackage{titlesec}
 \usepackage{etoolbox}
 \usepackage{lipsum}
-\usepackage{agda}
-\usepackage{unicode-math}
+
+\include{preamble}
 
 \setcounter{secnumdepth}{5}
 \setcounter{tocdepth}{1}
