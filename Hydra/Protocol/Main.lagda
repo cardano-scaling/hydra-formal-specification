@@ -276,10 +276,10 @@ variable
   s^ : ℕ
   s⁻ : ℕ
   σ⁻ : ℍ
-  𝓤^ : List UTxO
-  𝓤⁻ : List UTxO
+  𝓤^ : UTxO
+  𝓤⁻ : UTxO
   Σ^ : List (ℕ × ℍ)
-  𝓛^ : List UTxO
+  𝓛^ : UTxO
   𝓣^ : List Tx
   tx𝜔 : Maybe Tx
 
