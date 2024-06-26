@@ -3,8 +3,35 @@
 \usepackage{etoolbox}
 \usepackage{lipsum}
 \usepackage{todonotes}
+\usepackage{polytable}
+
+\usepackage[many]{tcolorbox}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage[normalem]{ulem} % temporary for strikeout math
+\usepackage{environ}
+\usepackage{enumerate}
+\usepackage[shortlabels,inline]{enumitem}
+\usepackage{wrapfig}
+\usepackage[lined,noend]{algorithm2e}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{adjustbox}
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{xifthen}
+% Keep figures in same section
+\usepackage[section]{placeins}
+\usepackage{pifont}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows}
+\usepackage{pgfplots}
+\usepackage[framemethod=tikz]{mdframed} % and thus tikz
+\usepackage[font=small]{caption}
+\usepackage[many]{tcolorbox}      % for COLORED BOXES
 
 \include{preamble}
+\include{Hydra/Protocol/Macros}
 
 \setcounter{secnumdepth}{5}
 \setcounter{tocdepth}{1}
@@ -69,6 +96,7 @@ open import Hydra.Protocol.Throwaway
 \end{code}
 
 \input{Hydra/Protocol/Introduction}
+\input{Hydra/Protocol/Overview}
 \input{Hydra/Protocol/Throwaway}
 
 \end{document}

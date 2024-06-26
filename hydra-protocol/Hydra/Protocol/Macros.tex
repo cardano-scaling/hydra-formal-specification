@@ -1,0 +1,81 @@
+% ==== Hydra Macros ====
+
+% NOTE: New macro file; please copy and keep organized macros from
+% macros_old.tex as needed.  Hopefully, this will result in tidier
+% macros file.
+%
+% Index:
+% - Misc
+% - General
+% - Theorem Environments
+% - Multisignatures
+% - Transactions
+% - State Machines
+% - Head Protocol
+% - On-Chain Verification
+% - Algorithms
+% - Merkle-Patricia Trees
+
+% === engineering ===
+
+\newtheorem{theorem}{Theorem}
+% \numberwithin{theorem}{chapter}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{definition}{Definition}
+% \numberwithin{definition}{chapter}
+\newtheorem{invariant}{Invariant}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{postulate}{Postulate}
+\theoremstyle{definition}
+\newtheorem{example}{Example}
+\newtheorem{construction}{Construction}
+
+
+% === Transactions ===
+
+\newcommand{\stInitial}{\mathsf{initial}}
+\newcommand{\stOpen}{\mathsf{open}}
+\newcommand{\stClosed}{\mathsf{closed}}
+\newcommand{\stSnap}{\mathsf{newestSN}}
+\newcommand{\stFinal}{\mathsf{final}}
+
+\newcommand{\seed}{\txOutRef_{\mathsf{seed}}}
+\newcommand{\hMT}{h_{\mathsf{MT}}}
+\newcommand{\piMT}{\pi_{\mathsf{MT}}}
+\newcommand{\contesters}{\mathcal{C}}
+
+
+% == Inputs ==
+
+\newcommand{\stCollect}{\mathsf{collect}}
+\newcommand{\stClose}{\mathsf{close}}
+\newcommand{\stContest}{\mathsf{contest}}
+\newcommand{\stFanout}{\mathsf{fanout}}
+\newcommand{\stAbort}{\mathsf{abort}}
+
+
+\newcommand{\mtxInit}{\textit{init}}
+\newcommand{\mtxCom}{\textit{commit}}
+\newcommand{\mtxCommit}{\textit{commit}}
+\newcommand{\mtxCCom}{\textit{collectCom}}
+\newcommand{\mtxCollect}{\textit{collectCom}}
+\newcommand{\mtxIncrement}{\textit{increment}}
+\newcommand{\mtxDecrement}{\textit{decrement}}
+\newcommand{\mtxAbort}{\textit{abort}}
+\newcommand{\mtxClose}{\textit{close}}
+\newcommand{\mtxContest}{\textit{contest}}
+\newcommand{\mtxFinalize}{\textit{finalize}}
+\newcommand{\mtxFanout}{\textit{fanout}}
+\newcommand{\mtxSplit}{\textit{split}}
+\newcommand{\mtxCSN}{\textit{collectSN}}
+\newcommand{\mtxCHT}{\textit{collectHT}}
+\newcommand{\mtxSN}{\textit{SN}}
+\newcommand{\mtxHT}{\textit{HT}}
+
+\newcommand{\Tset}{T}
+\newcommand{\Uset}{U}
+\newcommand{\Uinit}{\Uset_{0}}
+\newcommand{\Ufinal}{\Uset_{\mathsf{final}}}
