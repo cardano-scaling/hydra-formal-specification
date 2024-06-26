@@ -99,4 +99,7 @@ open import Hydra.Protocol.Throwaway
 \input{Hydra/Protocol/Overview}
 \input{Hydra/Protocol/Throwaway}
 
+\bibliographystyle{plain}
+\bibliography{short}
+
 \end{document}

@@ -56,6 +56,7 @@
                 cp ${inputs.formal-ledger}/src/latex/* latex/ -r
                 find . -name '*.lagda' | xargs -I{} agda --transliterate --latex --latex-dir latex {}
                 find . -name '*.tex' | xargs -I{} ${pkgs.rsync}/bin/rsync -rR {} latex/
+                cp short.bib latex/
               '';
               installPhase = ''
                 mkdir $out
