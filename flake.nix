@@ -32,7 +32,8 @@
               buildPhase = ''
                 mkdir latex
                 cp ${inputs.formal-ledger}/src/latex/* latex/ -r
-                agda --latex Hydra/Protocol/Main.lagda --latex-dir latex
+                agda --latex --latex-dir latex Hydra/Protocol/Main.lagda
+                find . -name '*.lagda' | xargs -I{} agda --transliterate --latex --latex-dir latex {}
               '';
               installPhase = ''
                 mkdir $out
