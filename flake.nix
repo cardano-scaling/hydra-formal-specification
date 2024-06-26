@@ -52,8 +52,6 @@
               buildPhase = ''
                 cp ${packages.hydra-agda-spec}/* -r .
                 HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
-                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
-                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
               '';
               installPhase = ''
                 mkdir $out
