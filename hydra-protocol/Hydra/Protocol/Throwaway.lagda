@@ -1,6 +1,6 @@
-\chapter{Throwaway Examples}
+\section{Throwaway Examples}
 
-\section{Script Verification Example}
+\subsection{Script Verification Example}
 These are here for reference as we convert the LaTex spec into Agda.
 
 \begin{code}
@@ -213,7 +213,6 @@ _ : f ≡ success "foo"
 _ = refl
 
 \end{code}
-\subsection{Test Subsection}
 
 \subsubsection{Variables}
 \begin{code}
@@ -237,5 +236,3 @@ variable
   tx𝜔 : Maybe Tx
 
 \end{code}
-
-\end{document}

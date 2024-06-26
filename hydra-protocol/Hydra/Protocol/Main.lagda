@@ -1,4 +1,4 @@
-\documentclass{book}
+\documentclass[11pt]{article}
 \usepackage{titlesec}
 \usepackage{etoolbox}
 \usepackage{lipsum}
@@ -34,7 +34,7 @@
 \include{Hydra/Protocol/Macros}
 
 \setcounter{secnumdepth}{5}
-\setcounter{tocdepth}{1}
+\setcounter{tocdepth}{2}
 \renewcommand\thesection{\arabic{section}}
 
 % this length controls tha hanging indent for titles
