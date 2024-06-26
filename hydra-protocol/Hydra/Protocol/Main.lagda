@@ -65,7 +65,6 @@ Date: \today
 \begin{code}[hide]
 module Hydra.Protocol.Main where
 
-open import Hydra.Protocol.Introduction
 open import Hydra.Protocol.Throwaway
 \end{code}
 
