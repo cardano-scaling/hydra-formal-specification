@@ -1,4 +1,4 @@
-name: hydra-formal-specification
+name: hydra-protocol
 depend:
   formal-ledger
   standard-library
