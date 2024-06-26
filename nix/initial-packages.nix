@@ -15,14 +15,14 @@ let
 
     agda = withPackages [];
 
-    formal-ledger = callPackage ./nix/formal-ledger.nix { };
+    formal-ledger = callPackage ./pkgs/formal-ledger.nix { };
 
-    standard-library = callPackage ./nix/standard-library.nix { };
+    standard-library = callPackage ./pkgs/standard-library.nix { };
       inherit (pkgs.haskellPackages) ghcWithPackages;
 
-    standard-library-classes = callPackage ./nix/standard-library-classes.nix { };
+    standard-library-classes = callPackage ./pkgs/standard-library-classes.nix { };
 
-    standard-library-meta = callPackage ./nix/standard-library-meta.nix { };
+    standard-library-meta = callPackage ./pkgs/standard-library-meta.nix { };
 
   };
 in mkAgdaPackages Agda

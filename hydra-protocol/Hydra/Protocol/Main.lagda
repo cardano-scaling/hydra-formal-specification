@@ -21,6 +21,7 @@
 \titleformat{\chapter}[block]
   {\normalfont\huge\bfseries}{}{0pt}{\hspace*{-\titleindent}}
 
+
 \titleformat{\section}
   {\normalfont\Large\bfseries}{\llap{\parbox{\titleindent}{\thesection\hfill}}}{0em}{}
 
