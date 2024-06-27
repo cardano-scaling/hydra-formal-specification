@@ -97,6 +97,7 @@ open import Hydra.Protocol.Throwaway
 
 \input{Hydra/Protocol/Introduction}
 \input{Hydra/Protocol/Overview}
+\input{Hydra/Protocol/Preliminaries}
 \input{Hydra/Protocol/Throwaway}
 
 \bibliographystyle{plain}
