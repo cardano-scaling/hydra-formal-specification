@@ -16,6 +16,10 @@
 % - Algorithms
 % - Merkle-Patricia Trees
 
+\makeatletter
+\newcommand{\removelatexerror}{\let\@latex@error\@gobble}
+\makeatother
+
 \newtheorem{theorem}{Theorem}
 % \numberwithin{theorem}{chapter}
 \newtheorem{lemma}[theorem]{Lemma}
@@ -32,7 +36,9 @@
 \newtheorem{construction}{Construction}
 
 % === General ===
+\newcommand{\ith}[1]{#1^{\text{th}}}
 
+\newcommand{\nop}{n}
 \newcommand{\md}{\textsf{-}}
 
 \newcommand{\ol}[1]{\overline{#1}}

@@ -1,0 +1,244 @@
+\begin{figure*}[t!]
+
+	\def\sfact{0.8}
+	\centering
+	\begin{algobox}{Coordinated Hydra Head}
+		\medskip
+		\begin{tabular}{c}
+			%%% Initializing the head
+			\begin{tabular}{cc}
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.6}
+						%%% INIT
+						\On{$(\hpInit)$ from client}{
+							$n \gets |\hydraKeys^{setup}|$ \;
+							$\hydraKeysAgg \gets \msCombVK(\hydraKeys^{setup})$ \;
+							$\cardanoKeys \gets \cardanoKeys^{setup}$\;
+							$\cPer \gets \cPer^{setup}$ \;
+							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\cPer)$ \;
+						}
+						\vspace{12pt}
+
+						\On{$(\gcChainInitial, \cid, \seed, \nop, \hydraKeysAgg, \cardanoKeys^{\#}, \cPer)$ from chain}{
+						\Req{} $\hydraKeysAgg=\msCombVK(\hydraKeys^{setup})$\;
+						\Req{} $\cardanoKeys^{\#}= [ \hash(k)~|~\forall k \in \cardanoKeys^{setup}]$\;
+						\Req{} $\cPer=\cPer^{setup}$\;
+						\Req{} $\cid = \hash(\muHead(\seed))$ \;
+						}
+					\end{walgo}
+				}
+				 &
+
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.6}
+						\On{$(\gcChainCommit, j, U)$ from chain}{
+							$C_j \gets U $
+
+							\If{$\forall k \in [1..n]: C_k \neq $}{
+								$\eta \gets \combine([C_1 \dots C_n])$ \;
+								$\PostTx{}~(\mtxCCom, \eta)$ \;
+							}
+						}
+
+						\vspace{12pt}
+
+						\On{$(\gcChainCollectCom, \eta_{0})$ from chain}{
+							% Implictly means that all commits will defined as we cannot miss a commit (by assumption)
+							$\Uinit \gets \bigcup_{j=1}^{n} U_j$ \;
+							% $\Out~(\hpSnap,(0,U_0))$ \;
+							$\hatmU, \barmU, \hatmL \gets \Uinit$ \;
+							\textcolor{red}{$\tx_{\omega} \gets \bot$ \;}
+							$\hats,\bars \gets 0$ \;
+							$\mT, \hatmT, \barmT \gets \emptyset$ \;
+						}
+
+					\end{walgo}
+				}
+			\end{tabular}
+
+			\\
+			\multicolumn{1}{l}{\line(1,0){490}}
+			\\
+
+			%%% Open head
+			\begin{tabular}{c@{}c}
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.65}
+
+						%%% NEW TX
+						\On{$(\hpNew,\tx)$ from client}{
+							\Multi{} $(\hpRT,\tx)$%
+						}
+
+						\vspace{12pt}
+
+						%%% REQ TX
+						\On{$(\hpRT,\tx)$ from $\party_j$}{
+							$\mT_{\mathsf{all}} \gets \mT_{\mathsf{all}} \cup \{ (\hash(\tx),\tx )\}$ \;
+							\Wait{$\hatmL \applytx \tx \neq \bot$}{
+								$\hatmL \gets \hatmL\applytx\tx$ \;
+								$\hatmT \gets \hatmT \cup \{\tx\}$ \;
+								% issue snapshot if we are leader
+								\If{$\hats = \bars \land \hpLdr(\bars + 1) = i$}{
+                                    $\textcolor{blue}{\mT^{\#}_{req} \gets \{ \hash(\tx) ~ | ~ \forall tx \in \hatmT \}}$ \;
+									\Multi{} $(\hpRS,\bars+1, \textcolor{blue}{\mT^{\#}_{req}}, \textcolor{red}{\tx_{\omega}})$ \;
+								}
+							}
+						}
+
+						\vspace{12pt}
+
+						%%% REQ SN
+						\On{$(\hpRS,s,\mT^{\#}_{req}, \textcolor{red}{\tx_{\omega}})$ from $\party_j$}{
+							\Req{$s = \hats + 1 ~ \land ~ \hpLdr(s) = j$} \;
+							\Wait{$\bars = \hats ~ \land ~ \forall h \in  \mT^{\#}_{req} : (h, \cdot) \in \mT_{\mathsf{all}}$}{
+								$\mT_{\mathsf{req}} \gets \{ \mT_{\mathsf{all}}[h] ~ | ~ \forall h \in \mT^{\#}_{req} \}$ \;
+							    \textcolor{red}{\Req{$\barmU \applytx \tx_{\omega} \not= \bot$}} \;
+							    \textcolor{red}{$\barmU_{\mathsf{active}} \gets \barmU \applytx \tx_{\omega}$} \;
+								\Req{$\textcolor{red}{\barmU_{\mathsf{active}}} \applytx \mT_{\mathsf{req}} \not= \bot$} \;
+								$\hatmU \gets \textcolor{red}{\barmU_{\mathsf{active}}} \applytx \mT_{\mathsf{req}}$ \;
+								$\hats \gets \bars + 1$ \;
+								\textcolor{red}{$\eta' \gets \combine(\hatmU)$} \;
+								% TODO: hanwavy combine/outputs here
+								$\textcolor{red}{\eta_{\omega} \gets \combine(\mathsf{outputs}(\tx_{\omega}))}$ \;
+								% NOTE: WE could make included transactions auditable by adding
+								% a merkle tree root to the (signed) snapshot data \eta'
+								% TODO: sign \eta_{0} / previous state?
+								$\msSig_i \gets \msSign(\hydraSigningKey, (\cid || \textcolor{red}{\hats || \eta' || \eta_{\omega}}))$ \;
+								$\hatSigma \gets \emptyset$ \;
+								$\Multi{}~(\hpAS,\hats,\msSig_i)$ \;
+								$\forall \tx \in \mT_{\mathsf{req}}: \Out~(\hpSeen,\tx)$ \;
+								% TODO: Should we inform users if we drop a transaction?
+								% XXX: This is a bit verbose for the spec
+								$\hatmL \gets \hatmU$ \;
+								$X\gets\hatmT$ \;
+								$\hatmT\gets\emptyset$ \;
+								\For{$\tx\in X : \hatmL\applytx \tx \not=\bot$}{
+									$\hatmT\gets\hatmT\cup\{\tx\}$
+									$\hatmL\gets\hatmL\applytx \tx$ \;
+								}
+								$\mT_{\mathsf{all}} \gets \{ tx ~ | ~ \forall tx \in \mT_{\mathsf{all}} : tx \notin \mT_{\mathsf{req}} \}$ \;
+							}
+						}
+					\end{walgo}
+				} &
+
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.7}
+						%%% DECOMMIT
+						\On{$(\mathtt{decommit},\tx)$ from client}{
+							\If{\textcolor{blue}{$\tx_{\omega} = \bot \land \barmU \applytx \tx \not= \bot$}}{
+							  \Multi{} $(\mathtt{reqDec},\tx)$%
+							}
+						}
+
+						\vspace{12pt}
+
+						%%% REC DEC
+						\On{$(\mathtt{reqDec},\tx)$ from $\party_j$}{
+							\Wait{$\tx_\omega = \bot ~ \land ~ \barmU \applytx \tx \not= \bot$}{
+							  \textcolor{black}{
+								$\tx_\omega \gets \tx$ \;
+								% issue snapshot if we are leader
+								\If{$\hats = \bars \land \hpLdr(\bars + 1) = i$}{
+									$\textcolor{blue}{\mT^{\#}_{req} \gets \{ \hash(\tx) ~ | ~ \forall tx \in \hatmT \}}$ \;
+									\Multi{} $(\hpRS,\bars+1,\mT^{\#}_{req}, \textcolor{blue}{\tx})$ \;
+								}
+							  }
+							}
+						}
+
+						\vspace{12pt}
+
+						%%% DECREMENT
+						\On{$(\mathtt{decrementTx}, U_{\omega})$ from chain}{
+						    \textcolor{red}{
+							\If{$\mathsf{outputs}(\tx_{\omega}) = U_{\omega}$}{
+								$\tx_{\omega} \gets \bot$ \;
+							}
+							}
+						}
+
+						\vspace{12pt}
+
+						%%% ACK SN
+						\On{$(\hpAS,s,\msSig_j)$ from $\party_j$}{
+							\Req{} $s \in \{\hats,\hats+1\}$ \;
+							\Wait{$\hats=s$}{
+								\Req{} $(j, \cdot) \notin \hatSigma$ \;
+							    % FIXME: missing a write to \hatSigma
+								\If{$\forall k \in [1..n]: (k,\cdot) \in \hatSigma$}{
+									% TODO: MS-ASig used different than in the preliminaries
+									$\msCSig \gets \msComb(\hydraKeys^{setup}, \hatSigma)$ \;
+
+									$\eta' \gets \combine(\hatmU)$ \;
+									% TODO: tx_ω undefined (else) case
+								    $\textcolor{red}{\eta_{\omega} \gets \combine(\mathsf{outputs}(\tx_{\omega}))}$ \;
+
+							      	% TODO: sign \eta_{0} / previous state?
+									\Req{} $\msVfy(\hydraKeysAgg, (\cid || \hats || \eta' || \textcolor{red}{\eta_{\omega}}), \msCSig)$ \;
+									$\barmU \gets \hatmU$ \;
+									$\bars \gets \hats$ \;
+									$\barsigma \gets \msCSig$ \;
+
+									$\textcolor{red}{\PostTx{}~(\mathtt{decrementTx}, \hats, \eta', \eta_{\omega})}$ \;
+									%$\Out~(\hpSnap,(\bars,\barmU))$ \;
+									$\forall \tx \in \mT_{\mathsf{req}} : \Out (\hpConf,\tx)$ \;
+
+									% issue snapshot if we are leader
+									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
+									    % TODO: wasteful as we re-request U_ω?
+										$\textcolor{blue}{\mT^{\#}_{req} \gets \{ \hash(\tx) ~ | ~ \forall tx \in \hatmT \}}$ \;
+										\Multi{} $(\hpRS,s+1, \textcolor{blue}{\mT^{\#}_{req}}, \textcolor{red}{\tx_{\omega}})$ \;
+									}
+								}
+							}
+						}
+					\end{walgo}
+				}
+			\end{tabular}
+
+			\\
+			\multicolumn{1}{l}{\line(1,0){490}}
+			\\
+
+			%%% Closing the head
+			\begin{tabular}{c c}
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.6}
+						% CLOSE from client
+						\On{$(\hpClose)$ from client}{
+							$\eta' \gets \combine(\barmU)$ \;
+							$\xi \gets \barsigma$ \;
+							$\PostTx{}~(\mtxClose, \bars, \eta', \xi)$ \;
+						}
+					\end{walgo}
+				}
+				 &
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.6}
+						\On{$(\gcChainClose, \eta) \lor (\gcChainContest, s_{c}, \eta)$ from chain}{
+							\If{$\bars > s_{c}$}{
+								$\eta' \gets \combine(\barmU)$ \;
+								$\xi \gets \barsigma$ \;
+								$\PostTx{}~(\mtxContest, \bars, \eta', \xi)$ \;
+							}
+						}
+					\end{walgo}
+				}
+			\end{tabular}
+		\end{tabular}
+		\bigskip
+	\end{algobox}
+
+	\caption{Head-protocol machine for the \emph{coordinated head} from the perspective of party $\party_i$.}\label{fig:off-chain-prot}
+
+
+\end{figure*}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

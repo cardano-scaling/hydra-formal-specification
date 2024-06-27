@@ -98,6 +98,10 @@ open import Hydra.Protocol.Throwaway
 \input{Hydra/Protocol/Introduction}
 \input{Hydra/Protocol/Overview}
 \input{Hydra/Protocol/Preliminaries}
+\input{Hydra/Protocol/Setup}
+\input{Hydra/Protocol/OnChain}
+\input{Hydra/Protocol/OffChain}
+\input{Hydra/Protocol/Security}
 \input{Hydra/Protocol/Throwaway}
 
 \bibliographystyle{plain}
