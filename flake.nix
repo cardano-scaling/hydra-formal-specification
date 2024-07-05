@@ -19,7 +19,10 @@
       ];
       perSystem = { pkgs, ... }:
         let
-          agdaPackages = pkgs.callPackage ./nix/initial-packages.nix { Agda = pkgs.haskellPackages.Agda; nixpkgs = inputs.nixpkgs; };
+          agdaPackages = pkgs.callPackage ./nix/initial-packages.nix {
+            inherit (pkgs.haskellPackages) Agda;
+            inherit (inputs) nixpkgs;
+          };
           buildInputs = with agdaPackages;
             [
               formal-ledger
