@@ -68,8 +68,8 @@
               '';
             };
 
-            hydra-protocol-pdf = pkgs.stdenv.mkDerivation {
-              pname = "hydra-protocol.pdf";
+            hydra-spec-pdf = pkgs.stdenv.mkDerivation {
+              pname = "hydra-spec.pdf";
               version = "0.0.1";
               nativeBuildInputs = with pkgs; [
                 texlive.combined.scheme-full
@@ -82,11 +82,11 @@
               '';
               installPhase = ''
                 mkdir $out
-                cp Main.pdf $out/hydra-protocol.pdf
+                cp Main.pdf $out/hydra-spec.pdf
               '';
             };
 
-            default = packages.hydra-protocol-pdf;
+            default = packages.hydra-spec-pdf;
 
           };
         };
