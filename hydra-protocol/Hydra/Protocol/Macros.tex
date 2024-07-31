@@ -16,9 +16,14 @@
 % - Algorithms
 % - Merkle-Patricia Trees
 
+\newcommand{\undefinedrm}{\mathrm{undef}}
+
 \makeatletter
 \newcommand{\removelatexerror}{\let\@latex@error\@gobble}
 \makeatother
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
 
 \newtheorem{theorem}{Theorem}
 % \numberwithin{theorem}{chapter}
@@ -36,6 +41,8 @@
 \newtheorem{construction}{Construction}
 
 % === General ===
+\newcommand{\mc}{\mathcal}
+
 \newcommand{\ith}[1]{#1^{\text{th}}}
 
 \newcommand{\nop}{n}
@@ -256,6 +263,7 @@
 \newcommand{\hpClose}{\mathtt{close}}
 \newcommand{\hpCont}{\mathtt{cont}}
 \newcommand{\hpFO}{\mathtt{fanOut}}
+\newcommand{\hpRD}{\mathtt{reqDec}}
 
 
 % == Variables ==
@@ -293,6 +301,8 @@
 \newcommand{\cardanoKeysinit}{\initial{\underline{k}}_\pu}
 
 
+\newcommand{\hatv}{\hat v}
+\newcommand{\barv}{\bar v}
 \newcommand{\hats}{\hat s}
 \newcommand{\bars}{\bar s}
 \newcommand{\barsigma}{\bar{\sigma}}
@@ -304,7 +314,6 @@
 \newcommand{\barmL}{\bar {\mathcal L}}
 \newcommand{\mT}{{\mathcal T}}
 \newcommand{\hatmT}{\hat {\mathcal T}}
-\newcommand{\barmT}{\bar {\mathcal T}}
 \newcommand{\hatmDT}{\Delta\hat {\mathcal T}}
 \newcommand{\hatmR}{\hat {\mathcal R}}
 \newcommand{\mH}{{\mathcal H}}
@@ -316,7 +325,6 @@
 \newcommand{\hpSigs}{S}
 
 \newcommand{\txo}{\mathsf{tx}}
-
 
 % == Commands ==
 
