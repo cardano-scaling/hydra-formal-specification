@@ -23,7 +23,7 @@
             inherit (pkgs.haskellPackages) Agda;
             inherit (inputs) nixpkgs;
           };
-          buildInputs = with agdaPackages;
+          agdaLibraries = with agdaPackages;
             [
               formal-ledger
               standard-library
@@ -33,74 +33,26 @@
         in
         rec {
           packages = {
-            hydra-protocol-typecheck = agdaPackages.mkDerivation {
-              pname = "hydra-protocol-typecheck";
-              version = "0.0.1";
-              src = ./hydra-protocol;
-              inherit buildInputs;
-              meta = { };
-              buildPhase = ''
-                agda Hydra/Protocol/Main.lagda
-              '';
-              installPhase = ''
-                mkdir $out
-                echo "Success" > $out/result
-              '';
-            };
-
-            hydra-protocol-transliterate = agdaPackages.mkDerivation {
-              pname = "hydra-protocol-transliterate";
-              version = "0.0.1";
-              src = ./hydra-protocol;
-              inherit buildInputs;
-              meta = { };
-              buildPhase = ''
-                mkdir latex
-                cp ${inputs.formal-ledger}/src/latex/* latex/ -r
-                find . -name '*.lagda' | xargs -I{} agda --transliterate --latex --latex-dir latex {}
-                find . -name '*.tex' \
-                    -o -name '*.pdf' \
-                    -o -name '*.bib' | xargs -I{} ${pkgs.rsync}/bin/rsync -rR {} latex/
-              '';
-              installPhase = ''
-                mkdir $out
-                cp -r latex/* $out/
-              '';
-            };
-
-            hydra-spec-pdf = pkgs.stdenv.mkDerivation {
+            hydra-spec-pdf = agdaPackages.mkDerivation {
               pname = "hydra-spec.pdf";
               version = "0.0.1";
               nativeBuildInputs = with pkgs; [
+                (agdaPackages.withPackages agdaLibraries)
+                (haskellPackages.ghcWithPackages (p: [ p.shake ]))
                 texlive.combined.scheme-full
-                packages.hydra-protocol-transliterate
               ];
+              meta = { };
               src = ./.;
               buildPhase = ''
-                cp ${packages.hydra-protocol-transliterate}/* -r .
-                HOME=./. latexmk -xelatex Hydra/Protocol/Main.tex
+                shake
               '';
               installPhase = ''
                 mkdir $out
-                cp Main.pdf $out/hydra-spec.pdf
+                cp _build/hydra-spec.pdf $out/hydra-spec.pdf
               '';
             };
 
             default = packages.hydra-spec-pdf;
-          };
-
-          devShells.default = pkgs.mkShell {
-            buildInputs = [
-              (agdaPackages.withPackages
-                (p: [
-                  p.formal-ledger
-                  p.standard-library
-                  p.standard-library-classes
-                  p.standard-library-meta
-                ]))
-              (pkgs.haskellPackages.ghcWithPackages(p: with p; [shake]))
-              (pkgs.texlive.combined.scheme-full)
-            ];
           };
         };
     };
