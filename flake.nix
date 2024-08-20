@@ -99,6 +99,7 @@
                   p.standard-library-meta
                 ]))
               (pkgs.haskellPackages.ghcWithPackages(p: with p; [shake]))
+              (pkgs.texlive.combined.scheme-full)
             ];
           };
         };

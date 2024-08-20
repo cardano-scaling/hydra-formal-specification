@@ -29,9 +29,10 @@
 \usepackage[framemethod=tikz]{mdframed} % and thus tikz
 \usepackage[font=small]{caption}
 \usepackage[many]{tcolorbox}      % for COLORED BOXES
+\usepackage{agda}
 
 % NOTE: from formal-ledger-specifications
-\include{preamble}
+% \include{preamble}
 \include{Hydra/Protocol/Macros}
 
 \setcounter{secnumdepth}{5}
