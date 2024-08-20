@@ -14,8 +14,7 @@ nix build
 
 In a nix shell (`nix develop` or using `nix-direnv`) you can type check:
 ```sh
-cd hydra-protocol
-agda Hydra/Protocol/Main.lagda
+agda src/Hydra/Protocol/Main.lagda
 ```
 
 or build the PDF iteratively:
