@@ -98,6 +98,7 @@
                   p.standard-library-classes
                   p.standard-library-meta
                 ]))
+              (pkgs.haskellPackages.ghcWithPackages(p: with p; [shake]))
             ];
           };
         };
