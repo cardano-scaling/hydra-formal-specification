@@ -12,12 +12,21 @@ main = shakeArgs shakeOptions{shakeFiles="_build"} $ do
       removeFilesAfter "_build" ["//*"]
 
     "_build/hydra-spec" <.> "pdf" %> \out -> do
-      srcs <- getDirectoryFiles "hydra-protocol" ["//*.lagda", "//*.tex"]
-      let dsts = ["_build/latex" </> c -<.> "tex" | c <- srcs]
-      need dsts
-      cmd_ (Cwd "_build/latex") "latexmk -xelatex Hydra/Protocol/Main.tex"
-      copyFile' "Main.pdf" "_build/hydra-spec.pdf"
+      styles <- getDirectoryFiles "hydra-protocol" ["//*.sty"]
+      need ["_build/latex" </> c | c <- styles]
 
+      srcs <- getDirectoryFiles "hydra-protocol" ["//*.lagda", "//*.tex"]
+      need ["_build/latex" </> c -<.> "tex" | c <- srcs]
+
+      cmd_ (Cwd "_build/latex") "latexmk -xelatex Hydra/Protocol/Main.tex"
+      copyFile' "_build/latex/Main.pdf" "_build/hydra-spec.pdf"
+
+    -- Copy styles
+    "_build/latex//*.sty"  %> \out -> do
+      let src = "hydra-protocol" </> dropDirectory1 (dropDirectory1 out)
+      copyFile' src out
+
+    -- Copy or compile from lagda files
     "_build/latex//*.tex"  %> \out -> do
       let src = "hydra-protocol" </> dropDirectory1 (dropDirectory1 out)
       b <- doesFileExist src

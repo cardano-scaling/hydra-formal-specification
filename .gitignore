@@ -1,4 +1,4 @@
 result*
 *.agdai
 /.direnv/
-/latex/
+/_build/
