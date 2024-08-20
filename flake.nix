@@ -73,7 +73,7 @@
               version = "0.0.1";
               nativeBuildInputs = with pkgs; [
                 texlive.combined.scheme-full
-                packages.hydra-protocol-transliterate 
+                packages.hydra-protocol-transliterate
               ];
               src = ./.;
               buildPhase = ''
@@ -87,7 +87,18 @@
             };
 
             default = packages.hydra-spec-pdf;
+          };
 
+          devShells.default = pkgs.mkShell {
+            buildInputs = [
+              (agdaPackages.withPackages
+                (p: [
+                  p.formal-ledger
+                  p.standard-library
+                  p.standard-library-classes
+                  p.standard-library-meta
+                ]))
+            ];
           };
         };
     };
