@@ -30,6 +30,7 @@
 \usepackage[font=small]{caption}
 \usepackage[many]{tcolorbox}      % for COLORED BOXES
 
+% NOTE: from formal-ledger-specifications
 \include{preamble}
 \include{Hydra/Protocol/Macros}
 
