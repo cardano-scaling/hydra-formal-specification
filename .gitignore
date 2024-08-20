@@ -1,3 +1,4 @@
 result*
 *.agdai
 /.direnv/
+/latex/
