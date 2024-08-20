@@ -1,3 +1,4 @@
+import Control.Monad (forM)
 import Development.Shake
 import Development.Shake.Command
 import Development.Shake.FilePath
@@ -12,19 +13,20 @@ main = shakeArgs shakeOptions{shakeFiles="_build"} $ do
       removeFilesAfter "_build" ["//*"]
 
     "_build/hydra-spec" <.> "pdf" %> \out -> do
-      styles <- getDirectoryFiles "hydra-protocol" ["//*.sty"]
-      need ["_build/latex" </> c | c <- styles]
+      assets <- getDirectoryFiles "hydra-protocol" ["//*.sty", "Hydra/Protocol/Figures/*.pdf", "//*.bib"]
+      need ["_build/latex" </> c | c <- assets]
 
       srcs <- getDirectoryFiles "hydra-protocol" ["//*.lagda", "//*.tex"]
       need ["_build/latex" </> c -<.> "tex" | c <- srcs]
 
       cmd_ (Cwd "_build/latex") "latexmk -xelatex Hydra/Protocol/Main.tex"
-      copyFile' "_build/latex/Main.pdf" "_build/hydra-spec.pdf"
+      cmd_ "mv _build/latex/Main.pdf _build/hydra-spec.pdf"
 
-    -- Copy styles
-    "_build/latex//*.sty"  %> \out -> do
-      let src = "hydra-protocol" </> dropDirectory1 (dropDirectory1 out)
-      copyFile' src out
+    -- Copy assets
+    forM ["sty", "pdf", "bib"] $ \ext ->
+      ("_build/latex//*." <> ext)  %> \out -> do
+        let src = "hydra-protocol" </> dropDirectory1 (dropDirectory1 out)
+        copyFile' src out
 
     -- Copy or compile from lagda files
     "_build/latex//*.tex"  %> \out -> do
