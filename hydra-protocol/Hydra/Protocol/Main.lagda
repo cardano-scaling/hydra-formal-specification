@@ -32,7 +32,7 @@
 \usepackage{agda}
 
 % NOTE: from formal-ledger-specifications
-% \include{preamble}
+\include{formal-ledger/preamble}
 \include{Hydra/Protocol/Macros}
 
 \setcounter{secnumdepth}{5}
