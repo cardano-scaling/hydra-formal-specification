@@ -1,25 +1,20 @@
-\documentclass[11pt]{article}
+\documentclass[11pt, titlepage]{article}
 
 \include{preamble}
 \include{macros}
 
+\title{\Large \textbf{Hydra HeadV1 Specification: Coordinated Head protocol}\\[2ex] DRAFT}
+\author{
+  Sebastian Nagel \texttt{sebastian.nagel@iohk.io} \and
+  Sasha Bogicevic \texttt{sasha.bogicevic@iohk.io} \and
+  Franco Testagrossa \texttt{franco.testagrossa@iohk.io} \and
+  Daniel Firth \texttt{daniel.firth@iohk.io}
+  % NOTE: add yourself
+}
 \begin{document}
+\maketitle
 
-\begin{titlepage}
-
-\vspace*{\fill} % Add whitespace above to center the title page content
-
-\begin{center}
-
-{\LARGE Hydra Protocol Specification}\\ [1.5cm]
-
-Date: \today
-
-\end{center}
-
-\vspace*{\fill}
-
-\end{titlepage}
+\newpage
 
 \tableofcontents
 
