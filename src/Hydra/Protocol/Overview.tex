@@ -9,10 +9,10 @@ guarantees full wealth preservation: no generation of funds can happen off-chain
 (inside a head) and no responsive honest party involved in a head can ever lose
 any funds other than by consenting to give them away. In exchange for decreased
 liveness guarantees (stop any time), it can essentially proceed at network speed
-under good conditions, thereby reducing latency and increasing throughput. At the
-same time, the head protocol provides the same capabilities as the mainchain by
-reusing the same ledger model and transaction formats --- making the protocol
-"isomorphic".
+under good conditions, thereby reducing latency and increasing throughput. At
+the same time, the head protocol provides the same capabilities as the mainchain
+by reusing the same ledger model and transaction formats --- making the protocol
+``isomorphic''.
 
 \subsection{Opening the head}
 
@@ -24,15 +24,16 @@ transactions that are restricted to head members (e.g., a non-member is not
 allowed to close the head) and for signing off-chain transactions in the head.
 
 The initiator then establishes the head by submitting an \emph{initial}
-transaction to the mainchain that contains the Hydra protocol parameters and mints special
-\emph{participation tokens (PT)} identifying the head members. The
+transaction to the mainchain that contains the Hydra protocol parameters and
+mints special \emph{participation tokens (PT)} identifying the head members. The
 \emph{initial} transaction also initializes a state machine (see
-Fig.~\ref{fig:SM_states_basic}) that manages the ``transfer'' of UTxOs into the
-head and back. The state machine comprises the four states: $\stInitial$,
+Fig.~\ref{fig:head-protocol-states}) that manages the ``transfer'' of UTxOs into
+the head and back. The state machine comprises the four states: $\stInitial$,
 $\stOpen$, $\stClosed$, and $\stFinal$. A \emph{state thread token (ST)} minted
-in \emph{initial} marks the head output and ensures contract continuity~\cite{eutxo}.
+in \emph{initial} marks the head output and ensures contract
+continuity~\cite{eutxo}.
 
-\input{Hydra/Protocol/Figures/SM_States_Basic}
+\input{Hydra/Protocol/Figures/head-protocol-states}
 
 Once the initial transaction appears on the mainchain, establishing the initial
 state $\stInitial$, each head member can attach a \mtxCom{} transaction, which
