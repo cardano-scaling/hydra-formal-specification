@@ -104,18 +104,18 @@ chain via a \mtxDecrement{} transaction --- the overall process is also called
 
 The head protocol is designed to allow any head member at any point in time to
 produce, without interaction, a certificate to close the head. This certificate
-is created from the latest confirmed snapshot, specifically from its snapshot
-number and the respective multisignature. Using this certificate, the head
-member may ``force close'' the head by advancing the mainchain state machine to
-the $\stClosed$ state.
+is created from the latest confirmed, multi-signed snapshot. Using this
+certificate, the head member may ``force close'' the head by advancing the
+mainchain state machine to the $\stClosed$ state.
 
 Once in $\stClosed$, the state machine grants parties a contestation period,
 during which parties may contest the closure by posting the certificate of a
-newer snapshot on-chain in a contest transaction. Contesting leads back to the state
-$\stClosed$ and each party can contest at most once. After the contestation period has elapsed, the state machine may
-proceed to the $\stFinal$ state. The state machine enforces that the outputs of
-the transaction leading to $\stFinal$ correspond exactly to the latest UTxO set
-seen during the contestation period.
+newer snapshot on-chain in a contest transaction. Contesting leads back to the
+state $\stClosed$ and each party can contest at most once. After the
+contestation period has elapsed, the state machine may proceed to the $\stFinal$
+state. The state machine enforces that the outputs of the transaction leading to
+$\stFinal$ correspond exactly to the latest UTxO set seen during the
+contestation period.
 
 \subsection{Differences}
 % TODO More details on what was in orig paper?
