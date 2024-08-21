@@ -1,35 +1,51 @@
 \clearpage
 \section{On-chain Protocol}\label{sec:on-chain}
-% FIXME: update all figures: removed n and decrement changes
 \todo{Update figures}
 
 \todo{Open problem: ensure abort is always possible. e.g. by individual aborts or undoing commits}
 \todo{Open problem: ensure fanout is always possible, e.g. by limiting complexity of $U_0$}
 
-The following sections describe the the \emph{on-chain} protocol controlling the
+\noindent The following sections describe the the \emph{on-chain} protocol controlling the
 life-cycle of a Hydra head, which can be intuitively described as a state
 machine (see Figure~\ref{fig:SM_states_basic}). Each transition in this state
 machine is represented and caused by a corresponding Hydra protocol transaction
-on-chain: $\mtxInit{}$, $\mtxCom{}$, $\mtxAbort{}$, $\mtxCollect{}$,
-$\mtxDecrement{}$, $\mtxClose{}$, $\mtxContest{}$, and $\mtxFanout{}$.
+on-chain: \mtxInit{}, \mtxCom{}, \mtxAbort{}, \mtxCollect{}, \mtxDecrement{},
+\red{\mtxIncrement{},} \mtxClose{}, \mtxContest{}, and \mtxFanout{}. \\
+
+\noindent \red{Besides the main state transitions of the head protocol,
+	there is the related ``deposit protocol'' with two transactions in support of
+	\mtxIncrement{}: \mtxDeposit{} and \mtxRecover{}.} \\
 
 % TODO: Could include a combined overview, slightly more detailed than Figure 1
 % of the transaction trace for the full life cycle maybe?
 
-\noindent The protocol defines one minting policy script and three validator scripts:
+\noindent The head protocol defines one minting policy script and three
+validator scripts:
 \begin{itemize}
 	\item $\muHead$ governs minting of state and participation tokens in
 	      $\mtxInit{}$ and burning of these tokens in $\mtxAbort{}$ and
 	      $\mtxFanout{}$.
 	\item $\nuInitial$ controls how UTxOs are committed to the head in
-	      $\mtxCommit{}$ or when the head initialiazation is aborted via
+	      $\mtxCommit{}$ or when the head initialization is aborted via
 	      $\mtxAbort{}$.
 	\item $\nuCommit$ controls the collection of committed UTxOs into the head in
 	      $\mtxCollect$ or that funds are reimbursed in an $\mtxAbort{}$.
 	\item $\nuHead$ represents the main protocol state machine logic and ensures
-	      contract continuity throughout $\mtxCollect{}$, $\mtxDecrement{}$,
-	      $\mtxClose{}$, $\mtxContest{}$ and $\mtxFanout{}$.
+				contract continuity throughout $\mtxCollect{}$, $\mtxDecrement{}$,
+				\red{\mtxIncrement{},} $\mtxClose{}$, $\mtxContest{}$ and
+				$\mtxFanout{}$.
 \end{itemize}
+
+\noindent \red{The deposit protocol defines one minting policy and one validator
+	script:
+	\begin{itemize}
+		\item $\muDeposit$ governs minting of a deposit thread token and ensures correct
+		recording of UTxO in a \mtxDeposit{} transaction.
+		\item $\nuDeposit$ controls that deposited UTxO is claimed correctly into a
+		head via \mtxIncrement{} or recovered after the deadline has passed in a
+		\mtxRecover{} transaction.
+	\end{itemize}
+}
 
 \subsection{Init transaction}\label{sec:init-tx}
 

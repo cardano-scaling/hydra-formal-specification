@@ -84,21 +84,21 @@ is now evidence that this state once existed during the head evolution.
 
 Besides processing ``normal'' transactions, participants can also request to
 withdraw some UTxO they can spend from the Head and make it available on main
-chain via a \mtxDecrement{} transaction --- the overall process is also called
+chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall process is also called
 ``decommit''.
 
 \red{The inverse of locking more UTxO on the mainchain and making it available
-	within the head is called (incremental) ``commit'' and is achieved via two
-	types of transactions: \mtxDeposit{} and \mtxIncrement{}. First, anyone may
-	create a deposit of one or more UTxO using a \mtxDeposit{} transaction. The
-	head participants will observe this deposit and, once settled, request
-	off-chain agreement to include the deposited UTxO in the form of a snapshot.
-	With that agreement, an \mtxIncrement{} transaction can be created and used to
-	update the head state on the mainchain. A deadline is associated with the
-	deposit, which ensures that the UTxO is locked up long enough to be safely
-	consumed into the head without risk of double spending. Should a deposit have
-	not been picked up in time, a \mtxRecover{} transaction allows anyone to
-	unlock the original UTxO.}
+	within the head is called (incremental) ``commit''. First, anyone may create a
+	deposit of one or more UTxO using a \mtxDeposit{}~\ref{sec:deposit-tx}
+	transaction. The head participants will observe this deposit and, once
+	settled, request off-chain agreement to include the deposited UTxO in the form
+	of a snapshot. With that agreement, an \mtxIncrement{}~\ref{sec:increment-tx}
+	transaction can be created and used to update the head state on the mainchain.
+	A deadline is associated with the deposit, which ensures that the UTxO is
+	locked up long enough to be safely consumed into the head without risk of
+	double spending. Should a deposit have not been picked up in time, a
+	\mtxRecover{}~\ref{sec:recover-tx} transaction allows anyone to unlock the
+	original UTxO.}
 
 \subsection{Closing the head}
 
