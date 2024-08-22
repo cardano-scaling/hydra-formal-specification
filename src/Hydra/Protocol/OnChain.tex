@@ -331,19 +331,32 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 		$\stOpen$ head output.}\label{fig:collectComTx}
 \end{figure}
 
+\newpage
+
+\subsection{\red{Deposit Transaction}}\label{sec:deposit-tx}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/deposit-tx}
+	\caption{\mtxDeposit{} transaction spending multiple UTxO into a deposit
+	  output.}\label{fig:depositTx}
+\end{figure}
+
+\subsection{\red{Recover Transaction}}\label{sec:recover-tx}
+
 \subsection{\red{Increment Transaction}}\label{sec:increment-tx}
 
-\noindent The \mtxIncrement{} transaction (Figure~\ref{fig:incrementTx}) allows a party to
-add a UTxO to an already open head and consists of:
+\noindent The \mtxIncrement{} transaction (Figure~\ref{fig:incrementTx}) allows
+a party to add a deposited UTxO to an already open head using a snapshot that
+approves inclusion. Consequently this transaction consists of:
 
 \begin{itemize}
 	\item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
-	\item zero or more inputs with reference $\txOutRef_{\mathsf{increment}_{j}}$
-	      spending output $o_{\mathsf{increment}_{j}}$ with
-	      $\val_{\mathsf{increment}_{j}}$,
+	\item one input spending from $\nuDeposit$ with $\datumDeposit$,
 	\item one output paying to $\nuHead$ with value $\valHead'$ and
 		  datum $\datumHead'$,
 \end{itemize}
+\todo{continue with deposit draft}
 
 \noindent The state-machine validator $\nuHead$ is spent with
 $\redeemerHead = (\mathsf{increment}, \xi, $s$, \txOutRef_{\mathsf{increment}})$, where $\xi$ is a multi-signature of
