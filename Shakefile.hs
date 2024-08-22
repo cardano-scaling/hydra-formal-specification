@@ -13,7 +13,8 @@ main = shakeArgs shakeOptions{shakeFiles="_build"} $ do
       removeFilesAfter "_build" ["//*"]
 
     "_build/hydra-spec" <.> "pdf" %> \out -> do
-      assets <- getDirectoryFiles "src" ["//*.sty", "Hydra/Protocol/Figures/*.pdf", "//*.bib", "//*.ttf"]
+      -- TODO: Copy fonts, figures and latex stuff per directory, not per file
+      assets <- getDirectoryFiles "src" ["//*.sty", "//*.pdf", "//*.png", "//*.bib", "//*.ttf"]
       need ["_build/latex" </> c | c <- assets]
 
       srcs <- getDirectoryFiles "src" ["//*.lagda", "//*.tex"]
@@ -23,7 +24,7 @@ main = shakeArgs shakeOptions{shakeFiles="_build"} $ do
       cmd_ "cp _build/latex/Main.pdf _build/hydra-spec.pdf"
 
     -- Copy assets
-    forM ["sty", "pdf", "bib", "ttf"] $ \ext ->
+    forM ["sty", "pdf", "png", "bib", "ttf"] $ \ext ->
       ("_build/latex//*." <> ext)  %> \out -> do
         let src = "src" </> dropDirectory1 (dropDirectory1 out)
         copyFile' src out
