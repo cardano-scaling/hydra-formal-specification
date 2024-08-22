@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Vis Network | Edge Styles | Static smooth curves</title>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+    ></script>
+    <style type="text/css">
+      #mynetwork {
+        width: 500px;
+        height: 200px;
+        border: 1px solid lightgray;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mynetwork"></div>
+    <script type="text/javascript">
+      const tx = (id, label, options) => {
+        return Object.assign(
+          {
+            id,
+            label,
+            shape: "box",
+            shapeProperties: { borderRadius: 0 },
+            heightConstraint: { minimum: 100 },
+          },
+          options,
+        );
+      };
+
+      const txOut = (id, label, options) => {
+        return Object.assign(
+          {
+            id,
+            label,
+            shape: "dot",
+            size: 10,
+          },
+          options,
+        );
+      };
+
+      var data = {
+        nodes: [
+          txOut(1, "u1"),
+          txOut(2, "u2"),
+          txOut(3, "u3"),
+          tx(4, "depositTx"),
+          txOut(5, "deposit1"),
+        ],
+        edges: [
+          { from: 1, to: 4 },
+          { from: 2, to: 4 },
+          { from: 3, to: 4 },
+          { from: 4, to: 5 },
+        ],
+      };
+
+      var network = new vis.Network(
+        document.getElementById("mynetwork"),
+        data,
+        {
+          configure: { enabled: true, filter: "physics" },
+          physics: {
+            hierarchicalRepulsion: {
+              centralGravity: 0,
+              nodeDistance: 40,
+              damping: 0.24,
+            },
+            minVelocity: 0.75,
+            solver: "hierarchicalRepulsion",
+          },
+          layout: {
+            hierarchical: {
+              levelSeparation: 200,
+              nodeSpacing: 20,
+              treeSpacing: 50,
+              direction: "LR",
+              sortMethod: "directed",
+            },
+          },
+          nodes: {
+            color: {
+              border: "black",
+              background: "white",
+            },
+          },
+          edges: {
+            smooth: { type: "cubicBezier" },
+            arrows: {
+              to: { enabled: true, scaleFactor: 0.75 },
+            },
+          },
+        },
+      );
+    </script>
+  </body>
+</html>

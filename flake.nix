@@ -54,6 +54,12 @@
 
             default = packages.hydra-spec-pdf;
           };
+
+          devShells.default = packages.default.overrideAttrs (oldAttrs: {
+            buildInputs = oldAttrs.buildInputs ++ [
+              pkgs.nodePackages.prettier
+            ];
+          });
         };
     };
 }
