@@ -1,29 +1,61 @@
-% ==== Hydra Macros ====
-
-% NOTE: New macro file; please copy and keep organized macros from
-% macros_old.tex as needed.  Hopefully, this will result in tidier
-% macros file.
+% Hydra Macros
 %
-% Index:
-% - Misc
-% - General
-% - Theorem Environments
-% - Multisignatures
-% - Transactions
-% - State Machines
-% - Head Protocol
-% - On-Chain Verification
-% - Algorithms
-% - Merkle-Patricia Trees
+% Contains a subset of the original hydra papers, but still a lot of unused things.
 
-\newcommand{\undefinedrm}{\mathrm{undef}}
-
-\makeatletter
-\newcommand{\removelatexerror}{\let\@latex@error\@gobble}
-\makeatother
+% === Misc ===
 
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\md}{\textsf{-}}
+
+\newcommand{\fst}[1]{#1^{\text{st}}}
+\newcommand{\snd}[1]{#1^{\text{nd}}}
+\newcommand{\trd}[1]{#1^{\text{rd}}}
+\newcommand{\ith}[1]{#1^{\text{th}}}
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\mc}{\mathcal}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% === General ===
+\newcommand{\ol}[1]{\overline{#1}}
+
+\newcommand{\true}{\mathtt{true}}
+\newcommand{\false}{\mathtt{false}}
+
+\newcommand{\spara}{k}
+
+\newcommand{\nop}{n}
+\newcommand{\party}{\mathsf p}
+\newcommand{\parties}{\mathcal{P}}
+
+\newcommand{\adv}{\ensuremath{\mathcal{A}}}
+\newcommand{\att}{\adv}
+\newcommand{\advLive}{\ensuremath{\mathcal{A}}_{\mathsf L}}
+
+\newcommand{\propName}{\textsc}
+
+\newcommand{\hout}[1]{h_{\mathsf{out},#1}}
+\newcommand{\hrest}{h_{\mathsf{rest}}}
+
+\newcommand{\es}{\eps}
+
+
+% === Theorem Environments ===
+
+\newtheoremstyle{putaneffinperiod}% name of the style to be used
+{\topsep}% measure of space to leave above the theorem. E.g.: 3pt
+{\topsep}% measure of space to leave below the theorem. E.g.: 3pt
+{\itshape}% name of font to use in the body of the theorem
+{0pt}% measure of space to indent
+{\bfseries}% name of head font
+{.}% punctuation between head and body
+{1em}% space after theorem head; " " = normal interword space
+{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+\theoremstyle{putaneffinperiod}
 
 \newtheorem{theorem}{Theorem}
 % \numberwithin{theorem}{chapter}
@@ -39,33 +71,6 @@
 \theoremstyle{definition}
 \newtheorem{example}{Example}
 \newtheorem{construction}{Construction}
-
-% === General ===
-\newcommand{\mc}{\mathcal}
-
-\newcommand{\ith}[1]{#1^{\text{th}}}
-
-\newcommand{\nop}{n}
-\newcommand{\md}{\textsf{-}}
-
-\newcommand{\ol}[1]{\overline{#1}}
-
-\newcommand{\spara}{k}
-
-\newcommand{\party}{\mathsf p}
-\newcommand{\parties}{\mathcal{P}}
-
-\newcommand{\adv}{\ensuremath{\mathcal{A}}}
-\newcommand{\att}{\adv}
-\newcommand{\advLive}{\ensuremath{\mathcal{A}}_{\mathsf L}}
-
-\newcommand{\propName}{\textsc}
-
-\newcommand{\hout}[1]{h_{\mathsf{out},#1}}
-\newcommand{\hrest}{h_{\mathsf{rest}}}
-
-
-% === Theorem Environments ===
 
 
 % === Transactions ===
@@ -345,6 +350,7 @@
 
 % == Functions ==
 
+\newcommand{\hash}{\mathsf{hash}}
 \newcommand{\bytes}{\mathsf{bytes}}
 \newcommand{\concat}{\mathsf{concat}}
 \newcommand{\sortOn}{\mathsf{sortOn}}
@@ -508,7 +514,6 @@
 {
 	\begin{minipage}{#1\linewidth}
 		\begingroup
-		\removelatexerror% Nullify \@latex@error
 		\begin{algorithm}[H]
 			}
 			{

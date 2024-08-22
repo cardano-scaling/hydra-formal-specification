@@ -34,7 +34,7 @@
 						\On{$(\gcChainCommit, j, U)$ from chain}{
 							$C_j \gets U $
 
-							\If{$\forall k \in [1..n]: C_k \neq \undefinedrm$}{
+							\If{$\forall k \in [1..n]: C_k \neq \bot$}{
 								$\eta \gets \combine([C_1 \dots C_n])$ \;
 								$\PostTx{}~(\mtxCCom, \eta)$ \;
 							}

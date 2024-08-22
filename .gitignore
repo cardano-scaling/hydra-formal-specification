@@ -1,2 +1,4 @@
 result*
 *.agdai
+/.direnv/
+/_build/

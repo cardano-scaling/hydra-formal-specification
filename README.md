@@ -2,18 +2,24 @@
 
 Agda specification for the hydra-protocol.
 
-## Devshell For Type Checking
+## Building
 
-To enter the devShell 
-
-```
-nix develop .#hydra-protocol-typecheck
-cd hydra-protocol
-agda Hydra/Protocol/Main.lagda
-```
-
-## Building a PDF
+To produce the specification PDF in `result/`:
 
 ```
 nix build
 ```
+
+## Developing / writing
+
+In a nix shell (`nix develop` or using `nix-direnv`) you can type check:
+```sh
+agda src/Hydra/Protocol/Main.lagda
+```
+
+or build the PDF iteratively:
+``` sh
+shake
+```
+
+with the specification PDF available in `_build/hydra-spec.pdf`.
