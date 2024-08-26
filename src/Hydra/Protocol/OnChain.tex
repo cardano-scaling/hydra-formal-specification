@@ -31,19 +31,19 @@ validator scripts:
 	\item $\nuCommit$ controls the collection of committed UTxOs into the head in
 	      $\mtxCollect$ or that funds are reimbursed in an $\mtxAbort{}$.
 	\item $\nuHead$ represents the main protocol state machine logic and ensures
-				contract continuity throughout $\mtxCollect{}$, $\mtxDecrement{}$,
-				\red{\mtxIncrement{},} $\mtxClose{}$, $\mtxContest{}$ and
-				$\mtxFanout{}$.
+	      contract continuity throughout $\mtxCollect{}$, $\mtxDecrement{}$,
+	      \red{\mtxIncrement{},} $\mtxClose{}$, $\mtxContest{}$ and
+	      $\mtxFanout{}$.
 \end{itemize}
 
 \noindent \red{The deposit protocol defines one minting policy and one validator
 	script:
 	\begin{itemize}
 		\item $\muDeposit$ governs minting of a deposit thread token and ensures correct
-		recording of UTxO in a \mtxDeposit{} transaction.
+		      recording of UTxO in a \mtxDeposit{} transaction.
 		\item $\nuDeposit$ controls that deposited UTxO is claimed correctly into a
-		head via \mtxIncrement{} or recovered after the deadline has passed in a
-		\mtxRecover{} transaction.
+		      head via \mtxIncrement{} or recovered after the deadline has passed in a
+		      \mtxRecover{} transaction.
 	\end{itemize}
 }
 
@@ -60,7 +60,7 @@ by a single output reference parameter $\seed \in \tyOutRef$:
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/initTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/initTx.pdf}
 	\caption{\mtxInit{} transaction spending a seed UTxO, and producing the head
 		output in state $\stInitial$ and initial outputs for each participant.}\label{fig:initTx}
 \end{figure}
@@ -105,11 +105,10 @@ by a single output reference parameter $\seed \in \tyOutRef$:
 \end{itemize}
 
 \noindent The $\muHead(\seed)$ minting policy is the only script that verifies
-init transactions and can be redeemed with either a $\mathsf{mint}$ or
-$\mathsf{burn}$ redeemer:
-% TODO: mint redeemer conflicts with mint field
+init transactions and can be redeemed with either a $\mathsf{Mint}$ or
+$\mathsf{Burn}$ redeemer:
 \begin{itemize}
-	\item When evaluated with the $\mathsf{mint}$ redeemer,
+	\item When evaluated with the $\mathsf{Mint}$ redeemer,
 	      \begin{menumerate}
 		      \item The seed output is spent in this transaction. This guarantees uniqueness of the policy $\cid$ because the EUTxO ledger ensures that $\seed$ cannot be spent twice in the same chain.
 		      $(\seed, \cdot) \in \txInputs$
@@ -123,7 +122,7 @@ $\mathsf{burn}$ redeemer:
 		      \item The $\datum_{\mathsf{head}}$ contains own currency id $\cid = \cid'$ and the right seed reference $\seed = \seed'$
 		      \item All initial outputs have a $\cid$ as their datum: $\forall i \in [1 \dots |\hydraKeys|] : \cid = \datumInitial{i}$
 	      \end{menumerate}
-	\item When evaluated with the $\mathsf{burn}$ redeemer,
+	\item When evaluated with the $\mathsf{Burn}$ redeemer,\todo{move to abort/fanout?}
 	      \begin{menumerate}
 		      \item All tokens for this policy in $\txMint$ need to be of negative quantity
 		      $\forall \{\cid \mapsto \cdot \mapsto q\} \in \txMint : q < 0$.
@@ -182,7 +181,7 @@ by the appropriate redeemer.
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/commitTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/commitTx.pdf}
 	\caption{\mtxCom{} transaction spending an initial output and a single
 		committed output, and producing a commit output.}\label{fig:commitTx}
 \end{figure}
@@ -248,7 +247,7 @@ reimburse, and checks:
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/abortTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/abortTx.pdf}
 	\caption{\mtxAbort{} transaction spending the $\stInitial$ state head
 		output and collecting all initial and commit outputs, which get reimbursed
 		by outputs $o_{1} \dots o_{m}$. Note that each $\pt$ may be in either, an
@@ -325,7 +324,7 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/collectComTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/collectComTx.pdf}
 	\caption{\mtxCCom{} transaction spending the head output in $\stInitial$
 		state and collecting from multiple commit outputs into a single
 		$\stOpen$ head output.}\label{fig:collectComTx}
@@ -335,11 +334,65 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 
 \subsection{\red{Deposit Transaction}}\label{sec:deposit-tx}
 
+\noindent The \mtxDeposit{} transaction initiates a (incremental) commit by
+locking funds on the mainchain for later collection by the head protocol. The
+validators in this transaction ensures that anything deposited is correctly
+recorded in the datum and allow for either collection or recovery of the
+deposit. The transaction is shown in Figure~\ref{fig:depositTx} and it
+
+\begin{itemize}
+	\item has one or more inputs with reference $\txOutRef_{\mathsf{deposited}_{j}}$
+	      spending output $o_{\mathsf{deposited}_{j}}$ with
+	      $\val_{\mathsf{deposited}_{j}}$
+	\item mints a \emph{Deposit Token (DT)} identifying this deposit in token name $\tau_{\mathsf{deposit}}$
+	      \[
+		      \dt = \{\did \mapsto \tau_{\mathsf{deposit}} \mapsto 1\}
+	      \]
+	\item has one output paying to $\nuDeposit$ with value $\valDeposit$ and datum
+	      \[
+		      \datumDeposit = (\cid, \did, t_{\mathsf{recover}}, C)
+	      \]
+	      where
+	      \begin{mitemize}
+		      \item $\cid$ is the currency id of the target head protocol instance (see~\ref{sec:init-tx}),
+		      \item $\did$ is the currency id of the $\dt$,
+		      \item $t_{\mathsf{recover}}$ is a deadline after which the deposit can be recovered, and
+		      \item $C$ is the list of deposited UTxO (similar to commits in~\ref{sec:commit-tx}).
+	      \end{mitemize}
+\end{itemize}
+
+\noindent The $\muDeposit$ minting policy is the only script that verifies
+deposit transactions and can be redeemed with either a $\mathsf{Mint}$ or
+$\mathsf{Burn}$ redeemer:\todo{ALL of this could be done off-chain, no need for token + deposit checks?}
+\begin{itemize}
+	\item When $\redeemerDeposit = (\mathsf{Mint}, \overline{\txOutRef}_{\mathsf{deposited}})$,
+	      \begin{menumerate}
+		      \item All deposited value is in the output\footnote{The$\supseteq$ is
+			      important for real world situations where the values might not be
+			      exactly equal due to ledger constraints (i.e. to ensure a minimum
+			      value on outputs).}
+		      \[
+			      \valDeposit \supseteq \bigcup_{j=1}^{m} \val_{\mathsf{deposited}_{j}}
+		      \]
+		      \item Deposited outputs are recorded in the output datum
+		      \[
+			      C = \forall j \in \{1 \dots m\} : [(\txOutRef_{\mathsf{deposited}_{j}},\bytes(o_{\mathsf{deposited}_{j}}))]
+		      \]
+	      \end{menumerate}
+	\item When $\redeemerDeposit = \mathsf{Burn}$,\todo{move to Claim/Recover?}
+	      \begin{menumerate}
+		      \item All tokens for this policy in $\txMint$ need to be of negative quantity
+		      \[
+			      \forall \{\cid \mapsto \cdot \mapsto q\} \in \txMint : q < 0
+		      \]
+	      \end{menumerate}
+\end{itemize}
+
 \begin{figure}
 	\centering
 	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/deposit-tx}
 	\caption{\mtxDeposit{} transaction spending multiple UTxO into a deposit
-	  output.}\label{fig:depositTx}
+		output.}\label{fig:depositTx}
 \end{figure}
 
 \subsection{\red{Recover Transaction}}\label{sec:recover-tx}
@@ -354,7 +407,7 @@ approves inclusion. Consequently this transaction consists of:
 	\item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
 	\item one input spending from $\nuDeposit$ with $\datumDeposit$,
 	\item one output paying to $\nuHead$ with value $\valHead'$ and
-		  datum $\datumHead'$,
+	      datum $\datumHead'$,
 \end{itemize}
 \todo{continue with deposit draft}
 
@@ -373,13 +426,13 @@ validator checks:
 	\[
 		v' = v + 1
 	\]
-\item $\xi$ is a valid multi-signature of the new snapshot state (currency id $\cid$, the current state version $v$, the new state $\eta'$, UTxO to deposit $\eta_\alpha$)
+	\item $\xi$ is a valid multi-signature of the new snapshot state (currency id $\cid$, the current state version $v$, the new state $\eta'$, UTxO to deposit $\eta_\alpha$)
 	\[
-    \msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta_\alpha || \bot),\xi) = \true
+		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta_\alpha || \bot),\xi) = \true
 	\]
-  where snapshot number $s$ is provided through the redeemer, $\eta_\alpha$ is the digest of all added UTxO.
+	where snapshot number $s$ is provided through the redeemer, $\eta_\alpha$ is the digest of all added UTxO.
 	\[
-    \eta_\alpha = \hash(\bigoplus_{j=1}^m \bytes(o_{\mathsf{increment}_j}))
+		\eta_\alpha = \hash(\bigoplus_{j=1}^m \bytes(o_{\mathsf{increment}_j}))
 	\]
 	\item The value in the head output is increased accordingly
 	\todo{Redundant to above? Only check $\valHead' > \valHead$?}
@@ -432,7 +485,7 @@ validator checks:
 	\[
 		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \red{\bot} || \eta_\omega),\xi) = \true
 	\]
-    where snapshot number $s$ is provided through the redeemer and $\eta_\omega$ must be the digest of all removed UTxO.
+	where snapshot number $s$ is provided through the redeemer and $\eta_\omega$ must be the digest of all removed UTxO.
 	\[
 		\red{\eta_\omega} = \hash(\bigoplus_{j=2}^{m+1} \bytes(o_{j}))
 	\]
@@ -450,7 +503,7 @@ validator checks:
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/decrementTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/decrementTx.pdf}
 	\caption{\mtxDecrement{} transaction spending an open head output,
 		producing a new head output and multiple decommitted outputs.}\label{fig:decrementTx}
 \end{figure}
@@ -467,7 +520,7 @@ In order to close a head, a head member may post the \mtxClose{} transaction
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/closeTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/closeTx.pdf}
 	\caption{\mtxClose{} transaction spending the $\stOpen$ head output and producing a $\stClosed$ head output.}\label{fig:closeTx}
 \end{figure}
 
@@ -479,14 +532,14 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	$\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\cPer$
 	stay unchanged and the new state is governed again by $\nuHead$
 	\[
-    (\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta', \eta_\Delta', \contesters,\Tfinal)
+		(\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta', \eta_\Delta', \contesters,\Tfinal)
 	\]
 	\item Last known open state version is recorded in closed state
 	\[
 		v' = v
 	\]
 
-\item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \red{\cup (\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{five} cases are distinguished:
+	\item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \red{\cup (\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{five} cases are distinguished:
 	\begin{menumerate}
 		\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 		\[
@@ -498,55 +551,55 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 		\[
 			\eta' = \eta
 		\]
-    \red{
-		  \item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
-		  \[
-		  	\eta_\Delta' = \bot
-		  \]
-		  \[
-		  	\eta_\omega = \bot
-		  \]
-		  \[
-		  \msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-		  \]
-      where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
-    }
+		\red{
+			\item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
+			\[
+				\eta_\Delta' = \bot
+			\]
+			\[
+				\eta_\omega = \bot
+			\]
+			\[
+				\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\]
+			where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
+		}
 		\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
 		\[
 			\eta_\omega = \eta_\Delta' \neq \bot
 		\]
-    \red{
-		  \[
-		  	\eta_\alpha = \bot
-		  \]
-    }
+		\red{
+			\[
+				\eta_\alpha = \bot
+			\]
+		}
 		\[
-      \msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
 		\]
 		\todo{this is hard to understand}
-    \red{
-		  \item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
-		  \[
-		  	\eta_\alpha = \eta_\Delta' \neq \bot
-		  \]
-		  \[
-		  	\eta_\omega = \bot
-		  \]
-		  \[
-		  	\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
-		  \]
-    }
+		\red{
+			\item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
+			\[
+				\eta_\alpha = \eta_\Delta' \neq \bot
+			\]
+			\[
+				\eta_\omega = \bot
+			\]
+			\[
+				\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
+			\]
+		}
 		\item $\mathsf{UsedDec}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
 		\[
-	 		\eta_\omega = \eta_\Delta' = \bot
+			\eta_\omega = \eta_\Delta' = \bot
 		\]
-    \red{
-		  \[
-		  	\eta_\alpha = \bot
-		  \]
-    }
+		\red{
+			\[
+				\eta_\alpha = \bot
+			\]
+		}
 		\[
-      \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
 		\]
 		where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
 	\end{menumerate}
@@ -595,7 +648,7 @@ transaction has
 \end{itemize}
 
 \begin{figure}
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/contestTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/contestTx.pdf}
 	\caption{\mtxContest{} transaction spending the $\stClosed$ head output and
 		producing a different $\stClosed$ head output.}\label{fig:contestTx}
 \end{figure}
@@ -620,58 +673,58 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\[
 		s' > s
 	\]
-\item $\mathsf{ContestType} = \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{four} cases are distinguished:
+	\item $\mathsf{ContestType} = \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{four} cases are distinguished:
 
 	\begin{menumerate}
 		%% FIXME: \red{\item ...} does not work
 		\item \red{$\mathsf{UnusedInc}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment must be $\bot$ in the closed state.
-		\[
-			\eta_\alpha = \eta_\Delta' = \bot
-		\]
-		\[
-			\eta_\omega = \bot
-		\]
-		\[
-		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-		\]
-		where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.}
+			\[
+				\eta_\alpha = \eta_\Delta' = \bot
+			\]
+			\[
+				\eta_\omega = \bot
+			\]
+			\[
+				\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\]
+			where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.}
 
 		\item $\mathsf{UnusedDec}$: Contesting snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
 		\[
 			\eta_\omega = \eta_\Delta' \neq \bot
 		\]
-    \red{
-		  \[
-		  	\eta_\alpha = \bot
-		  \]
-    }
+		\red{
+			\[
+				\eta_\alpha = \bot
+			\]
+		}
 		\[
-      \msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
 		\]
-    \red{
-		  \item $\mathsf{UsedInc}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
-		  \[
-		  	\eta_\alpha = \eta_\Delta' \neq \bot
-		  \]
-		  \[
-		  	\eta_\omega = \bot
-		  \]
-		  \[
-		  	\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
-		  \]
-    }
+		\red{
+			\item $\mathsf{UsedInc}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
+			\[
+				\eta_\alpha = \eta_\Delta' \neq \bot
+			\]
+			\[
+				\eta_\omega = \bot
+			\]
+			\[
+				\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
+			\]
+		}
 
 		\item $\mathsf{UsedDec}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
 		\[
-	 		\eta_\omega = \eta_\Delta' = \bot
+			\eta_\omega = \eta_\Delta' = \bot
 		\]
-    \red{
-		  \[
-		  	\eta_\alpha = \bot
-		  \]
-    }
+		\red{
+			\[
+				\eta_\alpha = \bot
+			\]
+		}
 		\[
-      \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
 		\]
 		where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
 	\end{menumerate}
@@ -724,7 +777,7 @@ hence there is no state machine output.
 
 \begin{figure}
 	\centering
-        \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.pdf}
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.pdf}
 	\caption{\mtxFanout{} transaction spending the $\stClosed$ head output and
 		distributing funds with outputs $o_{1} \dots o_{m}$.}\label{fig:fanoutTx}
 \end{figure}
