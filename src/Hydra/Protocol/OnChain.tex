@@ -395,11 +395,11 @@ to recover, and checks:
   comparing hashes of serialised representations of the $m$ recovering outputs
   $o_{1} \dots o_{m}$ with the canonically combined committed UTxOs in $C$:
   \[
-	\hash(\bigoplus_{j=1}^{m} \bytes(o_{j})) = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
+    \hash(\bigoplus_{j=1}^{m} \bytes(o_{j})) = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
   \]
   \item Transaction is posted after the deadline
   \[
-	\txValidityMin > t_{\mathsf{recover}}
+    \txValidityMin > t_{\mathsf{recover}}
   \]
 \end{menumerate}
 
@@ -413,51 +413,72 @@ to recover, and checks:
 \subsection{\red{Increment Transaction}}\label{sec:increment-tx}
 
 \noindent The \mtxIncrement{} transaction (Figure~\ref{fig:incrementTx}) allows
-a party to add a deposited UTxO to an already open head using a snapshot that
-approves inclusion. Consequently this transaction consists of:
+a participant to add a \mtxDeposit{} output~\ref{sec:deposit-tx} to an already
+open head using a snapshot that approves inclusion. Consequently this
+transaction consists of:
 
 \begin{itemize}
-  \item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
-  \item one input spending from $\nuDeposit$ with $\datumDeposit$,
-  \item one output paying to $\nuHead$ with value $\valHead'$ and
-  datum $\datumHead'$,
+  \item one input spending from $\nuHead$ with value $\valHead$ holding the
+        $\st$ and datum $\datumHead$,
+  \item one input $\txOutRef_{\mathsf{deposit}}$ spending from $\nuDeposit$ with value $\valDeposit$ and datum
+        $\datumDeposit = (\cid_{\mathsf{deposit}}, t_{\mathsf{recover}}, C)$,
+  \item one output paying to $\nuHead$ with value $\valHead'$ and datum
+        $\datumHead'$.
 \end{itemize}
-\todo{continue with deposit draft}
+
+\noindent The deposit validator $\nuDeposit$ is spent with
+$\redeemerDeposit = \mathsf{claim}$ and ensures:
+\begin{menumerate}
+  \item Claiming head id matches the deposit datum
+  \[
+    \cid = \cid_{\mathsf{deposit}}
+  \]
+  \item Transaction is posted before the deadline
+  \[
+    \txValidityMax <= t_{\mathsf{recover}}
+  \]
+\end{menumerate}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{increment}, \xi, $s$, \txOutRef_{\mathsf{increment}})$, where $\xi$ is a multi-signature of
-the increment snapshot which authorizes addition of some UTxO $U_\alpha$, $s$ is the snapshot number and $\txOutRef_{\mathsf{increment}}$ are the output references we need to spend. The
-validator checks:
+$\redeemerHead = (\mathsf{increment}, \xi, s, \txOutRef_{\mathsf{increment}})$,
+where $\xi$ is a multi-signature of the increment snapshot which authorizes
+addition of deposited UTxO, $s$ is the snapshot number and
+$\txOutRef_{\mathsf{deposit}}$ points to the claimed deposit. The validator
+checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
   $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeysAgg,\nop,\cPer$
   stay unchanged and the new state is governed again by $\nuHead$:
   \[
-	(\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v,\eta) \xrightarrow[\xi, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v',\eta')
+	(\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v,\eta) \xrightarrow[\xi, s, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v',\eta')
   \]
   \item New version $v'$ is incremented correctly
   \[
 	v' = v + 1
   \]
-  \item $\xi$ is a valid multi-signature of the new snapshot state (currency id $\cid$, the current state version $v$, the new state $\eta'$, UTxO to deposit $\eta_\alpha$)
+  \item Claimed deposit is spent
+  \[
+    \txOutRef_{\mathsf{increment}} = \txOutRef_{\mathsf{deposit}}
+  \]
+  \item $\xi$ is a valid multi-signature of the new head state $\eta'$
   \[
 	\msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta_\alpha || \bot),\xi) = \true
   \]
-  where snapshot number $s$ is provided through the redeemer, $\eta_\alpha$ is the digest of all added UTxO.
+  where $\eta_\alpha$ is the digest of all deposited UTxO in $C$ sorted by their output
+  references
   \[
-	\eta_\alpha = \hash(\bigoplus_{j=1}^m \bytes(o_{\mathsf{increment}_j}))
+	\eta_\alpha = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
   \]
-  \item The value in the head output is increased accordingly
-  \todo{Redundant to above? Only check $\valHead' > \valHead$?}
+  \item The value in the head output is increased accordingly\todo{Redundant to above? Only check $\valHead' > \valHead$?}
   \[
-	\valHead \cup (\bigcup_{j=1}^m \val_{i_{j}}) = \valHead'
+	\valHead \cup \valDeposit = \valHead'
   \]
   \item Transaction is signed by a participant
-  \todo{Allow anyone to do increments?}
   \[
 	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
   \]
 \end{menumerate}
+
 
 \begin{figure}
   \centering
