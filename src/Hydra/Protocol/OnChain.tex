@@ -5,16 +5,16 @@
 \todo{Open problem: ensure abort is always possible. e.g. by individual aborts or undoing commits}
 \todo{Open problem: ensure fanout is always possible, e.g. by limiting complexity of $U_0$}
 
-\noindent The following sections describe the the \emph{on-chain} protocol controlling the
-life-cycle of a Hydra head, which can be intuitively described as a state
-machine (see Figure~\ref{fig:head-protocol-states}). Each transition in this state
-machine is represented and caused by a corresponding Hydra protocol transaction
-on-chain: \mtxInit{}, \mtxCom{}, \mtxAbort{}, \mtxCollect{}, \mtxDecrement{},
-\red{\mtxIncrement{},} \mtxClose{}, \mtxContest{}, and \mtxFanout{}. \\
+\noindent The following sections describe the the \emph{on-chain} protocol
+controlling the life-cycle of a Hydra head, which can be intuitively described
+as a state machine (see Figure~\ref{fig:head-protocol-states}). Each transition
+in this state machine is represented and caused by a corresponding Hydra
+protocol transaction
+on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort{}~\ref{sec:abort-tx}, \mtxCollect{}~\ref{sec:collect-tx}, \red{\mtxIncrement{}~\ref{sec:increment-tx},} \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
 
-\noindent \red{Besides the main state transitions of the head protocol,
-	there is the related ``deposit protocol'' with two transactions in support of
-	\mtxIncrement{}: \mtxDeposit{} and \mtxRecover{}.} \\
+\noindent \red{Besides the main state transitions of the head protocol, there is
+  the related ``deposit protocol'' with two transactions in support of
+  \mtxIncrement{}: \mtxDeposit{}~\ref{sec:deposit-tx} and \mtxRecover{}~\ref{sec:recover-tx}.} \\
 
 % TODO: Could include a combined overview, slightly more detailed than Figure 1
 % of the transaction trace for the full life cycle maybe?
@@ -38,9 +38,9 @@ validator scripts:
 
 \noindent \red{The deposit protocol defines one validator script:
 	\begin{itemize}
-		\item $\nuDeposit$ controls that deposited UTxO is claimed correctly into a
-		      head via \mtxIncrement{} or recovered after the deadline has passed in a
-		      \mtxRecover{} transaction.
+	  \item $\nuDeposit$ controls that \mtxDeposit{} transaction output is
+			claimed correctly into a head via \mtxIncrement{} or recovered after
+			the deadline has passed in a \mtxRecover{} transaction.
 	\end{itemize}
 }
 
@@ -775,7 +775,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\]
 \end{menumerate}
 
-\subsection{Fan-Out Transaction}
+\subsection{Fan-Out Transaction}\label{sec:fanout-tx}
 
 Once the contestation phase is over, a head may be finalized by posting a
 \mtxFanout{} transaction (see Figure~\ref{fig:fanoutTx}), which
