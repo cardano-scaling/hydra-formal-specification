@@ -377,6 +377,39 @@ shown in Figure~\ref{fig:depositTx}. The $j \in \{1 \dots m\}$ inputs of this ex
 
 \subsection{\red{Recover Transaction}}\label{sec:recover-tx}
 
+\noindent If a \mtxDeposit{} transaction output (see~\ref{sec:deposit-tx}) was
+not collected into a head by an \mtxIncrement{}
+transaction~\ref{sec:increment-tx}, the \mtxRecover{} transaction
+(Figure~\ref{fig:recoverTx}) allows for restoring the UTxO as recorded in the
+deposit after the deadline has passed. It consists of
+\begin{itemize}
+	\item one input spending from $\nuDeposit$ with datum $\datumDeposit = (\cid, t_{\mathsf{recover}}, C)$, and
+	\item outputs $o_{1} \dots o_{m}$ to recover UTxOs.
+\end{itemize}
+
+\noindent The script validator $\nuDeposit$ is spent with redeemer
+$\redeemerDeposit = (\mathsf{Recover}, m)$, where $m$ is the number of outputs
+to recover, and checks:
+\begin{menumerate}
+  \item All UTxOs are recovered exactly as they were deposited. This is done by
+  comparing hashes of serialised representations of the $m$ recovering outputs
+  $o_{1} \dots o_{m}$ with the canonically combined committed UTxOs in $C$:
+	\[
+	  \hash(\bigoplus_{j=1}^{m} \bytes(o_{j})) = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
+	\]
+	\item Transaction is posted after the deadline
+	\[
+	  \txValidityMin > t_{\mathsf{recover}}
+	\]
+\end{menumerate}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/recover-tx}
+	\caption{\mtxRecover{} transaction restoring UTxO of a deposit
+		output.}\label{fig:recoverTx}
+\end{figure}
+
 \subsection{\red{Increment Transaction}}\label{sec:increment-tx}
 
 \noindent The \mtxIncrement{} transaction (Figure~\ref{fig:incrementTx}) allows
