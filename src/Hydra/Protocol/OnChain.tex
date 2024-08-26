@@ -469,11 +469,11 @@ checks:
   \[
 	\eta_\alpha = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
   \]
-  \item The value in the head output is increased accordingly\todo{Redundant to above? Only check $\valHead' > \valHead$?}
+  \item The value in the head output is increased accordingly\todo{Only check $\valHead' > \valHead$?}
   \[
 	\valHead \cup \valDeposit = \valHead'
   \]
-  \item Transaction is signed by a participant
+  \item Transaction is signed by a participant\todo{Redundant to snapshot sig?}
   \[
 	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
   \]
@@ -496,7 +496,7 @@ a party to remove a UTxO from an already open head and consists of:
   \item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
   \item one output paying to $\nuHead$ with value $\valHead'$ and
   datum $\datumHead'$,
-  \item one or more decommit outputs $o_{2} \dots o_{m+1}$.
+  \item one or more decommit outputs $o_{2} \dots o_{m+1}$ with values $\val_{2} \dots \val_{m+1} $.
 \end{itemize}
 
 \noindent The state-machine validator $\nuHead$ is spent with
@@ -515,21 +515,19 @@ validator checks:
   \[
 	v' = v + 1
   \]
-  \item $\xi$ is a valid multi-signature of the new snapshot state (currency id $\cid$, the current state version $v$, the new state $\eta'$ \red{, UTxO to deposit $\eta_\alpha$} and UTxO to withdraw $\eta_\omega$)
+  \item $\xi$ is a valid multi-signature of the new snapshot state $\eta'$
   \[
 	\msVfy(\hydraKeys,(\cid || v || s || \eta' || \red{\bot} || \eta_\omega),\xi) = \true
   \]
-  where snapshot number $s$ is provided through the redeemer and $\eta_\omega$ must be the digest of all removed UTxO.
+  where $\eta_\omega$ must is the digest of all removed UTxO
   \[
-	\red{\eta_\omega} = \hash(\bigoplus_{j=2}^{m+1} \bytes(o_{j}))
+	\eta_\omega = \hash(\bigoplus_{j=2}^{m+1} \bytes(o_{j}))
   \]
-  \item The value in the head output is decreased accordingly
-  \todo{Redundant to above? Only check $\valHead' < \valHead$?}
+  \item The value in the head output is decreased accordingly\todo{Only check $\valHead' < \valHead$?}
   \[
-	\valHead' \cup (\bigcup_{j=2}^{m+1} \val_{o_{j}}) = \valHead
+	\valHead' \cup (\bigcup_{j=2}^{m+1} \val_{j}) = \valHead
   \]
-  \item Transaction is signed by a participant
-  \todo{Allow anyone to do decrements?}
+  \item Transaction is signed by a participant\todo{Redundant to snapshot sig?}
   \[
 	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
   \]
@@ -707,7 +705,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
   \[
 	s' > s
   \]
-  \item $\mathsf{ContestType} = \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{four} cases are distinguished:
+  \item Based on the redeemer $\mathsf{ContestType} = \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{four} cases are distinguished:
 
   \begin{menumerate}
 	%% FIXME: \red{\item ...} does not work
