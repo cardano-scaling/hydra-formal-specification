@@ -36,11 +36,8 @@ validator scripts:
 	      $\mtxFanout{}$.
 \end{itemize}
 
-\noindent \red{The deposit protocol defines one minting policy and one validator
-	script:
+\noindent \red{The deposit protocol defines one validator script:
 	\begin{itemize}
-		\item $\muDeposit$ governs minting of a deposit thread token and ensures correct
-		      recording of UTxO in a \mtxDeposit{} transaction.
 		\item $\nuDeposit$ controls that deposited UTxO is claimed correctly into a
 		      head via \mtxIncrement{} or recovered after the deadline has passed in a
 		      \mtxRecover{} transaction.
@@ -330,63 +327,46 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 		$\stOpen$ head output.}\label{fig:collectComTx}
 \end{figure}
 
-\newpage
 
 \subsection{\red{Deposit Transaction}}\label{sec:deposit-tx}
 
 \noindent The \mtxDeposit{} transaction initiates a (incremental) commit by
-locking funds on the mainchain for later collection by the head protocol. The
-validators in this transaction ensures that anything deposited is correctly
-recorded in the datum and allow for either collection or recovery of the
-deposit. The transaction is shown in Figure~\ref{fig:depositTx} and it
+locking funds in $\nuDeposit$ for later collection by the head protocol. Any
+transaction paying to $\nuDeposit$ is a \mtxDeposit{} transaction as there is no
+on-chain verification in \mtxDeposit{} transactions. Consequently, protocol
+actors \textbf{must ensure off-chain} that a valid datum is used when paying to
+the $\nuDeposit$ validator.\todo{explain why this is enough?} \\
 
-\begin{itemize}
-	\item has one or more inputs with reference $\txOutRef_{\mathsf{deposited}_{j}}$
-	      spending output $o_{\mathsf{deposited}_{j}}$ with
-	      $\val_{\mathsf{deposited}_{j}}$
-	\item mints a \emph{Deposit Token (DT)} identifying this deposit in token name $\tau_{\mathsf{deposit}}$
-	      \[
-		      \dt = \{\did \mapsto \tau_{\mathsf{deposit}} \mapsto 1\}
-	      \]
-	\item has one output paying to $\nuDeposit$ with value $\valDeposit$ and datum
-	      \[
-		      \datumDeposit = (\cid, \did, t_{\mathsf{recover}}, C)
-	      \]
-	      where
-	      \begin{mitemize}
-		      \item $\cid$ is the currency id of the target head protocol instance (see~\ref{sec:init-tx}),
-		      \item $\did$ is the currency id of the $\dt$,
-		      \item $t_{\mathsf{recover}}$ is a deadline after which the deposit can be recovered, and
-		      \item $C$ is the list of deposited UTxO (similar to commits in~\ref{sec:commit-tx}).
-	      \end{mitemize}
-\end{itemize}
+\noindent A valid deposit output is governed by $\nuDeposit$ with value $\valDeposit$ and datum
+\[
+	\datumDeposit = (\cid, t_{\mathsf{recover}}, C)
+\]
+where
+\begin{mitemize}
+	\item $\cid$ is the currency id of the target head protocol instance (see~\ref{sec:init-tx}),
+	\item $t_{\mathsf{recover}}$ is a deadline after which the deposit can be recovered, and
+	\item $C \in {(\txInputs \times \tyBytes)}^{*}$ is a list of transaction output
+	references with along with serialized outputs that should become available in
+	the head (similar to commits in~\ref{sec:commit-tx}).
+\end{mitemize}
 
-\noindent The $\muDeposit$ minting policy is the only script that verifies
-deposit transactions and can be redeemed with either a $\mathsf{Mint}$ or
-$\mathsf{Burn}$ redeemer:\todo{ALL of this could be done off-chain, no need for token + deposit checks?}
-\begin{itemize}
-	\item When $\redeemerDeposit = (\mathsf{Mint}, \overline{\txOutRef}_{\mathsf{deposited}})$,
-	      \begin{menumerate}
-		      \item All deposited value is in the output\footnote{The$\supseteq$ is
-			      important for real world situations where the values might not be
-			      exactly equal due to ledger constraints (i.e. to ensure a minimum
-			      value on outputs).}
-		      \[
-			      \valDeposit \supseteq \bigcup_{j=1}^{m} \val_{\mathsf{deposited}_{j}}
-		      \]
-		      \item Deposited outputs are recorded in the output datum
-		      \[
-			      C = \forall j \in \{1 \dots m\} : [(\txOutRef_{\mathsf{deposited}_{j}},\bytes(o_{\mathsf{deposited}_{j}}))]
-		      \]
-	      \end{menumerate}
-	\item When $\redeemerDeposit = \mathsf{Burn}$,\todo{move to Claim/Recover?}
-	      \begin{menumerate}
-		      \item All tokens for this policy in $\txMint$ need to be of negative quantity
-		      \[
-			      \forall \{\cid \mapsto \cdot \mapsto q\} \in \txMint : q < 0
-		      \]
-	      \end{menumerate}
-\end{itemize}
+\noindent Head protocol participants determine \textbf{off-chain} whether a
+deposit output $o_{\mathsf{desposit}}$ is eligible for their head by checking
+\begin{enumerate}
+	\item $\cid$ matches their head identifier,
+	\item $t_{\mathsf{recover}}$ is reasonably far in the future, and\todo{explain; relate to contestation period?}
+	\item $\valDeposit$ contains the value of all decoded outputs of $C$ from $\datumDeposit$.
+\end{enumerate}
+
+\noindent An example transaction which records all its spent inputs in a deposit output is
+shown in Figure~\ref{fig:depositTx}. The $j \in \{1 \dots m\}$ inputs of this example with reference $\txOutRef_{\mathsf{deposited}_{j}}$ each spend output $o_{\mathsf{deposited}_{j}}$ with $\val_{\mathsf{deposited}_{j}}$ would be recorded in the output datum as
+\[
+	C = \forall j \in \{1 \dots m\} : [(\txOutRef_{\mathsf{deposited}_{j}},\bytes(o_{\mathsf{deposited}_{j}}))]
+\]
+\noindent and the value check would need to satisfy
+\[
+	\valDeposit \supseteq \bigcup_{j=1}^{m} \val_{\mathsf{deposited}_{j}}
+\]
 
 \begin{figure}
 	\centering
