@@ -176,9 +176,11 @@
 \newcommand{\cemTxCon}{\tx^\equiv}
 
 \newcommand{\cid}{\mathsf{cid}} % head id / currency id
+\newcommand{\did}{\mathsf{did}} % deposit id
 
 \newcommand{\st}{\mathsf{ST}}
 \newcommand{\pt}{\mathsf{PT}}
+\newcommand{\dt}{\mathsf{DT}}
 
 % == Transactions ==
 
@@ -187,6 +189,8 @@
 \newcommand{\mtxCommit}{\textit{commit}}
 \newcommand{\mtxCCom}{\textit{collectCom}}
 \newcommand{\mtxCollect}{\textit{collectCom}}
+\newcommand{\mtxDeposit}{\textit{deposit}}
+\newcommand{\mtxRecover}{\textit{recover}}
 \newcommand{\mtxIncrement}{\textit{increment}}
 \newcommand{\mtxDecrement}{\textit{decrement}}
 \newcommand{\mtxAbort}{\textit{abort}}
@@ -240,6 +244,11 @@
 \newcommand{\valCommit}[1]{\val_{\mathsf{commit}_{#1}}}
 \newcommand{\datumCommit}[1]{\datum_{\mathsf{commit}_{#1}}}
 \newcommand{\redeemerCommit}[1]{\redeemer_{\mathsf{commit}_{#1}}}
+
+\newcommand{\nuDeposit}{\nu_\mathsf{deposit}}
+\newcommand{\valDeposit}{\val_{\mathsf{deposit}}}
+\newcommand{\datumDeposit}{\datum_{\mathsf{deposit}}}
+\newcommand{\redeemerDeposit}{\redeemer_{\mathsf{deposit}}}
 
 \newcommand{\nuSnap}{\nu_\mathsf{SN}}
 \newcommand{\nuNewname}{\nu_\mathsf{newestSN}}

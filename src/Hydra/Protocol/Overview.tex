@@ -9,10 +9,10 @@ guarantees full wealth preservation: no generation of funds can happen off-chain
 (inside a head) and no responsive honest party involved in a head can ever lose
 any funds other than by consenting to give them away. In exchange for decreased
 liveness guarantees (stop any time), it can essentially proceed at network speed
-under good conditions, thereby reducing latency and increasing throughput. At the
-same time, the head protocol provides the same capabilities as the mainchain by
-reusing the same ledger model and transaction formats --- making the protocol
-"isomorphic".
+under good conditions, thereby reducing latency and increasing throughput. At
+the same time, the head protocol provides the same capabilities as the mainchain
+by reusing the same ledger model and transaction formats --- making the protocol
+``isomorphic''.
 
 \subsection{Opening the head}
 
@@ -24,15 +24,16 @@ transactions that are restricted to head members (e.g., a non-member is not
 allowed to close the head) and for signing off-chain transactions in the head.
 
 The initiator then establishes the head by submitting an \emph{initial}
-transaction to the mainchain that contains the Hydra protocol parameters and mints special
-\emph{participation tokens (PT)} identifying the head members. The
+transaction to the mainchain that contains the Hydra protocol parameters and
+mints special \emph{participation tokens (PT)} identifying the head members. The
 \emph{initial} transaction also initializes a state machine (see
-Fig.~\ref{fig:SM_states_basic}) that manages the ``transfer'' of UTxOs into the
-head and back. The state machine comprises the four states: $\stInitial$,
+Fig.~\ref{fig:head-protocol-states}) that manages the ``transfer'' of UTxOs into
+the head and back. The state machine comprises the four states: $\stInitial$,
 $\stOpen$, $\stClosed$, and $\stFinal$. A \emph{state thread token (ST)} minted
-in \emph{initial} marks the head output and ensures contract continuity~\cite{eutxo}.
+in \emph{initial} marks the head output and ensures contract
+continuity~\cite{eutxo}.
 
-\input{Hydra/Protocol/Figures/SM_States_Basic}
+\input{Hydra/Protocol/Figures/head-protocol-states}
 
 Once the initial transaction appears on the mainchain, establishing the initial
 state $\stInitial$, each head member can attach a \mtxCom{} transaction, which
@@ -80,28 +81,42 @@ confirmed. As a consequence, a participant can safely delete (if wished) all
 transactions that have been processed into it as the snapshot's multi-signature
 is now evidence that this state once existed during the head evolution.
 
-\red{Besides processing ``normal'' transactions, participants can also request
-  to withdraw some UTxO they can spend from the Head and make it available on main
-  chain, or deposit some UTxO they can spend from L1 and make it available within the Head.
-  These processes are called decrement, via the \mtxDecrement{} transaction,
-  and increment, via the \mtxIncrement{} transaction.}
+\subsubsection{Updating an open head}
+
+Besides processing ``normal'' transactions, participants can also request to
+withdraw some UTxO they can spend from the Head and make it available on main
+chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall process is also called
+``decommit''.
+
+\red{The inverse of locking more UTxO on the mainchain and making it available
+	within the head is called (incremental) ``commit''. First, anyone may create a
+	deposit of one or more UTxO using a \mtxDeposit{}~\ref{sec:deposit-tx}
+	transaction. The head participants will observe this deposit and, once
+	settled, request off-chain agreement to include the deposited UTxO in the form
+	of a snapshot. With that agreement, an \mtxIncrement{}~\ref{sec:increment-tx}
+	transaction can be created and used to update the head state on the mainchain.
+	A deadline is associated with the deposit, which ensures that the UTxO is
+	locked up long enough to be safely consumed into the head without risk of
+	double spending. Should a deposit have not been picked up in time, a
+	\mtxRecover{}~\ref{sec:recover-tx} transaction allows anyone to unlock the
+	original UTxO.}
 
 \subsection{Closing the head}
 
 The head protocol is designed to allow any head member at any point in time to
 produce, without interaction, a certificate to close the head. This certificate
-is created from the latest confirmed snapshot, specifically from its snapshot
-number and the respective multisignature. Using this certificate, the head
-member may ``force close'' the head by advancing the mainchain state machine to
-the $\stClosed$ state.
+is created from the latest confirmed, multi-signed snapshot. Using this
+certificate, the head member may ``force close'' the head by advancing the
+mainchain state machine to the $\stClosed$ state.
 
 Once in $\stClosed$, the state machine grants parties a contestation period,
 during which parties may contest the closure by posting the certificate of a
-newer snapshot on-chain in a contest transaction. Contesting leads back to the state
-$\stClosed$ and each party can contest at most once. After the contestation period has elapsed, the state machine may
-proceed to the $\stFinal$ state. The state machine enforces that the outputs of
-the transaction leading to $\stFinal$ correspond exactly to the latest UTxO set
-seen during the contestation period.
+newer snapshot on-chain in a contest transaction. Contesting leads back to the
+state $\stClosed$ and each party can contest at most once. After the
+contestation period has elapsed, the state machine may proceed to the $\stFinal$
+state. The state machine enforces that the outputs of the transaction leading to
+$\stFinal$ correspond exactly to the latest UTxO set seen during the
+contestation period.
 
 \subsection{Differences}
 % TODO More details on what was in orig paper?
@@ -118,7 +133,7 @@ differences to the original Head protocol in~\cite{hydrahead20} are:
 	\item No hanging transactions due to `coordination'.
 	\item No acknowledgement nor confirmation of transactions.
 	\item No confirmation message for snapshots (two-round local confirmation).
-  \item Allow for \red{incremental commits and} decommits while head is open.
+	\item Allow for \red{incremental commits and} decommits while head is open.
 \end{itemize}
 
 %%% Local Variables:

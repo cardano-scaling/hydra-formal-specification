@@ -29,6 +29,13 @@ jobs:
         name: cardano-scaling
         authToken: '${{ secrets.CACHIX_CARDANO_SCALING_AUTH_TOKEN }}'
 
-    - name: ❄ Nix Flake Check
+    - name: ❄ Build specification
       run: |
         nix build
+
+    - name: 💾 Upload specification
+      uses: actions/upload-artifact@v4
+      with:
+        name: hydra-spec
+        path: |
+          ./result/*.pdf
