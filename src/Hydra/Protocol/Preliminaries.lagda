@@ -6,6 +6,13 @@ of the specification.
 
 \subsection{Notation}
 
+\AgdaHide{
+\begin{code}
+module Hydra.Protocol.Preliminaries where
+
+\end{code}
+}
+
 The specification uses set-notation based approach while also inspired
 by~\cite{eutxo-2}~and~\cite{eutxo}. Values $a$ are in a set $a \in \mathcal{A}$,
 also indicated as being of some type $a : \mathcal{A}$, and multidimensional values are
@@ -19,6 +26,7 @@ $x : \mathcal{A} \to f(x) : \mathcal{B}$, where function
 application of a function $f$ to an argument $x$ is written as $f(x)$. \\
 
 \noindent Furthermore, given a set $\mathcal{A}$, let
+
 \begin{itemize}
 	\item $\mathcal{A}^? = \mathcal{A} \cup \Diamond$ denotes an option: a value from $\mathcal{A}$ or no value at all indicated by $\bot$,
 	\item $\mathcal{A}^n$ be the set of all n-sized sequences over $\mathcal{A}$,
@@ -146,6 +154,15 @@ define the following shorthands:
 
 \subsubsection{Scripts}
 
+\AgdaHide{
+\begin{code}
+postulate
+  Data : Set
+  Γ : Set
+  𝔹 : Set
+\end{code}
+}
+
 Validator scripts are called \emph{phase-2} scripts in the Cardano Ledger
 specification (see~\cite{ledger-alonzo-spec} for a formal treatment of these). Scripts
 are used for multiple purposes, but most often (and sufficient for this
@@ -154,20 +171,27 @@ specification) as a \emph{spending} or \emph{minting} policy script.
 \begin{definition}[Minting Policy Script]
 	A script $\mu \in \mathcal{M}$ governing whether a value can be minted (or
 	burned), is a pure function with type
-	\[
-		\mu \in \mathcal{M} = (\rho : \tyData) \to (\txContext : \tyContext) \to\tyBool,
-	\]
+\textnormal{
+\begin{center}
+\begin{code}
+ℳ  = (ρ : Data) → (γ : Γ) → 𝔹
+\end{code}
+\end{center}
+}
 	where $\rho \in \tyData$ is the redeemer provided as part of the transaction
 	being validated and $\txContext \in \tyContext$ is the validation
 	context.
 \end{definition}
-
 \begin{definition}[Spending Validator Script]
 	A validator script $\nu \in \mathcal{V}$ governing whether an output can be
 	spent, is a pure function with type
-	\[
-		\nu \in \mathcal{V} = (\delta : \tyData) \to (\rho : \tyData) \to (\txContext : \tyContext) \to\tyBool,
-	\]
+\textnormal{
+\begin{center}
+\begin{code}
+𝒱 = (δ : Data) → (ρ : Data) → (γ : Γ) → 𝔹
+\end{code}
+\end{center}
+}
 	where $\delta \in \tyData$ is the datum available at the output to be spent,
 	$\rho \in \tyData$ is the redeemer data provided as part of the transaction
 	being validated, and $\txContext \in \tyContext$ is the validation
