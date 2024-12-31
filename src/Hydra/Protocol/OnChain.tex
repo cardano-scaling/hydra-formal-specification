@@ -571,7 +571,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	v' = v
   \]
 
-  \item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \red{\cup (\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{five} cases are distinguished:
+  \item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \red{\cup (\mathsf{Any}, \xi)} \red{\cup (\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{six} cases are distinguished:
   \begin{menumerate}
 	\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 	\[
@@ -583,6 +583,15 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 	  \eta' = \eta
 	\]
+	\red{
+    \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and any UTxO to increment or decrement must be empty in the closed state.
+	  \[
+		\eta_\Delta' = \eta_\alpha = \eta_\omega = \bot
+	  \]
+	  \[
+		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+	  \]
+	}
 	\red{
 	  \item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
 	  \[
