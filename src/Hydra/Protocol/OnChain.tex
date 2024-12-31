@@ -714,9 +714,17 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
   \[
 	s' > s
   \]
-  \item Based on the redeemer $\mathsf{ContestType} = \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{four} cases are distinguished:
+  \item Based on the redeemer $\mathsf{ContestType} = \red{(\mathsf{Current}, \xi)} \red{(\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{five} cases are distinguished:
 
   \begin{menumerate}
+	\item \red{$\mathsf{Current}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment or decrement must be $\bot$ in the closed state.
+	  \[
+		\eta_\Delta' = \eta_\alpha = \eta_\omega = \bot
+	  \]
+	  \[
+		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+	  \]
+	  }
 	%% FIXME: \red{\item ...} does not work
 	\item \red{$\mathsf{UnusedInc}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment must be $\bot$ in the closed state.
 	  \[
