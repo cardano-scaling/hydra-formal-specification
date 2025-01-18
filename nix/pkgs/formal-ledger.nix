@@ -1,17 +1,17 @@
-{ lib, mkDerivation, fetchFromGitHub, standard-library, standard-library-classes, standard-library-meta }:
+{ lib, mkDerivation, fetchFromGitHub, abstract-set-theory, standard-library, standard-library-classes, standard-library-meta }:
 
 mkDerivation rec {
   version = "0.2.0";
   pname = "formal-ledger";
 
   src = (fetchFromGitHub {
-    owner = "locallycompact";
+    owner = "IntersectMBO";
     repo = "formal-ledger-specifications";
-    rev = "d2a1746ec6671ee7699487ae41b97b275160e71a";
-    sha256 = "sha256-2G9VEimSLFm4j/LdM+khJ43jTRwc3q7eQEdY6w5KvD8=";
+    rev = "cef3505f275900c51737071b5671e5dad47dc576";
+    sha256 = "sha256-KAyojB3uClt72fhOzw9iDSCGzlL8EUhEtK/Xizj5pyU=";
   }) + "/src";
 
-  buildInputs = [ standard-library standard-library-classes standard-library-meta ];
+  buildInputs = [ abstract-set-theory standard-library standard-library-classes standard-library-meta ];
 
   meta = { };
 }
