@@ -17,6 +17,8 @@ let
 
       agda = withPackages [ ];
 
+      abstract-set-theory = callPackage ./pkgs/abstract-set-theory.nix { };
+
       formal-ledger = callPackage ./pkgs/formal-ledger.nix { };
 
       standard-library = callPackage ./pkgs/standard-library.nix { };

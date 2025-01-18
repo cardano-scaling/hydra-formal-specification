@@ -25,6 +25,7 @@
           };
           agdaLibraries = with agdaPackages;
             [
+              abstract-set-theory
               formal-ledger
               standard-library
               standard-library-classes
