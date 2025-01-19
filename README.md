@@ -14,7 +14,7 @@ nix build
 
 In a nix shell (`nix develop` or using `nix-direnv`) you can type check:
 ```sh
-agda src/Hydra/Protocol/Main.lagda
+agda src/Hydra/Protocol/Main.lagda.typ
 ```
 
 or build the PDF iteratively:

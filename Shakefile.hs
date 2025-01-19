@@ -13,29 +13,14 @@ main = shakeArgs shakeOptions{shakeFiles="_build"} $ do
       removeFilesAfter "_build" ["//*"]
 
     "_build/hydra-spec" <.> "pdf" %> \out -> do
-      assets <- getDirectoryFiles "src" ["//*.sty", "Hydra/Protocol/Figures/*.pdf", "//*.bib", "//*.ttf"]
-      need ["_build/latex" </> c | c <- assets]
+      assets <- getDirectoryFiles "src" ["//*.sty", "//*.pdf", "//*.bib", "//*.ttf", "//*.typ"]
+      need ["_build/src" </> c | c <- assets]
+      cmd_ $ "typst compile --root _build _build/src/Hydra/Protocol/Main.lagda.typ " <> out
 
-      srcs <- getDirectoryFiles "src" ["//*.lagda", "//*.tex"]
-      need ["_build/latex" </> c -<.> "tex" | c <- srcs]
-
-      cmd_ (Cwd "_build/latex") "latexmk -xelatex -shell-escape -halt-on-error Hydra/Protocol/Main.tex"
-      cmd_ "cp _build/latex/Main.pdf _build/hydra-spec.pdf"
-
-    -- Copy assets
-    forM ["sty", "pdf", "bib", "ttf"] $ \ext ->
-      ("_build/latex//*." <> ext)  %> \out -> do
+    forM ["typ", "sty", "pdf", "bib", "ttf"] $ \ext ->
+      ("_build//*." <> ext)  %> \out -> do
         let src = "src" </> dropDirectory1 (dropDirectory1 out)
         copyFile' src out
 
-    -- Copy or compile from lagda files
-    "_build/latex//*.tex"  %> \out -> do
-      let src = "src" </> dropDirectory1 (dropDirectory1 out)
-      b <- doesFileExist src
-      if b then do
-        need [src]
-        copyFile' src out
-      else do
-        let src = "src" </> dropDirectory1 (dropDirectory1 (out -<.> "lagda"))
-        need [src]
-        cmd_ $ "agda --transliterate --latex --latex-dir _build/latex " <> src
+    phony "check" $ do
+      cmd_ $ "agda src/Hydra/Protocol/Main.lagda.typ" 

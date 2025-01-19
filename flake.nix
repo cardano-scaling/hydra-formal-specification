@@ -40,7 +40,7 @@
               nativeBuildInputs = with pkgs; [
                 (agdaPackages.withPackages agdaLibraries)
                 (haskellPackages.ghcWithPackages (p: [ p.shake ]))
-                texlive.combined.scheme-full
+                typst
               ];
               meta = { };
               src = ./.;
@@ -53,8 +53,23 @@
               '';
             };
 
+
             default = packages.hydra-spec-pdf;
+
           };
+            checks.typecheck = agdaPackages.mkDerivation {
+              pname = "hydra-spec-typecheck";
+              version = "0.0.1";
+              nativeBuildInputs = with pkgs; [
+                (agdaPackages.withPackages agdaLibraries)
+                (haskellPackages.ghcWithPackages (p: [ p.shake ]))
+              ];
+              meta = { };
+              src = ./.;
+              buildPhase = ''
+                shake check
+              '';
+            };
         };
     };
 }
