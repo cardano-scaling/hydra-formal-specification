@@ -328,7 +328,7 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 \end{figure}
 
 
-\subsection{\red{Deposit Transaction}}\label{sec:deposit-tx}
+\subsection{Deposit Transaction}\label{sec:deposit-tx}
 
 \noindent The \mtxDeposit{} transaction initiates a (incremental) commit by
 locking funds in $\nuDeposit$ for later collection by the head protocol. Any
@@ -367,7 +367,6 @@ shown in Figure~\ref{fig:depositTx}. The $j \in \{1 \dots m\}$ inputs of this ex
 \[
   \valDeposit \supseteq \bigcup_{j=1}^{m} \val_{\mathsf{deposited}_{j}}
 \]
-
 \begin{figure}
   \centering
   \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/deposit-tx}
@@ -375,7 +374,7 @@ shown in Figure~\ref{fig:depositTx}. The $j \in \{1 \dots m\}$ inputs of this ex
 	output.}\label{fig:depositTx}
 \end{figure}
 
-\subsection{\red{Recover Transaction}}\label{sec:recover-tx}
+\subsection{Recover Transaction}\label{sec:recover-tx}
 
 \noindent If a \mtxDeposit{} transaction output (see~\ref{sec:deposit-tx}) was
 not collected into a head by an \mtxIncrement{}
@@ -410,7 +409,7 @@ to recover, and checks:
 	output.}\label{fig:recoverTx}
 \end{figure}
 
-\subsection{\red{Increment Transaction}}\label{sec:increment-tx}
+\subsection{Increment Transaction}\label{sec:increment-tx}
 
 \noindent The \mtxIncrement{} transaction (Figure~\ref{fig:incrementTx}) allows
 a participant to add a \mtxDeposit{} output~\ref{sec:deposit-tx} to an already
