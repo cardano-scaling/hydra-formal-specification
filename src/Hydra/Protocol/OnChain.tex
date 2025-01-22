@@ -563,14 +563,14 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
   $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\cPer$
   stay unchanged and the new state is governed again by $\nuHead$
   \[
-	(\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta', \eta_\Delta', \contesters,\Tfinal)
+	(\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta', \eta_\alpha\Delta', \eta_\omega\Delta', \contesters,\Tfinal)
   \]
   \item Last known open state version is recorded in closed state
   \[
 	v' = v
   \]
 
-  \item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \red{\cup (\mathsf{Any}, \xi)} \red{\cup (\mathsf{UnusedInc}, \xi, \eta_\alpha)} \cup (\mathsf{UnusedDec}, \xi) \red{\cup (\mathsf{UsedInc}, \xi)}  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot \red{and $\eta_\alpha$} and $\eta_\omega$ are the digests of the UTxO to \red{increment or} decrement respectively, \red{six} cases are distinguished:
+  \item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi) \cup (\mathsf{UnusedInc}, \xi, \eta_\alpha) \cup (\mathsf{UnusedDec}, \xi) \cup (\mathsf{UsedInc}, \xi)  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot and $\eta_\alpha$ and $\eta_\omega$ are the digests of the UTxO to increment or decrement respectively, six cases are distinguished:
   \begin{menumerate}
 	\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 	\[
@@ -582,64 +582,63 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 	  \eta' = \eta
 	\]
-	\red{
     \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and any UTxO to increment or decrement must be empty in the closed state.
 	  \[
-		\eta_\Delta' = \eta_\alpha = \eta_\omega = \bot
+		\eta_\alpha\Delta' = \eta_\alpha = \bot
+	  \]
+	  \[
+		\eta_\omega\Delta' = \eta_\omega = \bot
 	  \]
 	  \[
 		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
 	  \]
-	}
-	\red{
 	  \item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
 	  \[
-		\eta_\Delta' = \bot
+	    \eta_\alpha  \neq \bot
 	  \]
 	  \[
-		\eta_\omega = \bot
+	    \eta_\alpha\Delta' = \bot
+	  \]
+	  \[
+		\eta_\omega\Delta' = \eta\omega = \bot
 	  \]
 	  \[
 		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
 	  \]
 	  where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
-	}
 	\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
 	\[
-	  \eta_\omega = \eta_\Delta' \neq \bot
+	  \eta_\alpha\Delta' = \eta_\alpha = \bot
 	\]
-	\red{
-	  \[
-		\eta_\alpha = \bot
-	  \]
-	}
 	\[
-	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+	  \eta_\omega\Delta' = \eta_\omega \neq \bot
+	\]
+	\[
+	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
 	\]
 	\todo{this is hard to understand}
-	\red{
-	  \item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
+	\item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
 	  \[
-		\eta_\alpha = \eta_\Delta' \neq \bot
+		\eta_\alpha\Delta' = \eta_\alpha \neq \bot
 	  \]
 	  \[
-		\eta_\omega = \bot
+	    \eta_\omega\Delta' = \eta_\omega = \bot
 	  \]
 	  \[
 		\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
-	  \]
-	}
-	\item $\mathsf{UsedDec}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
-	\[
-	  \eta_\omega = \eta_\Delta' = \bot
 	\]
-	\red{
+	\item $\mathsf{UsedDec}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
 	  \[
-		\eta_\alpha = \bot
+		\eta_\alpha\Delta' = \eta_\alpha = \bot
 	  \]
-	}
+	  \[ 
+	    \eta_\omega \neq  \bot
+	  \]
+	  \[ 
+	    \eta_\omega\Delta' = \bot
+	  \]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
 	\]
 	where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
   \end{menumerate}
