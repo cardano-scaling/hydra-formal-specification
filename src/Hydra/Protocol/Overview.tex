@@ -88,7 +88,7 @@ withdraw some UTxO they can spend from the Head and make it available on main
 chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall process is also called
 ``decommit''.
 
-\red{The inverse of locking more UTxO on the mainchain and making it available
+The inverse of locking more UTxO on the mainchain and making it available
 	within the head is called (incremental) ``commit''. First, anyone may create a
 	deposit of one or more UTxO using a \mtxDeposit{}~\ref{sec:deposit-tx}
 	transaction. The head participants will observe this deposit and, once
@@ -99,7 +99,7 @@ chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall p
 	locked up long enough to be safely consumed into the head without risk of
 	double spending. Should a deposit have not been picked up in time, a
 	\mtxRecover{}~\ref{sec:recover-tx} transaction allows anyone to unlock the
-	original UTxO.}
+	original UTxO.
 
 \subsection{Closing the head}
 
@@ -133,7 +133,7 @@ differences to the original Head protocol in~\cite{hydrahead20} are:
 	\item No hanging transactions due to `coordination'.
 	\item No acknowledgement nor confirmation of transactions.
 	\item No confirmation message for snapshots (two-round local confirmation).
-	\item Allow for \red{incremental commits and} decommits while head is open.
+	\item Allow for incremental commits and decommits while head is open.
 \end{itemize}
 
 %%% Local Variables:

@@ -748,7 +748,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	  \eta_\omega\Delta' = \eta_\omega \neq \bot
 	\]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
 	\]
 	  \item $\mathsf{UsedInc}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
 	  \[
@@ -772,7 +772,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	    \eta_\omega\Delta' = \bot
 	  \]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' \red{|| \eta_\alpha} || \eta_\omega),\xi) = \true
+	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
 	\]
 	where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
   \end{menumerate}
