@@ -20,8 +20,6 @@
 
 \begin{code}[hide]
 module Hydra.Protocol.Main where
-
-open import Hydra.Protocol.Throwaway
 \end{code}
 
 \input{Hydra/Protocol/Introduction}
