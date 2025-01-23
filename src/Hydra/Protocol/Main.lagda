@@ -31,7 +31,6 @@ open import Hydra.Protocol.Throwaway
 \input{Hydra/Protocol/OnChain}
 \input{Hydra/Protocol/OffChain}
 \input{Hydra/Protocol/Security}
-\input{Hydra/Protocol/Throwaway}
 
 \bibliographystyle{plain}
 \bibliography{short}
