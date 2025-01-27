@@ -581,7 +581,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 	  \eta' = \eta
 	\]
-    \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and any UTxO to increment or decrement must be empty in the closed state.
+    \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and both UTxO to increment and decrement must be empty in the closed state.
 	  \[
 		\eta_\alpha\Delta' = \eta_\alpha = \bot
 	  \]
@@ -817,7 +817,7 @@ Once the contestation phase is over, a head may be finalized by posting a
 distributes UTxOs from the head according to the latest state. It consists of
 \begin{itemize}
   \item one input spending from $\nuHead$ holding the $\st$, and
-  \item outputs $o_{1} \dots o_{m+n}$ to distribute UTxOs.
+  \item outputs $o_{1} \dots o_{m+n+n'}$ to distribute UTxOs.
 \end{itemize}
 
 Note that \mtxFanout{} represents a final transition of the state machine and
@@ -827,17 +827,17 @@ hence there is no state machine output.
   \centering
   \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.pdf}
   \caption{\mtxFanout{} transaction spending the $\stClosed$ head output and
-	distributing funds with outputs $o_{1} \dots o_{m}$.}\label{fig:fanoutTx}
+	distributing funds with outputs $o_{1} \dots o_{m+n+n'}$.}\label{fig:fanoutTx}
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{fanout}, m, n, o)$, where $m$, $n$ and $o$ are
+$\redeemerHead = (\mathsf{fanout}, m, n, n')$, where $m$, $n$ and $n'$ are
 outputs to distribute from the $\stClosed$ state, and checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stClosed$ to terminal state
   $\stFinal$: % XXX: What does this actually mean?
   \[
-	(\stClosed,\cid,\hydraKeys,\cPer,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\Tfinal) \xrightarrow[m,n]{\stFanout} \stFinal
+	(\stClosed,\cid,\hydraKeys,\cPer,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\Tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
   \]
   \item The first $m$ outputs are distributing funds according to $\eta$. That is,
   the outputs exactly correspond to the UTxO canonically combined $U^{\#}$ (see
@@ -849,13 +849,13 @@ outputs to distribute from the $\stClosed$ state, and checks:
   $\eta_\alpha\Delta$. That is, the outputs exactly correspond to the UTxO canonically
   combined $U^{\#}_{\alpha\Delta}$ (see Section~\ref{sec:collect-tx}):
   \[
-	\eta_{\alpha\Delta} = U^{\#}_{\alpha\Delta} = \hash(\bigoplus_{j=n}^{n} \bytes(o_{j}))
+	\eta_{\alpha\Delta} = U^{\#}_{\alpha\Delta} = \hash(\bigoplus_{j=m}^{m+n} \bytes(o_{j}))
   \]
-  \item The next $o$ outputs are distributing funds according to
+  \item The next $n'$ outputs are distributing funds according to
   $\eta_\omega\Delta$. That is, the outputs exactly correspond to the UTxO canonically
   combined $U^{\#}_{\omega\Delta}$ (see Section~\ref{sec:collect-tx}):
   \[
-	\eta_{\omega\Delta} = U^{\#}_{\omega\Delta} = \hash(\bigoplus_{j=o}^{o} \bytes(o_{j}))
+	\eta_{\omega\Delta} = U^{\#}_{\omega\Delta} = \hash(\bigoplus_{j=m'}^{m+n'} \bytes(o_{j}))
   \]
   \item Transaction is posted after contestation deadline $\txValidityMin > \Tfinal$.
   \item All tokens are burnt
