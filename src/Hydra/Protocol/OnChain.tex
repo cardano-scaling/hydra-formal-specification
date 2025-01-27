@@ -56,7 +56,7 @@ by a single output reference parameter $\seed \in \tyOutRef$:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/initTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/initTx.svg}
   \caption{\mtxInit{} transaction spending a seed UTxO, and producing the head
 	output in state $\stInitial$ and initial outputs for each participant.}\label{fig:initTx}
 \end{figure}
@@ -177,7 +177,7 @@ by the appropriate redeemer.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/commitTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/commitTx.svg}
   \caption{\mtxCom{} transaction spending an initial output and a single
 	committed output, and producing a commit output.}\label{fig:commitTx}
 \end{figure}
@@ -243,7 +243,7 @@ reimburse, and checks:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/abortTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/abortTx.svg}
   \caption{\mtxAbort{} transaction spending the $\stInitial$ state head
 	output and collecting all initial and commit outputs, which get reimbursed
 	by outputs $o_{1} \dots o_{m}$. Note that each $\pt$ may be in either, an
@@ -320,7 +320,7 @@ $\redeemerHead = \mathsf{collect}$ and checks:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/collectComTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/collectComTx.svg}
   \caption{\mtxCCom{} transaction spending the head output in $\stInitial$
 	state and collecting from multiple commit outputs into a single
 	$\stOpen$ head output.}\label{fig:collectComTx}
@@ -368,7 +368,7 @@ shown in Figure~\ref{fig:depositTx}. The $j \in \{1 \dots m\}$ inputs of this ex
 \]
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/deposit-tx}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/depositTx.svg}
   \caption{\mtxDeposit{} transaction spending multiple UTxO into a deposit
 	output.}\label{fig:depositTx}
 \end{figure}
@@ -403,7 +403,7 @@ to recover, and checks:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/recover-tx}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/recoverTx.svg}
   \caption{\mtxRecover{} transaction restoring UTxO of a deposit
 	output.}\label{fig:recoverTx}
 \end{figure}
@@ -480,7 +480,7 @@ checks:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/incrementTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/incrementTx.svg}
   \caption{\mtxIncrement{} transaction spending an open head output,
 	producing a new head output which includes the new UTxO.}\label{fig:incrementTx}
 \end{figure}
@@ -533,7 +533,7 @@ validator checks:
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/decrementTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/decrementTx.svg}
   \caption{\mtxDecrement{} transaction spending an open head output,
 	producing a new head output and multiple decommitted outputs.}\label{fig:decrementTx}
 \end{figure}
@@ -550,7 +550,7 @@ In order to close a head, a head member may post the \mtxClose{} transaction
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/closeTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/closeTx.svg}
   \caption{\mtxClose{} transaction spending the $\stOpen$ head output and producing a $\stClosed$ head output.}\label{fig:closeTx}
 \end{figure}
 
@@ -686,7 +686,7 @@ transaction has
 \end{itemize}
 
 \begin{figure}
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/contestTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/contestTx.svg}
   \caption{\mtxContest{} transaction spending the $\stClosed$ head output and
 	producing a different $\stClosed$ head output.}\label{fig:contestTx}
 \end{figure}
@@ -825,7 +825,7 @@ hence there is no state machine output.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.pdf}
+  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.svg}
   \caption{\mtxFanout{} transaction spending the $\stClosed$ head output and
 	distributing funds with outputs $o_{1} \dots o_{m+n+n'}$.}\label{fig:fanoutTx}
 \end{figure}
