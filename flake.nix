@@ -40,6 +40,7 @@
               nativeBuildInputs = with pkgs; [
                 (agdaPackages.withPackages agdaLibraries)
                 (haskellPackages.ghcWithPackages (p: [ p.shake ]))
+                inkscape
                 texlive.combined.scheme-full
               ];
               meta = { };
