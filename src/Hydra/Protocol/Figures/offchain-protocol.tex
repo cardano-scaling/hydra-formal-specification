@@ -48,11 +48,11 @@
 							$\Uinit \gets \bigcup_{j=1}^{n} U_j$ \;
 							% $\Out~(\hpSnap,(0,U_0))$ \;
 							$\hatmL \gets \Uinit$ \;
-							$\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset \red{, \emptyset})}$ \;
+							$\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset , \emptyset)}$ \;
 							$\hatv, \hats \gets 0$ \;
 							$\hatmT \gets \emptyset$ \;
 							$\tx_\omega \gets \bot$ \;
-							\red{$U_\alpha \gets \emptyset$ \;}
+							$U_\alpha \gets \emptyset$ \;
 						}
 
 					\end{walgo}
@@ -75,7 +75,7 @@
 								$\hatmT \gets \hatmT \cup \{\tx\}$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{U_\alpha}, \tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha, \tx_\omega)$ \;
 								}
 							}
 						}
@@ -83,37 +83,35 @@
 
 						%%% REC DEC
 						\On{$(\mathtt{reqDec},\tx)$ from $\party_j$}{
-							\Wait{$\red{U_{\alpha} = \emptyset ~ \land ~}\tx_\omega  = \bot ~ \land ~ \hatmL \applytx \tx \ne \bot$}{
+							\Wait{$U_{\alpha} = \emptyset ~ \land ~\tx_\omega  = \bot ~ \land ~ \hatmL \applytx \tx \ne \bot$}{
 								$\hatmL \gets \hatmL \applytx \tx \setminus \mathsf{outputs}(\tx)$ \;
 								$\tx_\omega \gets \tx$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{U_\alpha},\tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha,\tx_\omega)$ \;
 								}
 							}
 						}
 						\vspace{12pt}
 
 						%%% DEPOSIT
-						\red{
-							\On{$(\mathtt{depositTx}, U)$ from chain}{
-							  % FIXME: wait on chain events is a bit weird. Wait
-							  % in general feels like avoiding book keeping and
-							  % relying a lot on assumption of a perfect queue
-							  \Wait{$\tx_\omega = \bot ~ \land ~ U_{\alpha} = \emptyset$}{
-								$U_{\alpha} = U$ \;
-								% issue snapshot if we are leader
-								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-								  \Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{U_\alpha}, \tx_\omega)$ \;
-								}
-							  }
-							}
-						}
+					    \On{$(\mathtt{depositTx}, U)$ from chain}{
+					      % FIXME: wait on chain events is a bit weird. Wait
+					      % in general feels like avoiding book keeping and
+					      % relying a lot on assumption of a perfect queue
+					      \Wait{$\tx_\omega = \bot ~ \land ~ U_{\alpha} = \emptyset$}{
+					    	$U_{\alpha} = U$ \;
+					    	% issue snapshot if we are leader
+					    	\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
+					    	  \Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha, \tx_\omega)$ \;
+					    	}
+					      }
+					    }
 						\vspace{12pt}
 
 						%%% REQ SN
-						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} \red{, U_\alpha} , \tx_\omega)$ from $\party_j$}{
-							\red{\Req{$\tx_\omega = \bot ~ \lor ~ U_\alpha = \emptyset$}} \;
+						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} , U_\alpha , \tx_\omega)$ from $\party_j$}{
+							\Req{$\tx_\omega = \bot ~ \lor ~ U_\alpha = \emptyset$} \;
 							\Req{$v = \hatv ~ \land ~ s = \hats + 1 ~ \land ~ \hpLdr(s) = j$} \;
 							\Wait{$\hats = \bar{\mc S}.s$}{
 								\blue{
@@ -125,9 +123,9 @@
 								$\hats \gets s$ \;
 								% TODO: DRY message creation
 								$\eta \gets \combine(U)$ \;
-								\red{$\eta_\alpha \gets \mathsf{combine}(U_\alpha)$ \;}
+								$\eta_\alpha \gets \mathsf{combine}(U_\alpha)$ \;
 								$\eta_\omega \gets \mathsf{combine}(\mathsf{outputs}(\tx_\omega))$ \;
-								$\msSig_i \gets \msSign(\hydraSigningKey, (\cid || v || \hats || \eta \red{ || \eta_\alpha} || \eta_\omega))$ \;
+								$\msSig_i \gets \msSign(\hydraSigningKey, (\cid || v || \hats || \eta || \eta_\alpha || \eta_\omega))$ \;
 								% TODO: use a seen snapshot to keep track of things easier
 								$\hatSigma \gets \emptyset$ \;
 								$\Multi{}~(\hpAS,\hats,\msSig_i)$ \;
@@ -161,13 +159,13 @@
 									% TODO: DRY message creation
 									$\eta \gets \combine(\hatmU)$ \;
 
-									\red{$\eta_\alpha \gets \mathsf{combine}(U_\alpha)$ \;}
+									$\eta_\alpha \gets \mathsf{combine}(U_\alpha)$ \;
 									$U_\omega \gets \mathsf{outputs}(\tx_\omega)$ \;
 									$\eta_\omega \gets \mathsf{combine}(U_\omega)$ \;
 									% NOTE: Implementation differs here and
 									% below as it stores seen version in seen
 									% snapshot and uses that to verify
-									\Req{} $\msVfy(\hydraKeysAgg, (\cid || \blue{\hatv ||} \hats || \eta \red{|| \eta_\alpha} || \eta_\omega), \msCSig)$ \;
+									\Req{} $\msVfy(\hydraKeysAgg, (\cid || \blue{\hatv ||} \hats || \eta || \eta_\alpha || \eta_\omega), \msCSig)$ \;
 									% create confirmed snapshot for later reference
 									\blue{$\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_\alpha, U_\omega)$ \;}
 									$\bar{\mc S}.\sigma \gets \msCSig$ \;
@@ -175,16 +173,16 @@
 									$\forall \tx \in \mT_{\mathsf{req}} : \Out (\hpConf,\tx)$ \;
 
 									\If{${\bar S}.U_\omega \ne \bot$}{
-										$\PostTx{}~(\mathtt{decrementTx}, \hatv, \hats, \eta, \red{\eta_\alpha}, \eta_\omega)$ \;
+										$\PostTx{}~(\mathtt{decrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega)$ \;
 									}
 
-									\red{\If{${\bar S}.U_\alpha \ne \bot$}{
-										$\PostTx{}~(\mathtt{incrementTx}, \hatv, \hats, \eta, \red{\eta_\alpha}, \eta_\omega)$ \;
-									}}
+									\If{${\bar S}.U_\alpha \ne \bot$}{
+										$\PostTx{}~(\mathtt{incrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega)$ \;
+									}
 
 									% issue snapshot if we are leader
 									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
-										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT \red{, U_\alpha}, \tx_\omega)$ \;
+										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , U_\alpha, \tx_\omega)$ \;
 									}
 								}
 							}
@@ -201,14 +199,14 @@
 						\vspace{12pt}
 
 						%%% INCREMENT
-						\red{\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
+						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
 							% XXX: require?
 							\If{$U_\alpha = U$}{
 								$\hatmL \gets \hatmL \cup U$ \;
 								$U_\alpha \gets \emptyset$\;
 								$\hatv \gets v$ \;
 							}
-						}}
+						}
 
 					\end{walgo}
 				}
@@ -231,11 +229,11 @@
 					% CLOSE from client
 					\On{$(\hpClose)$ from client}{
 						$\eta \gets \combine(\bar{\mc S}.U)$ \;
-						\red{$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha$) \;}
+						$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha$) \;
 						$\eta_\omega \gets \combine(\bar{\mc S}.U_\omega)$ \;
 						$\xi \gets \bar{\mc S}.\sigma$ \;
 						% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
-						$\PostTx{}~(\mtxClose, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta \red{, \eta_\alpha}, \eta_\omega, \xi)$ \;
+						$\PostTx{}~(\mtxClose, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta , \eta_\alpha, \eta_\omega, \xi)$ \;
 					}
 				\end{walgo}
 			}
@@ -245,11 +243,11 @@
 					\On{$(\gcChainClose, \eta) \lor (\gcChainContest, s_{c}, \eta)$ from chain}{
 						\If{$\bar{\mc S}.s > s_{c}$}{
 							$\eta \gets \combine(\bar{\mc S}.U)$ \;
-							\red{$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha$) \;}
+							$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha$) \;
 							$\eta_\omega \gets \combine({\bar{\mc S}.U_\omega})$ \;
 							$\xi \gets \bar{\mc S}.\sigma$ \;
 							% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
-							$\PostTx{}~(\mtxContest, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta \red{, \eta_\alpha}, \eta_\omega , \xi)$ \;
+							$\PostTx{}~(\mtxContest, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta , \eta_\alpha, \eta_\omega , \xi)$ \;
 						}
 					}
 				\end{walgo}

@@ -20,8 +20,6 @@
 
 \begin{code}[hide]
 module Hydra.Protocol.Main where
-
-open import Hydra.Protocol.Throwaway
 \end{code}
 
 \input{Hydra/Protocol/Introduction}
@@ -31,7 +29,6 @@ open import Hydra.Protocol.Throwaway
 \input{Hydra/Protocol/OnChain}
 \input{Hydra/Protocol/OffChain}
 \input{Hydra/Protocol/Security}
-\input{Hydra/Protocol/Throwaway}
 
 \bibliographystyle{plain}
 \bibliography{short}
