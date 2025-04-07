@@ -191,21 +191,16 @@
 
 						%%% DECREMENT
 						\On{$(\mathtt{decrementTx}, U, v)$ from chain}{
-							\If{$\mathsf{outputs}(\tx_{\omega}) = U$}{
-								$\tx_{\omega} \gets \bot$ \;
-								$\hatv \gets v$ \;
-							}
+							$\tx_{\omega} \gets \bot$ \;
+							$\hatv \gets v$ \;
 						}
 						\vspace{12pt}
 
 						%%% INCREMENT
 						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
-							% XXX: require?
-							\If{$U_\alpha = U$}{
-								$\hatmL \gets \hatmL \cup U$ \;
-								$U_\alpha \gets \emptyset$\;
-								$\hatv \gets v$ \;
-							}
+							$\hatmL \gets \hatmL \cup U$ \;
+							$U_\alpha \gets \emptyset$\;
+							$\hatv \gets v$ \;
 						}
 
 					\end{walgo}
