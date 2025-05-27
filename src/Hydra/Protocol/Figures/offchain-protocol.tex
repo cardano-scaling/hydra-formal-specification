@@ -1,7 +1,6 @@
+\def\sfact{0.6}
 
 \begin{figure*}[t!]
-
-	\def\sfact{0.8}
 	\centering
 	\begin{algobox}{Coordinated Hydra Head}
 		\medskip
@@ -75,7 +74,7 @@
 								$\hatmT \gets \hatmT \cup \{\tx\}$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha, \tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\tx^\#_\alpha}, \tx_\omega)$ \;
 								}
 							}
 						}
@@ -88,35 +87,32 @@
 								$\tx_\omega \gets \tx$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha,\tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\bot}, \tx_\omega)$ \;
 								}
 							}
 						}
 						\vspace{12pt}
 
-						%%% DEPOSIT
-					    \On{$(\mathtt{depositTx}, U)$ from chain}{
-					      % FIXME: wait on chain events is a bit weird. Wait
-					      % in general feels like avoiding book keeping and
-					      % relying a lot on assumption of a perfect queue
-					      \Wait{$\tx_\omega = \bot ~ \land ~ U_{\alpha} = \emptyset$}{
-					    	$U_{\alpha} = U$ \;
-					    	% issue snapshot if we are leader
-					    	\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-					    	  \Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, U_\alpha, \tx_\omega)$ \;
-					    	}
-					      }
-					    }
-						\vspace{12pt}
-
 						%%% REQ SN
-						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} , U_\alpha , \tx_\omega)$ from $\party_j$}{
-							\Req{$\tx_\omega = \bot ~ \lor ~ U_\alpha = \emptyset$} \;
+						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} , \red{\tx_\alpha}, \tx_\omega)$ from $\party_j$}{
 							\Req{$v = \hatv ~ \land ~ s = \hats + 1 ~ \land ~ \hpLdr(s) = j$} \;
-							\Wait{$\hats = \bar{\mc S}.s$}{
+							\Wait{$\hats = \bar{\mc S}.s \red{~ \land ~ v = \hatv}$}{
+								\Req{$\tx_\omega = \bot ~ \red{\lor ~ \tx_\alpha = \bot}$} \;
 								\blue{
+									TODO: require consistent with $\bar{\mc S}$ \;
 									\Req{$\bar{\mc S}.U \applytx \tx_\omega \not= \bot$} \;
 									$U_{\mathsf{active}} \gets \bar{\mc S}.U \applytx \tx_\omega \setminus \mathsf{outputs}(\tx_\omega)$ \;
+								}
+								\red{
+								  \If{$\tx_\alpha \neq \bot$}{
+									$\mathcal{D} \gets \mathcal{D}[\tx_\alpha]$ \;
+                                    \Req{$\mathcal{D}.\mathsf{status} \neq \mathsf{Expired}$} \;
+                                    \Wait{$\mathcal{D}.\mathsf{status} = \mathsf{Active}$}{
+									  TODO: require consistent with $\bar{\mc S}$ \;
+									  $U_\alpha \gets \mathcal{D}.U$ \;
+                                      $U_{\mathsf{active}} \gets U_{\mathsf{active}} \cup  U_{\alpha}$ \;
+									}
+								  }
 								}
 								\Req{$U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}} \not= \bot$} \;
 								$U \gets U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}}$ \;
@@ -141,6 +137,7 @@
 								}
 							}
 						}
+						\vspace{12pt}
 					\end{walgo}
 				} &
 
@@ -182,26 +179,58 @@
 
 									% issue snapshot if we are leader
 									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
-										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , U_\alpha, \tx_\omega)$ \;
+										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , \red{\tx^\#_\alpha}, \tx_\omega)$ \;
 									}
 								}
 							}
 						}
 						\vspace{12pt}
 
+						%%% DEPOSIT
+					    \On{$(\mathtt{depositTx}, \red{\tx^{\#}_{\alpha}, U, t_{\mathsf{created}}, t_{\mathsf{deadline}}})$ from chain}{
+						  \red{$\mathcal{D} \gets \mathcal{D} \cup (\tx^{\#}_{\alpha}, \mathsf{depositObj}(U, t_{\mathsf{created}}, t_{\mathsf{deadline}}, \mathsf{Inactive}))$}
+					    }
+						\vspace{12pt}
+
+						%%% RECOVER
+						\red{
+					    \On{$(\mathtt{recoverTx}, \tx^{\#}_{\alpha})$ from chain}{
+						  \red{$\mathcal{D} \gets \mathcal{D} \setminus (\tx^{\#}_{\alpha}, \cdot)$}
+					    }
+						}
+						\vspace{12pt}
+
 						%%% DECREMENT
 						\On{$(\mathtt{decrementTx}, U, v)$ from chain}{
-							$\tx_{\omega} \gets \bot$ \;
 							$\hatv \gets v$ \;
+							$\tx_{\omega} \gets \bot$ \;
 						}
 						\vspace{12pt}
 
 						%%% INCREMENT
 						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
-							$\hatmL \gets \hatmL \cup U$ \;
-							$U_\alpha \gets \emptyset$\;
 							$\hatv \gets v$ \;
+							$\red{\tx^{\#}_\alpha \gets \bot}$\;
+							$\hatmL \gets \hatmL \cup U$ \;
 						}
+						\vspace{12pt}
+
+						%%% TICK
+						\red{
+						\On{$(\mathtt{tick}, t)$ from chain}{
+							\For{$D \in \mathcal{D}$}{
+							    $D.status \gets TODO$
+							}
+							\If{$\exists D \in \mathcal{D} : D.status = \mathsf{Active}$}{
+								% issue snapshot if we are leader
+								% FIXME: \tx^\#_\alpha undefined
+								\If{$\tx^\#_\alpha \neq \bot \land \tx_\omega = \bot \land \hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \tx^\#_\alpha, \bot)$ \;
+								}
+							}
+						}
+						}
+						\vspace{12pt}
 
 					\end{walgo}
 				}
@@ -212,8 +241,6 @@
 \end{figure*}
 \clearpage
 \begin{figure*}[t!]
-
-	\def\sfact{0.8}
 	\begin{tabular}{c}
 		\\
 		\multicolumn{1}{l}{\line(1,0){490}}
