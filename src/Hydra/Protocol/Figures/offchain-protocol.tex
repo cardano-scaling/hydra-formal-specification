@@ -8,21 +8,22 @@
 			%%% Initializing the head
 			\begin{tabular}{cc}
 				\adjustbox{valign=t,scale=\sfact}{
-					\begin{walgo}{0.6}
+					\begin{walgo}{0.7}
 						%%% INIT
 						\On{$(\hpInit)$ from client}{
 							$n \gets |\hydraKeys^{setup}|$ \;
 							$\hydraKeysAgg \gets \msCombVK(\hydraKeys^{setup})$ \;
 							$\cardanoKeys \gets \cardanoKeys^{setup}$\;
-							$\cPer \gets \cPer^{setup}$ \;
-							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\cPer)$ \;
+							$\Tcontest \gets \Tcontest^{setup}$ \;
+							\red{$\Tdeposit \gets \Tdeposit^{setup}$ \;}
+							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\Tcontest)$ \;
 						}
 						\vspace{12pt}
 
-						\On{$(\gcChainInitial, \cid, \seed, \nop, \hydraKeysAgg, \cardanoKeys^{\#}, \cPer)$ from chain}{
+						\On{$(\gcChainInitial, \cid, \seed, \nop, \hydraKeysAgg, \cardanoKeys^{\#}, \Tcontest)$ from chain}{
 						\Req{} $\hydraKeysAgg=\msCombVK(\hydraKeys^{setup})$\;
 						\Req{} $\cardanoKeys^{\#}= [ \hash(k)~|~\forall k \in \cardanoKeys^{setup}]$\;
-						\Req{} $\cPer=\cPer^{setup}$\;
+						\Req{} $\Tcontest=\Tcontest^{setup}$\;
 						\Req{} $\cid = \hash(\muHead(\seed))$ \;
 						}
 					\end{walgo}
@@ -51,7 +52,8 @@
 							$\hatv, \hats \gets 0$ \;
 							$\hatmT \gets \emptyset$ \;
 							$\tx_\omega \gets \bot$ \;
-							$U_\alpha \gets \emptyset$ \;
+							% NOTE: Actually a tx id, but does not matter
+							\red{$\tx_\alpha \gets \bot$ \;}
 						}
 
 					\end{walgo}
@@ -74,7 +76,7 @@
 								$\hatmT \gets \hatmT \cup \{\tx\}$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\tx^\#_\alpha}, \tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\tx_\alpha}, \tx_\omega)$ \;
 								}
 							}
 						}
@@ -99,9 +101,11 @@
 							\Wait{$\hats = \bar{\mc S}.s \red{~ \land ~ v = \hatv}$}{
 								\Req{$\tx_\omega = \bot ~ \red{\lor ~ \tx_\alpha = \bot}$} \;
 								\blue{
+								  \If{$\tx_\alpha \neq \bot$}{
 									TODO: require consistent with $\bar{\mc S}$ \;
 									\Req{$\bar{\mc S}.U \applytx \tx_\omega \not= \bot$} \;
 									$U_{\mathsf{active}} \gets \bar{\mc S}.U \applytx \tx_\omega \setminus \mathsf{outputs}(\tx_\omega)$ \;
+								  }
 								}
 								\red{
 								  \If{$\tx_\alpha \neq \bot$}{
@@ -179,7 +183,7 @@
 
 									% issue snapshot if we are leader
 									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
-										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , \red{\tx^\#_\alpha}, \tx_\omega)$ \;
+										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , \red{\tx_\alpha}, \tx_\omega)$ \;
 									}
 								}
 							}
@@ -187,15 +191,15 @@
 						\vspace{12pt}
 
 						%%% DEPOSIT
-					    \On{$(\mathtt{depositTx}, \red{\tx^{\#}_{\alpha}, U, t_{\mathsf{created}}, t_{\mathsf{deadline}}})$ from chain}{
-						  \red{$\mathcal{D} \gets \mathcal{D} \cup (\tx^{\#}_{\alpha}, \mathsf{depositObj}(U, t_{\mathsf{created}}, t_{\mathsf{deadline}}, \mathsf{Inactive}))$}
+					    \On{$(\mathtt{depositTx}, \red{\tx_{\alpha}, U, t_{\mathsf{created}}, t_{\mathsf{deadline}}})$ from chain}{
+						  \red{$\mathcal{D} \gets \mathcal{D} \cup (\tx_{\alpha}, \mathsf{depositObj}(U, t_{\mathsf{created}}, t_{\mathsf{deadline}}, \mathsf{Inactive}))$}
 					    }
 						\vspace{12pt}
 
 						%%% RECOVER
 						\red{
-					    \On{$(\mathtt{recoverTx}, \tx^{\#}_{\alpha})$ from chain}{
-						  \red{$\mathcal{D} \gets \mathcal{D} \setminus (\tx^{\#}_{\alpha}, \cdot)$}
+					    \On{$(\mathtt{recoverTx}, \tx_{\alpha})$ from chain}{
+						  \red{$\mathcal{D} \gets \mathcal{D} \setminus (\tx_{\alpha}, \cdot)$}
 					    }
 						}
 						\vspace{12pt}
@@ -210,7 +214,7 @@
 						%%% INCREMENT
 						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
 							$\hatv \gets v$ \;
-							$\red{\tx^{\#}_\alpha \gets \bot}$\;
+							$\red{\tx_\alpha \gets \bot}$\;
 							$\hatmL \gets \hatmL \cup U$ \;
 						}
 						\vspace{12pt}
@@ -219,13 +223,17 @@
 						\red{
 						\On{$(\mathtt{tick}, t)$ from chain}{
 							\For{$D \in \mathcal{D}$}{
-							    $D.status \gets TODO$
+							  \If{$t > D.\mathsf{deadline} - T_{\mathsf{deposit}} $}{
+							    $D.\mathsf{status} \gets \mathsf{Expired}$
+							  }
+							  \ElseIf{$t > D.\mathsf{created} + T_{\mathsf{deposit}} $}{
+							    $D.\mathsf{status} \gets \mathsf{Active}$
+							  }
 							}
-							\If{$\exists D \in \mathcal{D} : D.status = \mathsf{Active}$}{
+							\If{$\exists D \in \mathcal{D} : D.\mathsf{status} = \mathsf{Active}$}{
 								% issue snapshot if we are leader
-								% FIXME: \tx^\#_\alpha undefined
-								\If{$\tx^\#_\alpha \neq \bot \land \tx_\omega = \bot \land \hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \tx^\#_\alpha, \bot)$ \;
+								\If{$\tx_\alpha \neq \bot \land \tx_\omega = \bot \land \hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \tx_\alpha, \bot)$ \;
 								}
 							}
 						}
