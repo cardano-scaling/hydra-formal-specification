@@ -15,7 +15,7 @@
 							$\hydraKeysAgg \gets \msCombVK(\hydraKeys^{setup})$ \;
 							$\cardanoKeys \gets \cardanoKeys^{setup}$\;
 							$\Tcontest \gets \Tcontest^{setup}$ \;
-							\red{$\Tdeposit \gets \Tdeposit^{setup}$ \;}
+							$\Tdeposit \gets \Tdeposit^{setup}$ \;
 							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\Tcontest)$ \;
 						}
 						\vspace{12pt}
@@ -53,7 +53,7 @@
 							$\hatmT \gets \emptyset$ \;
 							$\tx_\omega \gets \bot$ \;
 							% NOTE: Actually a tx id, but does not matter
-							\red{$\tx_\alpha \gets \bot$ \;}
+							$\tx_\alpha \gets \bot$ \;
 						}
 
 					\end{walgo}
@@ -76,7 +76,7 @@
 								$\hatmT \gets \hatmT \cup \{\tx\}$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\tx_\alpha}, \tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT \tx_\alpha,\tx_\omega)$ \;
 								}
 							}
 						}
@@ -89,42 +89,38 @@
 								$\tx_\omega \gets \tx$ \;
 								% issue snapshot if we are leader
 								\If{$\hats = \bar{\mc S}.s \land \hpLdr(\bar{\mc S}.s + 1) = i$}{
-									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \red{\bot}, \tx_\omega)$ \;
+									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT,\bot,\tx_\omega)$ \;
 								}
 							}
 						}
 						\vspace{12pt}
 
 						%%% REQ SN
-						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} , \red{\tx_\alpha}, \tx_\omega)$ from $\party_j$}{
+						\On{$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}} ,\tx_\alpha,\tx_\omega)$ from $\party_j$}{
 							\Req{$v = \hatv ~ \land ~ s = \hats + 1 ~ \land ~ \hpLdr(s) = j$} \;
-							\Wait{$\hats = \bar{\mc S}.s \blue{~ \land ~ v = \hatv}$}{
-								\Req{$\tx_\omega = \bot ~ \red{\lor ~ \tx_\alpha = \bot}$} \;
+							% TODO: is this v = hatv really needed?
+							\Wait{$\hats = \bar{\mc S}.s ~ \land ~ v = \hatv$}{
+								\Req{$\tx_\omega = \bot ~ \lor ~ \tx_\alpha = \bot$} \;
 								\If{$\tx_\omega \neq \bot$}{
 								  % NOTE: require withdrawal to be stay consistent with last confirmed snapshot until cleared through a decrement
-								  \blue{
 								  \If{$v = \bar{\mc S}.v \land \bar{\mc S}.U_{\omega} \neq \bot$}{
 									\Req{$\bar{\mc S}.U_{\omega} = \mathsf{outputs}(\tx_\omega) $} \;
-								  }}
+								  }
 								  \Else{
 									\Req{$\bar{\mc S}.U \applytx \tx_\omega \ne \bot$} \;
 									$U_{\mathsf{active}} \gets \bar{\mc S}.U \applytx \tx_\omega \setminus \mathsf{outputs}(\tx_\omega)$ \;
 								  }
 								}
-								\If{\blue{$\tx_\alpha \neq \bot$}}{
-								  \red{
-									$\mathcal{D} \gets \mathcal{D}[\tx_\alpha]$ \;
-									\Req{$\mathcal{D}.\mathsf{status} \neq \mathsf{Expired}$} \;
-								  }
-								  \Wait{\red{$\mathcal{D}.\mathsf{status} = \mathsf{Active}$}}{
+								\If{$\tx_\alpha \neq \bot$}{
+								  $\mathcal{D} \gets \mathcal{D}[\tx_\alpha]$ \;
+								  \Req{$\mathcal{D}.\mathsf{status} \neq \mathsf{Expired}$} \;
+								  \Wait{$\mathcal{D}.\mathsf{status} = \mathsf{Active}$}{
 									% NOTE: require deposit to be stay consistent with last confirmed snapshot until cleared through an increment
-									\blue{
 									\If{$v = \bar{\mc S}.v \land \bar{\mc S}.U_{\alpha} \neq \bot$}{
-									  \Req{$\bar{\mc S}.U_{\alpha} = \red{\mathcal{D}.U} $} \;
-									}}
+									  \Req{$\bar{\mc S}.U_{\alpha} = \mathcal{D}.U $} \;
+									}
 									\Else{
-									  $U_\alpha \gets \red{\mathcal{D}.U}$ \;
-
+									  $U_\alpha \gets \mathcal{D}.U$ \;
 									  $U_{\mathsf{active}} \gets U_{\mathsf{active}} \cup  U_{\alpha}$ \;
 									}
 								  }
@@ -194,7 +190,7 @@
 
 									% issue snapshot if we are leader
 									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
-										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1, \hatmT , \red{\tx_\alpha}, \tx_\omega)$ \;
+										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT,\tx_\alpha,\tx_\omega)$ \;
 									}
 								}
 							}
@@ -202,17 +198,15 @@
 						\vspace{12pt}
 
 						%%% DEPOSIT
-					    \On{$(\mathtt{depositTx}, \red{\tx_{\alpha}, U, t_{\mathsf{created}}, t_{\mathsf{deadline}}})$ from chain}{
-						  \red{$\mathcal{D} \gets \mathcal{D} \cup (\tx_{\alpha}, \mathsf{depositObj}(U, t_{\mathsf{created}}, t_{\mathsf{deadline}}, \mathsf{Inactive}))$}
+					    \On{$(\mathtt{depositTx},\tx_{\alpha},U,t_{\mathsf{created}},t_{\mathsf{deadline}})$ from chain}{
+						  $\mathcal{D} \gets \mathcal{D} \cup (\tx_{\alpha}, \mathsf{depositObj}(U, t_{\mathsf{created}}, t_{\mathsf{deadline}}, \mathsf{Inactive}))$
 					    }
 						\vspace{12pt}
 
 						%%% RECOVER
-						\red{
 					    \On{$(\mathtt{recoverTx}, \tx_{\alpha})$ from chain}{
-						  \red{$\mathcal{D} \gets \mathcal{D} \setminus (\tx_{\alpha}, \cdot)$}
+						  $\mathcal{D} \gets \mathcal{D} \setminus (\tx_{\alpha}, \cdot)$
 					    }
-						}
 						\vspace{12pt}
 
 						%%% DECREMENT
@@ -225,13 +219,12 @@
 						%%% INCREMENT
 						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
 							$\hatv \gets v$ \;
-							$\red{\tx_\alpha \gets \bot}$\;
+							$\tx_\alpha \gets \bot$ \;
 							$\hatmL \gets \hatmL \cup U$ \;
 						}
 						\vspace{12pt}
 
 						%%% TICK
-						\red{
 						\On{$(\mathtt{tick}, t)$ from chain}{
 							\For{$D \in \mathcal{D}$}{
 							  \If{$t > D.\mathsf{deadline} - T_{\mathsf{deposit}} $}{
@@ -247,7 +240,6 @@
 									\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT, \tx_\alpha, \bot)$ \;
 								}
 							}
-						}
 						}
 						\vspace{12pt}
 
