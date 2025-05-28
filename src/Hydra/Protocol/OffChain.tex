@@ -11,20 +11,26 @@ head members, parties or simply protocol actors. The protocol is specified as a
 reactive system that processes three kinds of inputs:
 \begin{enumerate}
   \item On-chain protocol transactions as introduced in
-  Section~\ref{sec:on-chain}, which are posted to the mainchain and can be
-  observed by all actors:
-  \begin{itemize}
-    \item $\mathtt{initialTx}$: initiates a head
-    \item $\mathtt{commitTx}$: commits UTxO to an initializing head
-    \item $\mathtt{collectComTx}$: opens a head
-    \item $\mathtt{depositTx}$: prepares UTxO to be incremented
-    \item $\mathtt{incrementTx}$: adds UTxO to an open head
-    \item $\mathtt{decrementTx}$: removes UTxO from an open head
-    \item $\mathtt{closeTx}$: closes a head
-    \item $\mathtt{contestTx}$: contests a closed head
-    % NOTE: fanout not mentioned because not needed in off-chain protocol
-    % description
-  \end{itemize}
+        Section~\ref{sec:on-chain}, which are posted to the mainchain and can be
+        observed by all actors:
+        \begin{itemize}
+          \item $\mathtt{initialTx}$: initiates a head
+          \item $\mathtt{commitTx}$: commits UTxO to an initializing head
+          \item $\mathtt{collectComTx}$: opens a head
+          \item $\mathtt{depositTx}$: some UTxO was deposited to be incremented
+          \item $\mathtt{recoverTx}$: deposited UTxO was recovered
+          \item $\mathtt{incrementTx}$: adds UTxO to an open head
+          \item $\mathtt{decrementTx}$: removes UTxO from an open head
+          \item $\mathtt{closeTx}$: closes a head
+          \item $\mathtt{contestTx}$: contests a closed head
+          % NOTE: fanout not mentioned because not needed in off-chain protocol
+          % description
+        \end{itemize}
+        Also, a special input when time advanced on chain may be used:
+        \begin{itemize}
+          \item $\mathtt{tick}$: time advanced on chain
+        \end{itemize}
+  
   \item Off-chain network messages sent between protocol actors (parties):
   \begin{itemize}
     \item $\hpRT$: to request a transaction to be included in the next snapshot
@@ -57,9 +63,7 @@ off-chain protocol logic relies on these assumptions:
         for individual messages. Unauthenticated messages must be dropped.
   \item The head protocol gets correctly (and with completeness) notified about
         observed transactions on-chain belonging to the respective head
-        instance.~\red{Observation may be delayed varying by type of
-        transaction. See~\ref{sec:rollbacks} for a discussion on eventual
-        consistency of transactions.}
+        instance.
   \item All inputs are processed to completion, i.e.\ run-to-completion
         semantics and no preemption.
   \item Inputs are deduplicated. That is, any two identical inputs must not lead
@@ -114,9 +118,14 @@ party's local state consists of the following variables:
         applying $\hatmT$ to $\bar{S}.U$ to validate requested transactions.
   \item $\hatmT \in \mT^{*}$: List of transactions applied locally and pending
         inclusion in a snapshot (if this party is the next leader).
-  \item $U_\alpha \in {(\txInputs \times \txOutputs)}^{*}$: UTxO set pending to be added to the head.
+  \item $\tx_\alpha \in \mathcal{T}$: Pending deposit transaction\footnote{In
+        fact this would only need to be a transaction id to look up the
+        corresponding deposit in $\mc D$} to be used for incrementing the head
+        state.
   \item $\tx_\omega \in \mathcal{T}$: Pending decrement transaction, whose outputs are to be
         withdrawn from the head.
+  \item $\mc D$: Set of deposit objects tracking deposit transactions with their
+        status.
   \item $\bar{\mc S}$: Snapshot object of the latest confirmed snapshot which
         contains:
         \begin{center}
@@ -130,8 +139,14 @@ party's local state consists of the following variables:
             $\bar{\mc S}.\sigma$         & multisignature \\ \hline
           \end{tabular}
         \end{center}
-        where constructor $\Sno(v,n,\mT,U,U_\alpha, U_\omega)$ initializes a new snapshot object with $\bar{\mc S}.\sigma = \emptyset$.
 \end{itemize}
+
+where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega)$ initializes a
+new snapshot object with $\bar{\mathcal{S}}.\sigma = \emptyset$. \\
+
+Additionally, deposit objects are created using
+$\text{depositObj}(U, t_{\text{created}}, t_{\text{deadline}}, \text{status})$
+where status can be $\text{Inactive}$, $\text{Active}$, or $\text{Expired}$.
 
 \subsection{Protocol flow}
 
@@ -141,15 +156,17 @@ party's local state consists of the following variables:
 to exchange and agree on protocol parameters during the protocol setup phase
 (see Section~\ref{sec:setup}), so we can assume the public Cardano keys
 $\cardanoKeys^{setup}$, Hydra keys $\hydraKeysAgg^{setup}$, as well as the
-contestation period $\Tcontest^{setup}$ are available. One of the clients then can
-start head initialization using the $\hpInit$ command, which will result in an
-$\mtxInit$ transaction being posted. \\
+contestation period $\Tcontest^{setup}$ are available. One of the clients then
+can start head initialization using the $\hpInit$ command, which will result in
+an $\mtxInit$ transaction being posted. Not strictly a protocol parameter, but
+the deposit period $\Tdeposit$ would also be made available from
+configuration.\\
 
 \dparagraph{$\mathtt{initialTx}$.}\quad All parties will receive this $\mtxInit$
 transaction and validate announced parameters against the pre-agreed $setup$
 parameters, as well as the structure of the transaction and the minting policy
-used. This is a vital step to ensure the initialized Head is valid, which
-cannot be checked completely on-chain (see also Section~\ref{sec:init-tx}). \\
+used. This is a vital step to ensure the initialized Head is valid, which cannot
+be checked completely on-chain (see also Section~\ref{sec:init-tx}). \\
 
 \dparagraph{$\mathtt{commitTx}$.}\quad As each party $p_{j}$ posts a
 $\mtxCommit$ transaction, the protocol records observed committed UTxOs of each
@@ -161,12 +178,13 @@ spending. Should any party want to abort, they would post an $\mtxAbort$
 transaction and the protocol would end at this point.\\
 
 \dparagraph{$\mathtt{collectComTx}$.}\quad Upon observing the $\mtxCollect$
-transaction, the parties compute $\Uinit \gets \bigcup_{j=1}^{n} C_j$ using previously
-observed $C_j$ and initialize $\hatmL = \Uinit$. The seen transaction set is
-initialized empty $\hatmT = \emptyset$, seen head state version $\hatv = 0$, as well as
-snapshot number $\hats = 0$. No UTxO to increment $U_{\alpha} = \emptyset$ and no
-decrement transaction $\tx_{\omega} = \bot$ is pending, and the last confirmed snapshot
-is initialized accordingly $\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset, \emptyset)}$.
+transaction, the parties compute $\Uinit \gets \bigcup_{j=1}^{n} C_j$ using
+previously observed $C_j$ and initialize $\hatmL = \Uinit$. The seen transaction
+set is initialized empty $\hatmT = \emptyset$, seen head state version
+$\hatv = 0$, as well as snapshot number $\hats = 0$. No deposit transaction
+$\tx_{\alpha} = \bot$ and no decrement transaction $\tx_{\omega} = \bot$ are
+pending, and the last confirmed snapshot is initialized accordingly
+$\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset, \emptyset)}$.
 
 \subsubsection{Processing transactions off-chain}
 
@@ -178,61 +196,79 @@ While the frequency of snapshots in the general Head protocol~\cite{hydrahead20}
 was configurable, the Coordinated Head protocol does specify a snapshot to be
 created after each transaction.\\
 
-\dparagraph{$\hpRT$.}\quad Upon receiving request $(\hpRT,\tx)$, the transaction is
-applied to the \emph{local} ledger state $\hatmL \applytx \tx$. If not
+\dparagraph{$\hpRT$.}\quad Upon receiving request $(\hpRT,\tx)$, the transaction
+is applied to the \emph{local} ledger state $\hatmL \applytx \tx$. If not
 applicable yet, the protocol does $\KwWait$ to retry later or eventually marks
 this transaction as invalid (see assumption about events piling up). After
-applying and if there is no current snapshot in flight ($\hats = \bar{\mc S}.s$) and the
-receiving party $\party_{i}$ is the next snapshot
-leader, a message to request snapshot signatures $\hpRS$ is sent. \\
-
-\dparagraph{$\hpRD$.}\quad Upon receiving request $(\hpRD,\tx_\omega)$, the transaction
-is checked against the \emph{local} ledger state and if it is not applicable yet
-or another commit or decommit is pending still, the protocol does $\KwWait$ to
-retry later or eventually marks the decommit as invalid. After applying $\tx$,
-its outputs are removed from \emph{local} ledger state $\hatmL$ so that they are
-not available any more and the decommit transaction is kept in the local state
-($\tx_\omega$). If there is no current snapshot in flight ($\hats = \bar{\mc S}.s$)
+applying and if there is no current snapshot in flight ($\hats = \bar{\mc S}.s$)
 and the receiving party $\party_{i}$ is the next snapshot leader, a message to
-request snapshot signatures $\hpRS$ containing the decrement transaction $\tx_\omega$ is sent. \\
+request snapshot signatures $\hpRS$ is sent. \\
 
-\dparagraph{$\mathtt{depositTx}$.}\quad Upon observing a \mtxDeposit{}
-  transaction as settled\footnote{Protocol actors might use different techniques
-    and delays to determine transaction finality. See also~\ref{sec:rollbacks}.}
-  and no other commit or decommit is pending still, each party keeps track of
-  the observed deposited UTxO as the pending increment UTxO set $U_{\alpha} = U$. If
-  other commits or decommits are pending, the protocol $\KwWait$s and retries
-  updating state later.\todo{smelly and fragile} If the observing party is the
-  next snapshot leader, it may request a new snapshot by sending a $\hpRS$
-  including the UTxO to increment $U_{\alpha}$.  \\
+\dparagraph{$\hpRD$.}\quad Upon receiving request $(\hpRD,\tx_\omega)$, the
+transaction is checked against the \emph{local} ledger state and if it is not
+applicable yet or another commit or decommit is pending still, the protocol does
+$\KwWait$ to retry later or eventually marks the decommit as invalid. After
+applying $\tx$, its outputs are removed from \emph{local} ledger state $\hatmL$
+so that they are not available any more and the decommit transaction is kept in
+the local state ($\tx_\omega$). If there is no current snapshot in flight
+($\hats = \bar{\mc S}.s$) and the receiving party $\party_{i}$ is the next
+snapshot leader, a message to request snapshot signatures $\hpRS$ containing the
+decrement transaction $\tx_\omega$ is sent. \\
+
+\dparagraph{$\mathtt{depositTx}$.}\quad Upon observing a deposit transaction,
+each party records the deposit index by deposit transaction id to their local
+deposit registry $\mathcal{D}$ with status $\text{Inactive}$. The deposit
+contains deposited UTxO $U$, creation time $t_{\text{created}}$, and deadline
+$t_{\text{deadline}}$. \\
+
+\dparagraph{$\mathtt{recoverTx}$.}\quad Upon observing a recover transaction,
+each party drops the corresponding entry from its deposit registry
+$\mathcal{D}$. \\
+
+\dparagraph{$\mathtt{tick}$.}\quad Whenever time advances (on-chain) to point
+$t$, parties update the status of deposits in $\mathcal{D}$ accordingly using
+the configured deposit period $\Tdeposit$:
+\begin{itemize}
+  \item $\mathsf{Expired}$ when deadline passed (or too soon): $t > t_{\text{deadline}} - \Tdeposit$
+  \item $\mathsf{Active}$ when deposit settled enougth: $t > t_{\text{created}} + \Tdeposit$
+\end{itemize}
+When deposits become $\mathsf{Active}$ and no other commit / decommit is
+pending, and the party is the next snapshot leader, it may request a new
+snapshot including the deposit transaction $\tx_{\alpha}$. \\
 
 \dparagraph{$\hpRS$.}\quad Upon receiving request
-$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}}, U_\alpha, \tx_\omega)$\footnote{Snapshot
+$(\hpRS,v,s,\underline{\tx}_{\mathsf{req}}, \tx_\alpha, \tx_\omega)$\footnote{Snapshot
   requests with only transaction identifiers and output references are possible
   if all parties keep an index of previously seen transactions and their
-  identifiers.} from party $\party_j$, the receiving $\party_i$ $\Req$s
-  that only a commit or decommit is currently pending, and that $v$ refers
-to the current open state version, $s$ is the next snapshot number and that
-party $\party_j$ is responsible for leading its creation.\todo{define $\hpLdr$}
-Party $\party_i$ may has to $\KwWait$ until the previous snapshot is confirmed
-($\bar{\mc S}.s = \hats$). If the decommit transaction $\tx_{\omega}$ is not $\bot$, the
-transaction is $\Req$d to be applicable to the last confirmed UTxO set
-$\bar{\mc S}.U$ and decommitted transaction outputs must be removed, yielding
-the still active UTxO set $U_{\mathsf{active}}$. Then, all requested
-transactions $\underline{\tx}_{\mathsf{req}}$ are $\Req$d to be applicable to
-$U_{\mathsf{active}}$, otherwise the snapshot is rejected as invalid. Only then,
-$\party_i$ increments their seen-snapshot counter $\hats$, resets the signature
-accumulator $\hatSigma$, and computes the UTxO set of the new local snapshot as
+  identifiers.} from party $\party_j$, the receiving $\party_i$ $\Req$s that
+only a commit or decommit may be pending, and that $v$ refers to the current
+open state version, $s$ is the next snapshot number and that party $\party_j$ is
+responsible for leading its creation. Party $\party_i$ may have to wait until
+the previous snapshot is confirmed ($\bar{\mathcal{S}}.s = \hat{s}$).
+Furthermore, the protocol validates the snapshot request by:
+\begin{enumerate}
+  \item If a decommit is requested: verify the transaction is applicable to the
+        last confirmed UTxO set and update the active utxo set with it
+  \item If a deposit/commit is requested: verify the corresponding deposit is
+        $\text{Active}$ and update the active utxo set with it
+  \item If we are on the same version as the last snapshot, any requested
+        decommit or commit must match the last snapshot.
+  \item Verify all requested transactions $\underline{\tx}_{\mathsf{req}}$ are
+        applicable to the active UTxO set
+\end{enumerate}
+Only then, $\party_i$ increments their seen-snapshot counter $\hats$, resets the
+signature accumulator $\hatSigma$, and computes the UTxO set of the new local
+snapshot as
 $U \gets U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}}$. Then,
 $\party_i$ creates a signature $\msSig_i$ using their signing key
 $\hydraSigningKey$ on a message comprised by the $\cid$, the new snapshot number
 $\hats$, the new $\eta$ resulting from canonically combining $U$ (see
-Section~\ref{sec:close-tx} for details), and either $\eta_{\alpha}$ or $\eta_{\omega}$ derived
-from commit UTxO $U_{\alpha}$ or decommit transaction $\tx_{\omega}$ respectively. The
-signature is sent to all head members via message $(\hpAS,\hats,\msSig_i)$.
-Finally, the local ledger state $\hatmL$ and pending transaction set $\hatmT$
-get pruned by re-applying all locally pending transactions $\hatmT$ to the just
-requested snapshot's UTxO set iteratively and
+Section~\ref{sec:close-tx} for details), and either $\eta_{\alpha}$ or
+$\eta_{\omega}$ derived from deposited $U_{\alpha}$ or decommit transaction
+$\tx_{\omega}$ respectively. The signature is sent to all head members via
+message $(\hpAS,\hats,\msSig_i)$. Finally, the local ledger state $\hatmL$ and
+pending transaction set $\hatmT$ get pruned by re-applying all locally pending
+transactions $\hatmT$ to the just requested snapshot's UTxO set iteratively and
 ultimately yielding a ``pruned'' version of $\hatmT$ and $\hatmL$. \\
 
 \dparagraph{$\hpAS$.}\quad Upon receiving acknowledgment $(\hpAS,s,\msSig_j)$, all
@@ -291,7 +327,6 @@ and certificate $\xi$ is constructed and posted in a \mtxContest{} transaction (
 Section~\ref{sec:contest-tx}).
 
 \subsection{Rollbacks and protocol changes}\label{sec:rollbacks}
-\todo{Explain varying finality of deposit vs. increment}
 \todo{Explain why rollbacks are no problem to increment/decrement}
 \todo{Write about contestation deadline vs. rollbacks}
 
@@ -348,7 +383,7 @@ $\mtxCommit$ transactions were rolled back, a bad actor could choose to commit a
 different UTxO and open the Head with a different initial UTxO set, while the
 already signed snapshots would still be (cryptographically) valid. To mitigate
 this, all signatures on snapshots need to incorporate the initial UTxO set by
-including $\eta_{0}$. \todo{version-counting is less powerfull}
+including $\eta_{0}$.\todo{not implemented and maybe redundant with directly open heads}
 
 \input{Hydra/Protocol/Figures/offchain-protocol}
 
