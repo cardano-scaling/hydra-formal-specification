@@ -87,7 +87,7 @@ by a single output reference parameter $\seed \in \tyOutRef$:
   $o_{\mathsf{head}}$, which captures
   the initial state of the protocol in the datum
   \[
-	\datumHead = (\stInitial,\cid',\seed',\hydraKeys,\cPer)
+	\datumHead = (\stInitial,\cid',\seed',\hydraKeys,\Tcontest)
   \]
   where
   \begin{mitemize}
@@ -96,7 +96,7 @@ by a single output reference parameter $\seed \in \tyOutRef$:
 	\item $\seed'$ is the output reference parameter of $\muHead$,
 	\item $\hydraKeys$ are the off-chain multi-signature keys from the setup
 	phase,
-	\item $\cPer$ is the contestation period.
+	\item $\Tcontest$ is the contestation period.
   \end{mitemize}
 \end{itemize}
 
@@ -224,7 +224,7 @@ reimburse, and checks:
   \item State is advanced from $\datumHead \sim \stInitial$ to terminal state
   $\stFinal$:
   \[
-	(\stInitial,\cid,\seed,\hydraKeys,\cPer) \xrightarrow[m]{\stAbort} \stFinal.
+	(\stInitial,\cid,\seed,\hydraKeys,\Tcontest) \xrightarrow[m]{\stAbort} \stFinal.
   \]
   \item All UTxOs committed into the head are reimbursed exactly as they were
   committed. This is done by comparing hashes of serialised representations of
@@ -267,10 +267,10 @@ all the committed UTxOs to the same head. It has
 $\redeemerHead = \mathsf{collect}$ and checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stInitial$ to
-  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\cPer$ stay
+  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\Tcontest$ stay
   unchanged and the new state is governed again by $\nuHead$
   \[
-	(\stInitial,\cid,\seed,\hydraKeys,\cPer) \xrightarrow{\stCollect} (\stOpen,\cid,\hydraKeys,\cPer,v,\eta)
+	(\stInitial,\cid,\seed,\hydraKeys,\Tcontest) \xrightarrow{\stCollect} (\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta)
   \]
   where snapshot version is initialized as $v = 0$.
   \item Commits are collected in $\eta$
@@ -445,10 +445,10 @@ $\txOutRef_{\mathsf{deposit}}$ points to the claimed deposit. The validator
 checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
-  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeysAgg,\nop,\cPer$
+  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeysAgg,\nop,\Tcontest$
   stay unchanged and the new state is governed again by $\nuHead$:
   \[
-	(\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v,\eta) \xrightarrow[\xi, s, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\cPer,v',\eta')
+	(\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v,\eta) \xrightarrow[\xi, s, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v',\eta')
   \]
   \item New version $v'$ is incremented correctly
   \[
@@ -504,10 +504,10 @@ used snapshot number and $m$ is the number of outputs to distribute. The
 validator checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
-  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\cPer$ stay
+  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\Tcontest$ stay
   unchanged and the new state is governed again by $\nuHead$
   \[
-	(\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\xi, s, m]{\mathsf{decrement}} (\stOpen,\cid,\hydraKeys,\cPer,v',\eta')
+	(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\xi, s, m]{\mathsf{decrement}} (\stOpen,\cid,\hydraKeys,\Tcontest,v',\eta')
   \]
   \item New version $v'$ is incremented correctly
   \[
@@ -559,10 +559,10 @@ $\redeemerHead = (\mathsf{close}, \mathsf{CloseType})$, where
 $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
-  $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\cPer$
+  $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
   stay unchanged and the new state is governed again by $\nuHead$
   \[
-	(\stOpen,\cid,\hydraKeys,\cPer,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta', \eta_\alpha\Delta', \eta_\omega\Delta', \contesters,\Tfinal)
+	(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \eta_\alpha\Delta', \eta_\omega\Delta', \contesters,\tfinal)
   \]
   \item Last known open state version is recorded in closed state
   \[
@@ -653,13 +653,13 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 
   \item Correct contestation deadline is set
   \[
-	\Tfinal = \txValidityMax + T
+	\tfinal = \txValidityMax + T
   \]
   \item Transaction validity range is bounded by
   \[
 	\txValidityMax - \txValidityMin \leq T
   \]
-  to ensure the contestation deadline $\Tfinal$ is at most $2*T$ in the future.
+  to ensure the contestation deadline $\tfinal$ is at most $2*T$ in the future.
   \item Value in the head is preserved
   \[
 	\valHead' = \valHead
@@ -696,10 +696,10 @@ $\redeemerHead = (\mathsf{contest}, \mathsf{ContestType})$, where
 $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
-  $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\cPer$
+  $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
   stay unchanged and the new state is governed again by $\nuHead$
   \[
-	(\stClosed,\cid,\hydraKeys,\cPer,v,s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\Tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\cPer,v',s',\eta',\eta_\alpha\Delta',\eta\omega\Delta',\contesters',\Tfinal')
+	(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\eta_\alpha\Delta',\eta\omega\Delta',\contesters',\tfinal')
   \]
 
   \item Last known open state version stays recorded in closed state
@@ -787,13 +787,13 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
   \]
   \item Transaction is posted before deadline
   \[
-	\txValidityMax \leq \Tfinal
+	\txValidityMax \leq \tfinal
   \]
   \item Contestation deadline is updated correctly to
   \[
-	\Tfinal' = \left\{\begin{array}{ll}
-	  \Tfinal     & \mathrm{if} ~ |\contesters'| = n, \\
-	  \Tfinal + T & \mathrm{otherwise.}
+	\tfinal' = \left\{\begin{array}{ll}
+	  \tfinal     & \mathrm{if} ~ |\contesters'| = n, \\
+	  \tfinal + T & \mathrm{otherwise.}
 	\end{array}\right.
 \]
 \item Value in the head is preserved
@@ -837,7 +837,7 @@ outputs to distribute from the $\stClosed$ state, and checks:
   \item State is advanced from $\datumHead \sim \stClosed$ to terminal state
   $\stFinal$: % XXX: What does this actually mean?
   \[
-	(\stClosed,\cid,\hydraKeys,\cPer,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\Tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
+	(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
   \]
   \item The first $m$ outputs are distributing funds according to $\eta$. That is,
   the outputs exactly correspond to the UTxO canonically combined $U^{\#}$ (see
@@ -857,7 +857,7 @@ outputs to distribute from the $\stClosed$ state, and checks:
   \[
 	\eta_{\omega\Delta} = U^{\#}_{\omega\Delta} = \hash(\bigoplus_{j=m'}^{m+n'} \bytes(o_{j}))
   \]
-  \item Transaction is posted after contestation deadline $\txValidityMin > \Tfinal$.
+  \item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
   \item All tokens are burnt
   $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
 \end{menumerate}
