@@ -8,6 +8,7 @@
       url = "github:IntersectMBO/formal-ledger-specifications";
       flake = false;
     };
+    hydra-coding-standards.url = "github:cardano-scaling/hydra-coding-standards/0.6.6";
     nixpkgs.url = "github:nixos/nixpkgs";
   };
 
@@ -16,6 +17,9 @@
       systems = [
         "aarch64-darwin"
         "x86_64-linux"
+      ];
+      imports = [
+        inputs.hydra-coding-standards.flakeModule
       ];
       perSystem = { pkgs, ... }:
         let
@@ -33,6 +37,7 @@
             ];
         in
         rec {
+          coding.standards.hydra.enable = true;
           packages = {
             hydra-spec-pdf = agdaPackages.mkDerivation {
               pname = "hydra-spec.pdf";

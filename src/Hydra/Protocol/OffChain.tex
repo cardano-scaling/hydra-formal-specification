@@ -230,7 +230,7 @@ $t$, parties update the status of deposits in $\mathcal{D}$ accordingly using
 the configured deposit period $\Tdeposit$:
 \begin{itemize}
   \item $\mathsf{Expired}$ when deadline passed (or too soon): $t > t_{\text{deadline}} - \Tdeposit$
-  \item $\mathsf{Active}$ when deposit settled enougth: $t > t_{\text{created}} + \Tdeposit$
+  \item $\mathsf{Active}$ when deposit settled enough: $t > t_{\text{created}} + \Tdeposit$
 \end{itemize}
 When deposits become $\mathsf{Active}$ and no other commit / decommit is
 pending, and the party is the next snapshot leader, it may request a new
@@ -300,7 +300,7 @@ Section~\ref{sec:decrement-tx}. \\
 
 \dparagraph{$\mathtt{incrementTx}$.}\quad Upon observing the \mtxIncrement{}
   transaction, which added outputs $U$ to the head, the local ledger state
-  $\hatmL$ is extended with the newly addded UTxO while the pending increment
+  $\hatmL$ is extended with the newly added UTxO while the pending increment
   state $U_{\alpha}$ is cleared. Also the observed version $v$ is used for future
   snapshots by setting $\hatv = v$. Note that the version of the open head state
   is incremented on each \mtxIncrement{} transaction as described in
@@ -311,7 +311,7 @@ Section~\ref{sec:decrement-tx}. \\
 \dparagraph{$\hpClose$.}\quad In order to close a head, a client issues the
 $\hpClose$ input which uses the latest confirmed snapshot $\bar{\mc S}$ to
 create the new $\eta$-state from the last confirmed UTxO set, the digest of
-either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$), and the certifiate
+either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$), and the certificate
 $\xi$ using the corresponding multi-signature. With these, the $\mtxClose$ transaction
 can be constructed and posted. See Section~\ref{sec:close-tx} for details about this
 transaction. \\

@@ -111,7 +111,7 @@ $\mathsf{Burn}$ redeemer:
 	\item All entries of $\txMint$ are of this policy and of single quantity $\forall \{c \mapsto \cdot \mapsto q\} \in \txMint : c = \cid \land q = 1$
 	\item Right number of tokens are minted $|\txMint| = |\hydraKeys| + 1$
 	% TODO: |\txMint| may not be clear to the reader, maybe combine with item above, but be more explicit.
-	\item State token is sent to the head validator $\st \in \valHead$ % TODO: fact that it is goverend by nuHead is a bit implicit here.
+	\item State token is sent to the head validator $\st \in \valHead$ % TODO: fact that it is governed by nuHead is a bit implicit here.
 	\item \textcolor{blue}{The correct number of initial outputs are present $|(\cdot, \nuInitial, \cdot) \in \txOutputs| = |\hydraKeys|$}
 	% XXX: this is implied by the ledger, so can be removed
 	\item All participation tokens are sent to the initial validator as an initial output $\forall i \in [1 \dots |\hydraKeys|] : \{\cid \mapsto \cdot \mapsto 1\} \in \valInitial{i}$
@@ -350,7 +350,7 @@ where
 \end{mitemize}
 
 \noindent Head protocol participants determine \textbf{off-chain} whether a
-deposit output $o_{\mathsf{desposit}}$ is eligible for their head by checking
+deposit output $o_{\mathsf{deposit}}$ is eligible for their head by checking
 \begin{enumerate}
   \item $\cid$ matches their head identifier,
   \item $t_{\mathsf{recover}}$ is reasonably far in the future, and\todo{explain; relate to contestation period?}

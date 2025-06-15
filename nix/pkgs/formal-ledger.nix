@@ -1,4 +1,4 @@
-{ lib, mkDerivation, fetchFromGitHub, abstract-set-theory, standard-library, standard-library-classes, standard-library-meta }:
+{ mkDerivation, fetchFromGitHub, abstract-set-theory, standard-library, standard-library-classes, standard-library-meta }:
 
 mkDerivation rec {
   version = "0.2.0";
