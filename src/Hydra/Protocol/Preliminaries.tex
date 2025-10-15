@@ -37,6 +37,7 @@ application of a function $f$ to an argument $x$ is written as $f(x)$. \\
 	\item $\concat : \tyBytes^* \to \tyBytes$ is concatenating bytes, we also use operator $\bigoplus$ for this
 	\item $\hash : x \to \tyBytes$ denotes a collision-resistant
 	      hashing function and $x^{\#}$ indicates the hash of $x$
+	      \todo{Update hash function usage to support partial fanout where needed}
 	\item $\bytes : x \to \tyBytes$ denotes an invertible serialisation function
 	      mapping arbitrary data to bytes
 	\item $a || b = \concat(\bytes(a), \bytes(b))$ is an operator which concatenates the $\bytes(b)$ to the $\bytes(a)$
@@ -82,6 +83,25 @@ $\msVKL$ signed $m$.
 Note that in the following, we make the parameter~$\msParams$ implicit and leave
 out the $ver$ suffix for verification key such that $k = k^{ver}$ for better
 readability.
+
+\subsection{Partial Fanout Support}\label{sec:partial-fanout}
+
+\noindent To enable partial fanout when UTxO sets are too large for a single transaction,
+the protocol uses a cryptographic commitment scheme that supports partial distribution
+proofs. This allows distributing a subset of UTxOs while proving that the remaining
+UTxOs are still valid and can be distributed in subsequent transactions.
+
+\begin{definition}[Partial Distribution]
+For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:
+\begin{itemize}
+	\item $\accUTxO(U)$ creates a commitment to the UTxO set $U$
+	\item $\accPartial(U, S)$ creates a proof that subset $S$ can be distributed
+	\item $\accVerifyPartial(C, S, \pi)$ verifies that proof $\pi$ allows distribution of $S$ from commitment $C$
+\end{itemize}
+\end{definition}
+
+\noindent This enables the protocol to handle large UTxO sets by automatically falling back
+to partial distribution when full fanout exceeds transaction size limits.
 
 \subsection{Extended UTxO}\label{sec:eutxo}
 The Hydra Head protocol is specified to work on the so-called Extended UTxO (EUTxO) ledgers

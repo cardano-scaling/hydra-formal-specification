@@ -23,8 +23,7 @@ reactive system that processes three kinds of inputs:
           \item $\mathtt{decrementTx}$: removes UTxO from an open head
           \item $\mathtt{closeTx}$: closes a head
           \item $\mathtt{contestTx}$: contests a closed head
-          % NOTE: fanout not mentioned because not needed in off-chain protocol
-          % description
+          \item $\mathtt{fanoutTx}$: distributes UTxOs from a closed head (partial or complete)
         \end{itemize}
         Also, a special input when time advanced on chain may be used:
         \begin{itemize}
@@ -306,6 +305,16 @@ Section~\ref{sec:decrement-tx}. \\
   is incremented on each \mtxIncrement{} transaction as described in
   Section~\ref{sec:increment-tx}
 
+\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
+transaction, the distributed UTxOs are removed from the local state tracking.
+If this was a partial fanout (not all UTxOs were distributed), the head remains
+in $\stClosed$ state with updated accumulator containing the remaining UTxOs.
+If this was a complete fanout (all UTxOs distributed), the head transitions to
+$\stFinal$ state. The off-chain protocol must coordinate partial fanout to
+ensure proper selection of UTxO subsets and generation of exclusion proofs.
+\todo{Add detailed off-chain protocol for partial fanout coordination, including
+selection strategy for UTxO subsets.}
+
 \subsubsection{Closing the head}
 
 \dparagraph{$\hpClose$.}\quad In order to close a head, a client issues the
@@ -388,6 +397,7 @@ including $\eta_{0}$.\todo{not implemented and maybe redundant with directly ope
 \input{Hydra/Protocol/Figures/offchain-protocol}
 
 \todo{In figure: $\combine$ on UTxO slightly different than on commits}
+\todo{Update off-chain protocol to support partial fanout coordination}
 
 %%% Local Variables:
 %%% mode: latex
