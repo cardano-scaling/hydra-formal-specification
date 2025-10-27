@@ -84,24 +84,38 @@ Note that in the following, we make the parameter~$\msParams$ implicit and leave
 out the $ver$ suffix for verification key such that $k = k^{ver}$ for better
 readability.
 
-\subsection{Partial Fanout Support}\label{sec:partial-fanout}
+\subsection{BLS Accumulators for Partial Fanout}\label{sec:bls-accumulators}
 
 \noindent To enable partial fanout when UTxO sets are too large for a single transaction,
-the protocol uses a cryptographic commitment scheme that supports partial distribution
+the protocol uses BLS (Boneh-Lynn-Shacham) accumulators that support partial distribution
 proofs. This allows distributing a subset of UTxOs while proving that the remaining
 UTxOs are still valid and can be distributed in subsequent transactions.
+
+\begin{definition}[BLS Accumulator]
+A BLS accumulator scheme provides the following operations:
+\begin{itemize}
+	\item $\accSetup$ generates public parameters for the accumulator system
+	\item $\accCommit(U)$ creates a commitment to a UTxO set $U$
+	\item $\accWitness(C, u)$ generates a membership witness for UTxO $u$ in commitment $C$
+	\item $\accVerify(C, u, w)$ verifies that witness $w$ proves $u$ is in commitment $C$
+	\item $\accExclude(C, S)$ generates an exclusion proof for subset $S$ from commitment $C$
+	\item $\accVerifyExclude(C, S, \pi)$ verifies that exclusion proof $\pi$ allows removal of $S$ from $C$
+\end{itemize}
+\end{definition}
 
 \begin{definition}[Partial Distribution]
 For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:
 \begin{itemize}
-	\item $\accUTxO(U)$ creates a commitment to the UTxO set $U$
-	\item $\accPartial(U, S)$ creates a proof that subset $S$ can be distributed
-	\item $\accVerifyPartial(C, S, \pi)$ verifies that proof $\pi$ allows distribution of $S$ from commitment $C$
+	\item $\accUTxO(U)$ creates a BLS accumulator commitment to the UTxO set $U$
+	\item $\accPartial(U, S)$ creates an exclusion proof showing that subset $S$ can be distributed
+	\item $\accVerifyPartial(C, S, \pi)$ verifies that exclusion proof $\pi$ allows distribution of $S$ from commitment $C$
 \end{itemize}
 \end{definition}
 
-\noindent This enables the protocol to handle large UTxO sets by automatically falling back
-to partial distribution when full fanout exceeds transaction size limits.
+\noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
+to partial distribution when full fanout exceeds transaction size limits. The accumulator provides
+cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
+available for future distribution.
 
 \subsection{Extended UTxO}\label{sec:eutxo}
 The Hydra Head protocol is specified to work on the so-called Extended UTxO (EUTxO) ledgers

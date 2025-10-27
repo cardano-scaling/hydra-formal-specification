@@ -7,8 +7,16 @@ changes to the original protocol. While the on-chain part already describes the
 full life-cycle of a Hydra head on-chain, this section completes the picture by
 defining how the protocol behaves off-chain and notably the relationship between
 on- and off-chain semantics. Participants of the protocol are also called Hydra
-head members, parties or simply protocol actors. The protocol is specified as a
-reactive system that processes three kinds of inputs:
+head members, parties or simply protocol actors.
+
+\noindent The off-chain protocol coordinates BLS accumulator operations (see Section~\ref{sec:bls-accumulators})
+for partial fanout support. When UTxO sets are too large for single transactions,
+the off-chain protocol automatically falls back to partial distribution using
+exclusion proofs, ensuring all UTxOs can be distributed across multiple transactions
+while maintaining cryptographic integrity.
+
+The protocol is specified as a reactive system that processes three kinds of inputs:
+
 \begin{enumerate}
   \item On-chain protocol transactions as introduced in
         Section~\ref{sec:on-chain}, which are posted to the mainchain and can be

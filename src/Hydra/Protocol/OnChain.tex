@@ -17,6 +17,12 @@ in this state machine is represented and caused by a corresponding Hydra
 protocol transaction
 on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort{}~\ref{sec:abort-tx}, \mtxCollect{}~\ref{sec:collect-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
 
+\noindent The protocol uses BLS accumulators (see Section~\ref{sec:bls-accumulators}) to enable
+partial fanout when UTxO sets exceed transaction size limits. The \mtxCollect{} transaction
+creates BLS accumulator commitments to UTxO sets, and \mtxFanout{} transactions use
+exclusion proofs to distribute subsets of UTxOs while maintaining cryptographic guarantees
+about the remaining UTxOs. \\
+
 \noindent Besides the main state transitions of the head protocol, there is
   the related ``deposit protocol'' with two transactions in support of
   \mtxIncrement{}: \mtxDeposit{}~\ref{sec:deposit-tx} and \mtxRecover{}~\ref{sec:recover-tx}. \\
