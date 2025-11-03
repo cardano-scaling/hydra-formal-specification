@@ -18,7 +18,8 @@ protocol transaction
 on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort{}~\ref{sec:abort-tx}, \mtxCollect{}~\ref{sec:collect-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
 
 \noindent The protocol uses BLS accumulators (see Section~\ref{sec:bls-accumulators}) to enable
-partial fanout when UTxO sets exceed transaction size limits. The \mtxCollect{} transaction
+partial fanout when UTxO sets exceed transaction size limits (see Section~\ref{sec:bls-accumulators}
+for limits details). The \mtxCollect{} transaction
 creates BLS accumulator commitments to UTxO sets, and \mtxFanout{} transactions use
 exclusion proofs to distribute subsets of UTxOs while maintaining cryptographic guarantees
 about the remaining UTxOs. \\
@@ -830,8 +831,8 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 Once the contestation phase is over, a head may be finalized by posting one or more
 \mtxFanout{} transactions (see Figure~\ref{fig:fanoutTx}), which
 distribute UTxOs from the head according to the latest state. The protocol first attempts
-a complete fanout of all UTxOs. If this fails due to transaction size limits, it automatically
-falls back to partial fanout, distributing a subset of UTxOs and proving the remaining UTxOs
+a complete fanout of all UTxOs. If this fails due to transaction size limits (see Section~\ref{sec:bls-accumulators}
+for limits details), it automatically falls back to partial fanout, distributing a subset of UTxOs and proving the remaining UTxOs
 are still valid. A fanout transaction consists of
 \begin{itemize}
   \item one input spending from $\nuHead$ holding the $\st$, and

@@ -87,9 +87,22 @@ readability.
 \subsection{BLS Accumulators for Partial Fanout}\label{sec:bls-accumulators}
 
 \noindent To enable partial fanout when UTxO sets are too large for a single transaction,
-the protocol uses BLS (Boneh-Lynn-Shacham) accumulators that support partial distribution
+the protocol uses BLS (Boneh-Lynn-Shacham) accumulators~\cite{BLS2001,acc2018} that support partial distribution
 proofs. This allows distributing a subset of UTxOs while proving that the remaining
 UTxOs are still valid and can be distributed in subsequent transactions.
+
+\noindent A UTxO set is considered too large for a single transaction when one or more of the following
+conditions occur:
+\begin{itemize}
+	\item \textbf{Number of outputs:} The UTxO set contains more outputs than can fit in a single
+	      transaction. On Cardano, this limit is typically around 80 ada-only outputs for fanout transactions.
+	\item \textbf{Total transaction size:} The serialized representation of all outputs, including
+	      their values, addresses, and datums, exceeds the maximum transaction size limit (e.g., 16KB on Cardano).
+	\item \textbf{Asset complexity:} UTxOs containing many native assets or complex token structures
+	      increase the transaction size beyond acceptable limits.
+	\item \textbf{Script references:} Large or numerous script references in outputs contribute to
+	      transaction size limits.
+\end{itemize}
 
 \begin{definition}[BLS Accumulator]
 A BLS accumulator scheme provides the following operations:
@@ -113,7 +126,7 @@ For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:
 \end{definition}
 
 \noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
-to partial distribution when full fanout exceeds transaction size limits. The accumulator provides
+to partial distribution when full fanout exceeds transaction size limits (as defined above). The accumulator provides
 cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
 available for future distribution.
 

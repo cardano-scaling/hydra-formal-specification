@@ -10,8 +10,8 @@ on- and off-chain semantics. Participants of the protocol are also called Hydra
 head members, parties or simply protocol actors.
 
 \noindent The off-chain protocol coordinates BLS accumulator operations (see Section~\ref{sec:bls-accumulators})
-for partial fanout support. When UTxO sets are too large for single transactions,
-the off-chain protocol automatically falls back to partial distribution using
+for partial fanout support. When UTxO sets are too large for single transactions (see Section~\ref{sec:bls-accumulators}
+for limits details), the off-chain protocol automatically falls back to partial distribution using
 exclusion proofs, ensuring all UTxOs can be distributed across multiple transactions
 while maintaining cryptographic integrity.
 
