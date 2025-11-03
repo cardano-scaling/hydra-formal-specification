@@ -129,9 +129,9 @@
 								$U \gets U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}}$ \;
 								$\hats \gets s$ \;
 								% TODO: DRY message creation
-								$\eta \gets \accUTxO(U)$ \;
-								$\eta_\alpha \gets \accUTxO(U_\alpha)$ \;
-								$\eta_\omega \gets \accUTxO(\mathsf{outputs}(\tx_\omega))$ \;
+								\textcolor{red}{$\eta \gets \accUTxO(U)$} \;
+								\textcolor{red}{$\eta_\alpha \gets \accUTxO(U_\alpha)$} \;
+								\textcolor{red}{$\eta_\omega \gets \accUTxO(\mathsf{outputs}(\tx_\omega))$} \;
 								$\msSig_i \gets \msSign(\hydraSigningKey, (\cid || v || \hats || \eta || \eta_\alpha || \eta_\omega))$ \;
 								% TODO: use a seen snapshot to keep track of things easier
 								$\hatSigma \gets \emptyset$ \;
@@ -165,11 +165,11 @@
 									$\msCSig \gets \msComb(\hydraKeys^{setup}, \hatSigma)$ \;
 
 									% TODO: DRY message creation
-									$\eta \gets \accUTxO(\hatmU)$ \;
+									\textcolor{red}{$\eta \gets \accUTxO(\hatmU)$} \;
 
-									$\eta_\alpha \gets \accUTxO(U_\alpha)$ \;
+									\textcolor{red}{$\eta_\alpha \gets \accUTxO(U_\alpha)$} \;
 									$U_\omega \gets \mathsf{outputs}(\tx_\omega)$ \;
-									$\eta_\omega \gets \accUTxO(U_\omega)$ \;
+									\textcolor{red}{$\eta_\omega \gets \accUTxO(U_\omega)$} \;
 									% NOTE: Implementation differs here and
 									% below as it stores seen version in seen
 									% snapshot and uses that to verify
@@ -261,9 +261,9 @@
 				\begin{walgo}{0.6}
 					% CLOSE from client
 					\On{$(\hpClose)$ from client}{
-						$\eta \gets \accUTxO(\bar{\mc S}.U)$ \;
-						$\eta_\alpha \gets \accUTxO(\bar{\mc S}.U_\alpha$) \;
-						$\eta_\omega \gets \accUTxO(\bar{\mc S}.U_\omega)$ \;
+						\textcolor{red}{$\eta \gets \accUTxO(\bar{\mc S}.U)$} \;
+						\textcolor{red}{$\eta_\alpha \gets \accUTxO(\bar{\mc S}.U_\alpha$)} \;
+						\textcolor{red}{$\eta_\omega \gets \accUTxO(\bar{\mc S}.U_\omega)$} \;
 						$\xi \gets \bar{\mc S}.\sigma$ \;
 						% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
 						$\PostTx{}~(\mtxClose, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta , \eta_\alpha, \eta_\omega, \xi)$ \;
@@ -275,9 +275,9 @@
 					% CLOSE TX
 					\On{$(\gcChainClose, \eta) \lor (\gcChainContest, s_{c}, \eta)$ from chain}{
 						\If{$\bar{\mc S}.s > s_{c}$}{
-							$\eta \gets \accUTxO(\bar{\mc S}.U)$ \;
-							$\eta_\alpha \gets \accUTxO(\bar{\mc S}.U_\alpha$) \;
-							$\eta_\omega \gets \accUTxO({\bar{\mc S}.U_\omega})$ \;
+							\textcolor{red}{$\eta \gets \accUTxO(\bar{\mc S}.U)$} \;
+							\textcolor{red}{$\eta_\alpha \gets \accUTxO(\bar{\mc S}.U_\alpha$)} \;
+							\textcolor{red}{$\eta_\omega \gets \accUTxO({\bar{\mc S}.U_\omega})$} \;
 							$\xi \gets \bar{\mc S}.\sigma$ \;
 							% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
 							$\PostTx{}~(\mtxContest, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta , \eta_\alpha, \eta_\omega , \xi)$ \;
