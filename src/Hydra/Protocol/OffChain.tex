@@ -143,12 +143,13 @@ party's local state consists of the following variables:
             $\bar{\mc S}.U$         & snapshotted UTxO set \\ \hline
             $\bar{\mc S}.U_\alpha$ & pending UTxO to increment \\ \hline
             $\bar{\mc S}.U_\omega$       & pending UTxO to decrement \\ \hline
+            \textcolor{red}{$\bar{\mc S}.A$}         & \textcolor{red}{BLS accumulator of the UTxO set} \\ \hline
             $\bar{\mc S}.\sigma$         & multisignature \\ \hline
           \end{tabular}
         \end{center}
 \end{itemize}
 
-where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega)$ initializes a
+where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega, \textcolor{red}{A})$ initializes a
 new snapshot object with $\bar{\mathcal{S}}.\sigma = \emptyset$. \\
 
 Additionally, deposit objects are created using
@@ -191,7 +192,7 @@ set is initialized empty $\hatmT = \emptyset$, seen head state version
 $\hatv = 0$, as well as snapshot number $\hats = 0$. No deposit transaction
 $\tx_{\alpha} = \bot$ and no decrement transaction $\tx_{\omega} = \bot$ are
 pending, and the last confirmed snapshot is initialized accordingly
-$\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset, \emptyset)}$.
+$\bar{\mc S} \gets \blue{\Sno(0, 0, [], \Uinit, \emptyset, \emptyset, \accUTxO(\Uinit))}$.
 
 \subsubsection{Processing transactions off-chain}
 
@@ -287,8 +288,8 @@ if the signature from each party has been collected, $\party_i$ aggregates the
 multisignature $\msCSig$ and $\Req$ it to be valid (constructing the signed
 message as in $\hpRS$). If everything is fine, the snapshot can be considered
 confirmed by creating the snapshot object
-$\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_{\alpha}, \mathsf{outputs}(\tx_{\omega}))$
-and storing the multi-signature $\msCSig$ in it for later reference. In case
+$\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_{\alpha}, \mathsf{outputs}(\tx_{\omega}), \textcolor{red}{A})$
+where \textcolor{red}{$A = \accUTxO(\hatmU)$ is the accumulator of the UTxO set}, and storing the multi-signature $\msCSig$ in it for later reference. In case
 there is a pending decommit, any participant can now submit a \mtxDecrement{}
 transaction by providing the just confirmed snapshot with its digests of the
 active UTxO set $\eta$ and the to be removed UTxO set $\eta_{\omega}$. If, however, there
