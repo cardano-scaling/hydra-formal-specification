@@ -37,7 +37,6 @@ application of a function $f$ to an argument $x$ is written as $f(x)$. \\
 	\item $\concat : \tyBytes^* \to \tyBytes$ is concatenating bytes, we also use operator $\bigoplus$ for this
 	\item $\hash : x \to \tyBytes$ denotes a collision-resistant
 	      hashing function and $x^{\#}$ indicates the hash of $x$
-	      \textcolor{red}{\todo{Update hash function usage to support partial fanout where needed}}
 	\item $\bytes : x \to \tyBytes$ denotes an invertible serialisation function
 	      mapping arbitrary data to bytes
 	\item $a || b = \concat(\bytes(a), \bytes(b))$ is an operator which concatenates the $\bytes(b)$ to the $\bytes(a)$
@@ -84,51 +83,7 @@ Note that in the following, we make the parameter~$\msParams$ implicit and leave
 out the $ver$ suffix for verification key such that $k = k^{ver}$ for better
 readability.
 
-\subsection{\textcolor{red}{BLS Accumulators for Partial Fanout}}\label{sec:bls-accumulators}
 
-\textcolor{red}{\noindent To enable partial fanout when UTxO sets are too large for a single transaction,
-the protocol uses BLS (Boneh-Lynn-Shacham) accumulators~\cite{BLS2001,acc2018} that support partial distribution
-proofs. This allows distributing a subset of UTxOs while proving that the remaining
-UTxOs are still valid and can be distributed in subsequent transactions.}
-
-\textcolor{red}{\noindent A UTxO set is considered too large for a single transaction when one or more of the following
-conditions occur:}
-\begin{itemize}
-	\item \textcolor{red}{\textbf{Number of outputs:} The UTxO set contains more outputs than can fit in a single
-	      transaction. On Cardano, this limit is typically around 80 ada-only outputs for fanout transactions.}
-	\item \textcolor{red}{\textbf{Total transaction size:} The serialized representation of all outputs, including
-	      their values, addresses, and datums, exceeds the maximum transaction size limit (e.g., 16KB on Cardano).}
-	\item \textcolor{red}{\textbf{Asset complexity:} UTxOs containing many native assets or complex token structures
-	      increase the transaction size beyond acceptable limits.}
-	\item \textcolor{red}{\textbf{Script references:} Large or numerous script references in outputs contribute to
-	      transaction size limits.}
-\end{itemize}
-
-\begin{definition}[\textcolor{red}{BLS Accumulator}]
-\textcolor{red}{A BLS accumulator scheme provides the following operations:}
-\begin{itemize}
-	\item \textcolor{red}{$\accSetup$ generates public parameters for the accumulator system}
-	\item \textcolor{red}{$\accCommit(U)$ creates a commitment to a UTxO set $U$}
-	\item \textcolor{red}{$\accWitness(C, u)$ generates a membership witness for UTxO $u$ in commitment $C$}
-	\item \textcolor{red}{$\accVerify(C, u, w)$ verifies that witness $w$ proves $u$ is in commitment $C$}
-	\item \textcolor{red}{$\accExclude(C, S)$ generates an exclusion proof for subset $S$ from commitment $C$}
-	\item \textcolor{red}{$\accVerifyExclude(C, S, \pi)$ verifies that exclusion proof $\pi$ allows removal of $S$ from $C$}
-\end{itemize}
-\end{definition}
-
-\begin{definition}[\textcolor{red}{Partial Distribution}]
-\textcolor{red}{For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:}
-\begin{itemize}
-	\item \textcolor{red}{$\accUTxO(U)$ creates a BLS accumulator commitment to the UTxO set $U$}
-	\item \textcolor{red}{$\accPartial(U, S)$ creates an exclusion proof showing that subset $S$ can be distributed}
-	\item \textcolor{red}{$\accVerifyPartial(C, S, \pi)$ verifies that exclusion proof $\pi$ allows distribution of $S$ from commitment $C$}
-\end{itemize}
-\end{definition}
-
-\textcolor{red}{\noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
-to partial distribution when full fanout exceeds transaction size limits (as defined above). The accumulator provides
-cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
-available for future distribution.}
 
 \subsection{Extended UTxO}\label{sec:eutxo}
 The Hydra Head protocol is specified to work on the so-called Extended UTxO (EUTxO) ledgers
@@ -298,6 +253,42 @@ formalism).
 % and point out that state input/outputs do represent a transition in the
 % statemachine from s' to s' etc.
 \todo{Add an example graph with a legend}
+
+\subsection{\textcolor{red}{BLS Accumulators for Partial Fanout}}\label{sec:bls-accumulators}
+
+\textcolor{red}{\noindent To enable partial fanout when UTxO sets are too large for a single transaction,
+the protocol uses BLS (Boneh-Lynn-Shacham) accumulators~\cite{BLS2001,acc2018} that support partial distribution
+proofs. This allows distributing a subset of UTxOs while proving that the remaining
+UTxOs are still valid and can be distributed in subsequent transactions.}
+
+\textcolor{red}{\noindent When UTxO sets exceed transaction size limits or other constraints, the protocol
+uses partial fanout to distribute subsets of UTxOs across multiple transactions.}
+
+\begin{definition}[\textcolor{red}{BLS Accumulator}]
+\textcolor{red}{A BLS accumulator scheme provides the following operations:}
+\begin{itemize}
+	\item \textcolor{red}{$\accSetup$ generates public parameters for the accumulator system}
+	\item \textcolor{red}{$\accCommit(U)$ creates a commitment to a UTxO set $U$}
+	\item \textcolor{red}{$\accWitness(C, u)$ generates a membership witness for UTxO $u$ in commitment $C$}
+	\item \textcolor{red}{$\accVerify(C, u, w)$ verifies that witness $w$ proves $u$ is in commitment $C$}
+	\item \textcolor{red}{$\accExclude(C, S)$ generates an exclusion proof for subset $S$ from commitment $C$}
+	\item \textcolor{red}{$\accVerifyExclude(C, S, \pi)$ verifies that exclusion proof $\pi$ allows removal of $S$ from $C$}
+\end{itemize}
+\end{definition}
+
+\begin{definition}[\textcolor{red}{Partial Distribution}]
+\textcolor{red}{For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:}
+\begin{itemize}
+	\item \textcolor{red}{$\accUTxO(U)$ creates a BLS accumulator commitment to the UTxO set $U$}
+	\item \textcolor{red}{$\accPartial(U, S)$ creates an exclusion proof showing that subset $S$ can be distributed}
+	\item \textcolor{red}{$\accVerifyPartial(C, S, \pi)$ verifies that exclusion proof $\pi$ allows distribution of $S$ from commitment $C$}
+\end{itemize}
+\end{definition}
+
+\textcolor{red}{\noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
+to partial distribution when full fanout exceeds transaction limits. The accumulator provides
+cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
+available for future distribution.}
 
 %%% Local Variables:
 %%% mode: latex

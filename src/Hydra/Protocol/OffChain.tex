@@ -31,7 +31,8 @@ The protocol is specified as a reactive system that processes three kinds of inp
           \item $\mathtt{decrementTx}$: removes UTxO from an open head
           \item $\mathtt{closeTx}$: closes a head
           \item $\mathtt{contestTx}$: contests a closed head
-          \item \textcolor{red}{$\mathtt{fanoutTx}$: distributes UTxOs from a closed head (partial or complete)}
+          \item \textcolor{red}{$\mathtt{fanoutTx}$: distributes all UTxOs from a closed head (final)}
+          \item \textcolor{red}{$\mathtt{partialFanoutTx}$: distributes a subset of UTxOs from a closed head (intermediate)}
         \end{itemize}
         Also, a special input when time advanced on chain may be used:
         \begin{itemize}
@@ -314,12 +315,13 @@ Section~\ref{sec:decrement-tx}. \\
   is incremented on each \mtxIncrement{} transaction as described in
   Section~\ref{sec:increment-tx}
 
-\textcolor{red}{\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
-transaction, the distributed UTxOs are removed from the local state tracking.
-If this was a partial fanout (not all UTxOs were distributed), the head remains
+\noindent\textcolor{red}{\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
+transaction, all UTxOs are distributed and the head transitions to $\stFinal$ state.}
+
+\noindent\textcolor{red}{\dparagraph{$\mathtt{partialFanoutTx}$.}\quad Upon observing a partial fanout
+transaction, the distributed UTxOs are removed from the local state tracking and the head remains
 in $\stClosed$ state with updated accumulator containing the remaining UTxOs.
-If this was a complete fanout (all UTxOs distributed), the head transitions to
-$\stFinal$ state. The off-chain protocol must coordinate partial fanout to
+The off-chain protocol must coordinate partial fanout to
 ensure proper selection of UTxO subsets and generation of exclusion proofs.
 \todo{Add detailed off-chain protocol for partial fanout coordination, including
 selection strategy for UTxO subsets.}}
@@ -406,7 +408,6 @@ including $\eta_{0}$.\todo{not implemented and maybe redundant with directly ope
 \input{Hydra/Protocol/Figures/offchain-protocol}
 
 \todo{In figure: $\combine$ on UTxO slightly different than on commits}
-\textcolor{red}{\todo{Update off-chain protocol to support partial fanout coordination}}
 
 %%% Local Variables:
 %%% mode: latex

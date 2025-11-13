@@ -1,14 +1,6 @@
 \clearpage
 \section{On-chain Protocol}\label{sec:on-chain}
 \todo{Update figures}
-\textcolor{red}{\todo{Update fanoutTx.svg figure to show partial fanout concept - either complete distribution or partial distribution with remaining UTxOs}}
-
-\todo{Open problem: ensure abort is always possible. e.g. by individual aborts or undoing commits}
-\todo{Open problem: ensure fanout is always possible, e.g. by limiting complexity of $U_0$}
-\textcolor{red}{\todo{Update UTxO set digest mechanism to support partial fanout when transaction size limits are exceeded}}
-\textcolor{red}{\todo{Update combine function: change from simple hash to commitment scheme that supports partial distribution proofs}}
-\textcolor{red}{\todo{Implement fallback mechanism: try full fanout first, fall back to partial fanout if transaction size limit exceeded}}
-\textcolor{red}{\todo{Consider transaction chaining for seamless partial fanout execution}}
 
 \noindent The following sections describe the the \emph{on-chain} protocol
 controlling the life-cycle of a Hydra head, which can be intuitively described
@@ -18,11 +10,11 @@ protocol transaction
 on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort{}~\ref{sec:abort-tx}, \mtxCollect{}~\ref{sec:collect-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
 
 \noindent \textcolor{red}{The protocol uses BLS accumulators (see Section~\ref{sec:bls-accumulators}) to enable
-partial fanout when UTxO sets exceed transaction size limits (see Section~\ref{sec:bls-accumulators}
-for limits details). The \mtxCollect{} transaction
-creates BLS accumulator commitments to UTxO sets, and \mtxFanout{} transactions use
-exclusion proofs to distribute subsets of UTxOs while maintaining cryptographic guarantees
-about the remaining UTxOs.} \\
+partial fanout when UTxO sets exceed transaction size limits. The \mtxCollect{} transaction
+creates BLS accumulator commitments to UTxO sets. When all UTxOs fit in a single transaction,
+\mtxFanout{} distributes them all at once. When UTxO sets are too large, partial fanout transactions
+use exclusion proofs to distribute subsets of UTxOs across multiple transactions while maintaining 
+cryptographic guarantees about the remaining UTxOs.} \\
 
 \noindent Besides the main state transitions of the head protocol, there is
   the related ``deposit protocol'' with two transactions in support of
@@ -292,14 +284,11 @@ $\redeemerHead = \mathsf{collect}$ and checks:
   \]
   where $n = |\hydraKeys|$ and
   \[
-	\combine(\underline{C}) = \textcolor{red}{\accUTxO}(\mathsf{concat}({\sortOn(1, \mathsf{concat}(\underline{C}))}^{\downarrow2}))
+	\combine(\underline{C}) = \textcolor{red}{\accUTxO}(\{b \mid b \in \underline{C}\})
   \]
   \textcolor{red}{That is, given a list of committed UTxO $\underline{C}$, where each element is
-  a list of output references and the serialised representation of what was
-  committed, $\combine$ first concatenates all commits together, sorts this list
-  by the output references, and creates a commitment to the UTxO set that supports
-  partial fanout}\footnote{Sorting is required to ensure a canonical representation which
-	can also be reproduced from the UTxO set later in the fanout.}.
+  a bytestring corresponding to an output, $\combine$ creates a BLS accumulator commitment
+  to the set of bytestrings that supports partial fanout.}
 
   \item All committed value captured and no value is extracted
   \[
@@ -828,62 +817,101 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 
 \subsection{Fan-Out Transaction}\label{sec:fanout-tx}
 
-\textcolor{red}{Once the contestation phase is over, a head may be finalized by posting one or more
-\mtxFanout{} transactions (see Figure~\ref{fig:fanoutTx}), which
-distribute UTxOs from the head according to the latest state. The protocol first attempts
-a complete fanout of all UTxOs. If this fails due to transaction size limits (see Section~\ref{sec:bls-accumulators}
-for limits details), it automatically falls back to partial fanout, distributing a subset of UTxOs and proving the remaining UTxOs
-are still valid. A fanout transaction consists of}
+Once the contestation phase is over, a head may be finalized by posting a \mtxFanout{}
+transaction (see Figure~\ref{fig:fanoutTx}), which distributes all UTxOs from the head
+according to the latest state. A fanout transaction consists of
 \begin{itemize}
-  \item \textcolor{red}{one input spending from $\nuHead$ holding the $\st$, and}
-  \item \textcolor{red}{outputs $o_{1} \dots o_{m+n+n'}$ to distribute a subset of UTxOs.}
+  \item one input spending from $\nuHead$ holding the $\st$, and
+  \item outputs $o_{1} \dots o_{m+n+n'}$ to distribute all UTxOs.
 \end{itemize}
-
-\textcolor{red}{Note that \mtxFanout{} may represent either a final transition of the state machine
-(when all UTxOs are distributed) or an intermediate transition (when only a subset
-is distributed). In the latter case, the state machine remains in $\stClosed$ state
-with updated accumulator containing the remaining UTxOs.}
 
 \begin{figure}
   \centering
   \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.svg}
   \caption{\mtxFanout{} transaction spending the $\stClosed$ head output and
-	distributing funds with outputs $o_{1} \dots o_{m+n+n'}$. \textcolor{red}{The transaction can
-	distribute either all UTxOs (complete fanout) or a subset (partial fanout) with
-	proofs that remaining UTxOs are still valid.}}\label{fig:fanoutTx}
+	distributing funds with outputs $o_{1} \dots o_{m+n+n'}$.}\label{fig:fanoutTx}
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-\textcolor{red}{$\redeemerHead = (\mathsf{fanout}, m, n, n', \pi_{\eta}, \pi_{\alpha\Delta}, \pi_{\omega\Delta}, \eta'_{remaining})$}, where:
-\begin{itemize}
-  \item $m$, $n$ and $n'$ are outputs to distribute from the $\stClosed$ state
-  \item \textcolor{red}{$\pi_{\eta}$, $\pi_{\alpha\Delta}$, $\pi_{\omega\Delta}$ are partial distribution proofs for the distributed UTxO sets}
-  \item \textcolor{red}{$\eta'_{remaining}$ is the updated commitment containing remaining UTxOs}
-\end{itemize}
-The validator checks:
+$\redeemerHead = (\mathsf{fanout}, m, n, n')$, where $m$, $n$ and $n'$ are outputs
+to distribute from the $\stClosed$ state. The validator checks:
 \begin{menumerate}
-  \item \textcolor{red}{State transition: If all UTxOs are distributed, transition to $\stFinal$; otherwise remain in $\stClosed$ with updated accumulator:}
+  \item State is advanced from $\datumHead \sim \stClosed$ to terminal state $\stFinal$:
   \[
-	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n',\pi_{\eta},\pi_{\alpha\Delta},\pi_{\omega\Delta}]{\stFanout} \stFinal \text{ or } \stClosed'}
+	(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
   \]
-  \item \textcolor{red}{The first $m$ outputs are distributing a subset of funds according to $\eta$. The exclusion proof $\pi_{\eta}$ proves that the distributed outputs $S_{\eta} = \{o_1, \ldots, o_m\}$ can be removed from accumulator $\eta$:}
+  \item The first $m$ outputs are distributing funds according to $\eta$. That is,
+  the outputs exactly correspond to the UTxO set $U$ committed in the accumulator:
+  \[
+	\eta = \textcolor{red}{\accUTxO(\{o_1, \ldots, o_m\})}
+  \]
+  \item The following $n$ outputs are distributing funds according to
+  $\eta_\alpha\Delta$. That is, the outputs exactly correspond to the UTxO set
+  $U_{\alpha\Delta}$ committed in the accumulator:
+  \[
+	\eta_{\alpha\Delta} = \textcolor{red}{\accUTxO(\{o_{m+1}, \ldots, o_{m+n}\})}
+  \]
+  \item The next $n'$ outputs are distributing funds according to
+  $\eta_\omega\Delta$. That is, the outputs exactly correspond to the UTxO set
+  $U_{\omega\Delta}$ committed in the accumulator:
+  \[
+	\eta_{\omega\Delta} = \textcolor{red}{\accUTxO(\{o_{m+n+1}, \ldots, o_{m+n+n'}\})}
+  \]
+  \item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
+  \item All tokens are burnt
+  $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
+\end{menumerate}
+
+\subsubsection{Partial Fan-Out Transaction}\label{sec:partial-fanout-tx}
+
+\textcolor{red}{When UTxO sets exceed transaction size limits or other constraints (see Section~\ref{sec:bls-accumulators}),
+the protocol uses partial fanout to distribute a subset of UTxOs while proving that the remaining
+UTxOs are still valid. A partial fanout transaction consists of}
+\begin{itemize}
+  \item \textcolor{red}{one input spending from $\nuHead$ holding the $\st$, and}
+  \item \textcolor{red}{outputs $o_{1} \dots o_{m+n+n'}$ to distribute a subset of UTxOs, and}
+  \item \textcolor{red}{an output with updated $\stClosed$ state containing the remaining UTxOs.}
+\end{itemize}
+
+\textcolor{red}{\todo{Import partialFanoutTx.svg figure from Miro board}}
+
+\noindent \textcolor{red}{The state-machine validator $\nuHead$ is spent with
+$\redeemerHead = (\mathsf{partialFanout}, m, n, n', \pi_{\eta}, \pi_{\alpha\Delta}, \pi_{\omega\Delta}, \eta', \eta'_{\alpha\Delta}, \eta'_{\omega\Delta})$, where:}
+\begin{itemize}
+  \item \textcolor{red}{$m$, $n$ and $n'$ are outputs to distribute from the $\stClosed$ state}
+  \item \textcolor{red}{$\pi_{\eta}$, $\pi_{\alpha\Delta}$, $\pi_{\omega\Delta}$ are exclusion proofs for the distributed UTxO sets}
+  \item \textcolor{red}{$\eta'$, $\eta'_{\alpha\Delta}$, $\eta'_{\omega\Delta}$ are the updated accumulator commitments for remaining UTxOs}
+\end{itemize}
+\textcolor{red}{The validator checks:}
+\begin{menumerate}
+  \item \textcolor{red}{State remains in $\stClosed$ with updated accumulators for remaining UTxOs:}
+  \[
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n',\pi_{\eta},\pi_{\alpha\Delta},\pi_{\omega\Delta}]{\stPartialFanout} (\stClosed',\cid,\hydraKeys,\Tcontest,v, s,\eta',\eta'_{\alpha\Delta},\eta'_{\omega\Delta},\contesters,\tfinal)}
+  \]
+  \item \textcolor{red}{The first $m$ outputs are distributing a subset of funds according to $\eta$. That is,
+  the exclusion proof $\pi_{\eta}$ verifies that the distributed outputs $S_{\eta} = \{o_1, \ldots, o_m\}$ 
+  can be removed from the accumulator $\eta$:}
   \[
 	\textcolor{red}{\accVerifyPartial(\eta, S_{\eta}, \pi_{\eta}) = \true}
   \]
   \item \textcolor{red}{The following $n$ outputs are distributing a subset of funds according to
-  $\eta_\alpha\Delta$. The exclusion proof $\pi_{\alpha\Delta}$ proves that the distributed outputs $S_{\alpha\Delta} = \{o_{m+1}, \ldots, o_{m+n}\}$ can be removed from accumulator $\eta_{\alpha\Delta}$:}
+  $\eta_\alpha\Delta$. That is, the exclusion proof $\pi_{\alpha\Delta}$ verifies that the distributed 
+  outputs $S_{\alpha\Delta} = \{o_{m+1}, \ldots, o_{m+n}\}$ can be removed from the accumulator $\eta_{\alpha\Delta}$:}
   \[
 	\textcolor{red}{\accVerifyPartial(\eta_{\alpha\Delta}, S_{\alpha\Delta}, \pi_{\alpha\Delta}) = \true}
   \]
   \item \textcolor{red}{The next $n'$ outputs are distributing a subset of funds according to
-  $\eta_\omega\Delta$. The exclusion proof $\pi_{\omega\Delta}$ proves that the distributed outputs $S_{\omega\Delta} = \{o_{m+n+1}, \ldots, o_{m+n+n'}\}$ can be removed from accumulator $\eta_{\omega\Delta}$:}
+  $\eta_\omega\Delta$. That is, the exclusion proof $\pi_{\omega\Delta}$ verifies that the distributed 
+  outputs $S_{\omega\Delta} = \{o_{m+n+1}, \ldots, o_{m+n+n'}\}$ can be removed from the accumulator $\eta_{\omega\Delta}$:}
   \[
 	\textcolor{red}{\accVerifyPartial(\eta_{\omega\Delta}, S_{\omega\Delta}, \pi_{\omega\Delta}) = \true}
   \]
-  \item \textcolor{red}{If not all UTxOs are distributed, the remaining accumulator $\eta'_{remaining}$ is correctly computed by removing the distributed UTxOs from the original accumulators.}
-  \item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
-  \item All tokens are burnt
-  $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
+  \item \textcolor{red}{The outgoing $\stClosed'$ datum contains the updated accumulator commitments 
+  $\eta'$, $\eta'_{\alpha\Delta}$, $\eta'_{\omega\Delta}$ that correctly represent the remaining UTxOs 
+  after removing the distributed sets from each respective accumulator.}
+  \item \textcolor{red}{Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.}
+  \item \textcolor{red}{All tokens are burnt
+  $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.}
 \end{menumerate}
 
 \noindent The $\muHead(\seed)$ minting policy governs the burning of tokens via
