@@ -553,10 +553,12 @@ In order to close a head, a head member may post the \mtxClose{} transaction
   datum $\datumHead'$.
 \end{itemize}
 
+\textcolor{red}{\todo{Update closeTx.svg in Miro: output $\stClosed$ state should show single $\eta$ instead of three separate accumulators}}
+
 \begin{figure}
   \centering
   \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/closeTx.svg}
-  \caption{\mtxClose{} transaction spending the $\stOpen$ head output and producing a $\stClosed$ head output.}\label{fig:closeTx}
+  \caption{\mtxClose{} transaction spending the $\stOpen$ head output and producing a $\stClosed$ head output \textcolor{red}{with unified accumulator $\eta$.}}\label{fig:closeTx}
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
@@ -565,9 +567,11 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stOpen$ to
   $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
-  stay unchanged and the new state is governed again by $\nuHead$
+  stay unchanged and the new state is governed again by $\nuHead$. \textcolor{red}{The output state
+  contains a single unified accumulator $\eta'$ that combines all relevant UTxO sets
+  (main state, increments, and decrements) using $\accCombine$:}
   \[
-	(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \eta_\alpha\Delta', \eta_\omega\Delta', \contesters,\tfinal)
+	\textcolor{red}{(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \contesters,\tfinal)}
   \]
   \item Last known open state version is recorded in closed state
   \[
@@ -586,65 +590,55 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 	  \eta' = \eta
 	\]
-    \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and both UTxO to increment and decrement must be empty in the closed state.
+    \item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ \textcolor{red}{with no pending increments or decrements. The unified accumulator is simply the snapshotted state:}
 	  \[
-		\eta_\alpha\Delta' = \eta_\alpha = \bot
+		\textcolor{red}{\eta' = \eta_{\text{snapshot}}}
 	  \]
 	  \[
-		\eta_\omega\Delta' = \eta_\omega = \bot
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \bot || \bot),\xi) = \true}
 	  \]
-	  \[
-		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-	  \]
-	  \item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
+	  \item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ \textcolor{red}{with pending increments that should be combined with the snapshotted state:}
 	  \[
 	    \eta_\alpha  \neq \bot
 	  \]
 	  \[
-	    \eta_\alpha\Delta' = \bot
+	    \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\alpha)}
 	  \]
 	  \[
-		\eta_\omega\Delta' = \eta\omega = \bot
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\text{snapshot}} || \eta_\alpha || \bot),\xi) = \true}
 	  \]
-	  \[
-		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-	  \]
-	  where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
-	\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
+	  where $\eta_\alpha$ is provided by the redeemer \textcolor{red}{and combined with the snapshotted state to create the unified accumulator.}
+	\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$ \textcolor{red}{with pending decrements that should be combined with the snapshotted state:}
 	\[
-	  \eta_\alpha\Delta' = \eta_\alpha = \bot
+	  \textcolor{red}{\eta_\omega \neq \bot}
 	\]
 	\[
-	  \eta_\omega\Delta' = \eta_\omega \neq \bot
+	  \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\omega)}
 	\]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+	  \textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\text{snapshot}} || \bot || \eta_\omega),\xi) = \true}
 	\]
-	\todo{this is hard to understand}
-	\item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
+	\item $\mathsf{UsedInc}$: Closing snapshot refers to the previous state $v - 1$ \textcolor{red}{and includes increments that should be combined with the snapshotted state:}
 	  \[
-		\eta_\alpha\Delta' = \eta_\alpha \neq \bot
+		\textcolor{red}{\eta_\alpha \neq \bot}
 	  \]
 	  \[
-	    \eta_\omega\Delta' = \eta_\omega = \bot
+	    \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\alpha)}
 	  \]
 	  \[
-		\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\text{snapshot}} || \eta_\alpha || \bot ),\xi) = \true}
 	\]
-	\item $\mathsf{UsedDec}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
+	\item $\mathsf{UsedDec}$: Closing snapshot refers to the previous state $v - 1$ \textcolor{red}{and reflects decrements. The unified accumulator is the snapshotted state:}
 	  \[
-		\eta_\alpha\Delta' = \eta_\alpha = \bot
+	    \textcolor{red}{\eta_\omega \neq  \bot}
 	  \]
 	  \[ 
-	    \eta_\omega \neq  \bot
-	  \]
-	  \[ 
-	    \eta_\omega\Delta' = \bot
+	    \textcolor{red}{\eta' = \eta_{\text{snapshot}}}
 	  \]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+	  \textcolor{red}{\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \bot || \eta_\omega),\xi) = \true}
 	\]
-	where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
+	where $\eta_\omega$ is provided by the redeemer \textcolor{red}{for signature verification, but the decrements are already reflected in $\eta_{\text{snapshot}}$.}
   \end{menumerate}
   % TODO: detailed CDDL definition of msg
 
@@ -690,21 +684,23 @@ transaction has
   datum $\datumHead'$.
 \end{itemize}
 
+\textcolor{red}{\todo{Update contestTx.svg in Miro: both input and output $\stClosed$ states should show single $\eta$ instead of three separate accumulators}}
+
 \begin{figure}
   \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/contestTx.svg}
-  \caption{\mtxContest{} transaction spending the $\stClosed$ head output and
-	producing a different $\stClosed$ head output.}\label{fig:contestTx}
+  \caption{\mtxContest{} transaction spending the $\stClosed$ head output \textcolor{red}{with unified accumulator $\eta$} and
+	producing a different $\stClosed$ head output \textcolor{red}{with updated $\eta$.}}\label{fig:contestTx}
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
 $\redeemerHead = (\mathsf{contest}, \mathsf{ContestType})$, where
 $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 \begin{menumerate}
-  \item State is advanced from $\datumHead \sim \stOpen$ to
-  $\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
-  stay unchanged and the new state is governed again by $\nuHead$
+  \item \textcolor{red}{State remains in $\stClosed$ but with updated snapshot. Parameters $\cid,\hydraKeys,\Tcontest$
+  stay unchanged and the new state is governed again by $\nuHead$. The output state
+  contains a single unified accumulator $\eta'$ computed using $\accCombine$ based on the contest type:}
   \[
-	(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\eta_\alpha\Delta',\eta\omega\Delta',\contesters',\tfinal')
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\contesters',\tfinal')}
   \]
 
   \item Last known open state version stays recorded in closed state
@@ -719,67 +715,58 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
   \item Based on the redeemer $\mathsf{ContestType} = (\mathsf{Current}, \xi) (\mathsf{UnusedInc}, \xi, \eta_\alpha) \cup (\mathsf{UnusedDec}, \xi) \cup (\mathsf{UsedInc}, \xi)  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot and $\eta_\alpha$ and $\eta_\omega$ are the digests of the UTxO to increment or decrement respectively, five cases are distinguished:
 
   \begin{menumerate}
-	\item $\mathsf{Current}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment or decrement must be $\bot$ in the closed state.
+	\item $\mathsf{Current}$: Contesting snapshot refers to current state version $v$ \textcolor{red}{with no pending increments or decrements. The unified accumulator is simply the snapshotted state:}
 	  \[
-		\eta_\alpha\Delta' = \eta_\alpha =  \bot
+		\textcolor{red}{\eta' = \eta_{\text{snapshot}}}
 	  \]
 	  \[
-		\eta_\omega\Delta' = \eta_\omega =  \bot
-	  \]
-	  \[
-		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \bot || \bot),\xi) = \true}
 	  \]
 	%% FIXME: \red{\item ...} does not work
-	\item $\mathsf{UnusedInc}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment must be $\bot$ in the closed state.
+	\item $\mathsf{UnusedInc}$: Contesting snapshot refers to current state version $v$ \textcolor{red}{with pending increments that should be combined with the snapshotted state:}
 	  \[
-	    \eta_\alpha  \neq \bot
+	    \textcolor{red}{\eta_\alpha  \neq \bot}
 	  \]
 	  \[
-	    \eta_\alpha\Delta' = \bot
+	    \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\alpha)}
 	  \]
 	  \[
-		\eta_\omega\Delta' = \eta\omega = \bot
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\text{snapshot}} || \eta_\alpha || \bot),\xi) = \true}
 	  \]
-	  \[
-		\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-	  \]
-	  where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
+	  where $\eta_\alpha$ is provided by the redeemer \textcolor{red}{and combined with the snapshotted state to create the unified accumulator.}
 
-	\item $\mathsf{UnusedDec}$: Contesting snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
+	\item $\mathsf{UnusedDec}$: Contesting snapshot refers to current state version $v$ \textcolor{red}{with pending decrements that should be combined with the snapshotted state:}
 	\[
-	  \eta_\alpha\Delta' = \eta_\alpha = \bot
+	  \textcolor{red}{\eta_\omega \neq \bot}
 	\]
 	\[
-	  \eta_\omega\Delta' = \eta_\omega \neq \bot
+	  \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\omega)}
 	\]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
+	  \textcolor{red}{\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\text{snapshot}} || \bot || \eta_\omega),\xi) = \true}
 	\]
-	  \item $\mathsf{UsedInc}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
+	  \item $\mathsf{UsedInc}$: Contesting snapshot refers to the previous state $v - 1$ \textcolor{red}{and includes increments that should be combined with the snapshotted state:}
 	  \[
-		\eta_\alpha\Delta' = \eta_\alpha \neq \bot
+		\textcolor{red}{\eta_\alpha \neq \bot}
 	  \]
 	  \[
-	    \eta_\omega\Delta' = \eta_\omega = \bot
+	    \textcolor{red}{\eta' = \accCombine(\eta_{\text{snapshot}}, \eta_\alpha)}
 	  \]
 	  \[
-		\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
+		\textcolor{red}{\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\text{snapshot}} || \eta_\alpha || \bot ),\xi) = \true}
 	  \]
 
-	\item $\mathsf{UsedDec}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
-	  \[
-		\eta_\alpha\Delta' = \eta_\alpha = \bot
+	\item $\mathsf{UsedDec}$: Contesting snapshot refers to the previous state $v - 1$ \textcolor{red}{and reflects decrements. The unified accumulator is the snapshotted state:}
+	  \[ 
+	    \textcolor{red}{\eta_\omega \neq  \bot}
 	  \]
 	  \[ 
-	    \eta_\omega \neq  \bot
-	  \]
-	  \[ 
-	    \eta_\omega\Delta' = \bot
+	    \textcolor{red}{\eta' = \eta_{\text{snapshot}}}
 	  \]
 	\[
-	  \msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
+	  \textcolor{red}{\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \bot || \eta_\omega),\xi) = \true}
 	\]
-	where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
+	where $\eta_\omega$ is provided by the redeemer \textcolor{red}{for signature verification, but the decrements are already reflected in $\eta_{\text{snapshot}}$.}
   \end{menumerate}
   % TODO: detailed CDDL definition of msg
 
@@ -819,43 +806,33 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 
 Once the contestation phase is over, a head may be finalized by posting a \mtxFanout{}
 transaction (see Figure~\ref{fig:fanoutTx}), which distributes all UTxOs from the head
-according to the latest state. A fanout transaction consists of
+according to the \textcolor{red}{unified accumulator in the closed state. A fanout transaction consists of}
 \begin{itemize}
   \item one input spending from $\nuHead$ holding the $\st$, and
-  \item outputs $o_{1} \dots o_{m+n+n'}$ to distribute all UTxOs.
+  \item outputs $\textcolor{red}{o_{1} \dots o_{m}}$ to distribute all UTxOs.
 \end{itemize}
+
+\textcolor{red}{\todo{Update fanoutTx.svg in Miro: input $\stClosed$ state should show single $\eta$ instead of three separate accumulators}}
 
 \begin{figure}
   \centering
   \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/fanoutTx.svg}
-  \caption{\mtxFanout{} transaction spending the $\stClosed$ head output and
-	distributing funds with outputs $o_{1} \dots o_{m+n+n'}$.}\label{fig:fanoutTx}
+  \caption{\mtxFanout{} transaction spending the $\stClosed$ head output \textcolor{red}{with unified accumulator $\eta$} and
+	distributing all funds with outputs $\textcolor{red}{o_{1} \dots o_{m}}$.}\label{fig:fanoutTx}
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{fanout}, m, n, n')$, where $m$, $n$ and $n'$ are outputs
-to distribute from the $\stClosed$ state. The validator checks:
+\textcolor{red}{$\redeemerHead = (\mathsf{fanout}, m)$, where $m$ is the number of outputs
+to distribute from the $\stClosed$ state.} The validator checks:
 \begin{menumerate}
   \item State is advanced from $\datumHead \sim \stClosed$ to terminal state $\stFinal$:
   \[
-	(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\contesters,\tfinal) \xrightarrow[m]{\stFanout} \stFinal}
   \]
-  \item The first $m$ outputs are distributing funds according to $\eta$. That is,
-  the outputs exactly correspond to the UTxO set $U$ committed in the accumulator:
+  \item \textcolor{red}{All $m$ outputs are distributing the complete UTxO set according to the unified accumulator $\eta$. That is,
+  the outputs exactly correspond to the UTxO set $U$ committed in the accumulator:}
   \[
-	\eta = \textcolor{red}{\accUTxO(\{o_1, \ldots, o_m\})}
-  \]
-  \item The following $n$ outputs are distributing funds according to
-  $\eta_\alpha\Delta$. That is, the outputs exactly correspond to the UTxO set
-  $U_{\alpha\Delta}$ committed in the accumulator:
-  \[
-	\eta_{\alpha\Delta} = \textcolor{red}{\accUTxO(\{o_{m+1}, \ldots, o_{m+n}\})}
-  \]
-  \item The next $n'$ outputs are distributing funds according to
-  $\eta_\omega\Delta$. That is, the outputs exactly correspond to the UTxO set
-  $U_{\omega\Delta}$ committed in the accumulator:
-  \[
-	\eta_{\omega\Delta} = \textcolor{red}{\accUTxO(\{o_{m+n+1}, \ldots, o_{m+n+n'}\})}
+	\textcolor{red}{\eta = \accUTxO(\{o_1, \ldots, o_m\})}
   \]
   \item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
   \item All tokens are burnt
@@ -869,46 +846,33 @@ the protocol uses partial fanout to distribute a subset of UTxOs while proving t
 UTxOs are still valid. A partial fanout transaction consists of}
 \begin{itemize}
   \item \textcolor{red}{one input spending from $\nuHead$ holding the $\st$, and}
-  \item \textcolor{red}{outputs $o_{1} \dots o_{m+n+n'}$ to distribute a subset of UTxOs, and}
+  \item \textcolor{red}{outputs $o_{1} \dots o_{m}$ to distribute a subset of UTxOs, and}
   \item \textcolor{red}{an output with updated $\stClosed$ state containing the remaining UTxOs.}
 \end{itemize}
 
 \textcolor{red}{\todo{Import partialFanoutTx.svg figure from Miro board}}
 
 \noindent \textcolor{red}{The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{partialFanout}, m, n, n', \pi_{\eta}, \pi_{\alpha\Delta}, \pi_{\omega\Delta}, \eta', \eta'_{\alpha\Delta}, \eta'_{\omega\Delta})$, where:}
+$\redeemerHead = (\mathsf{partialFanout}, m, \pi, \eta')$, where:}
 \begin{itemize}
-  \item \textcolor{red}{$m$, $n$ and $n'$ are outputs to distribute from the $\stClosed$ state}
-  \item \textcolor{red}{$\pi_{\eta}$, $\pi_{\alpha\Delta}$, $\pi_{\omega\Delta}$ are exclusion proofs for the distributed UTxO sets}
-  \item \textcolor{red}{$\eta'$, $\eta'_{\alpha\Delta}$, $\eta'_{\omega\Delta}$ are the updated accumulator commitments for remaining UTxOs}
+  \item \textcolor{red}{$m$ is the number of outputs to distribute from the $\stClosed$ state}
+  \item \textcolor{red}{$\pi$ is the exclusion proof for the distributed UTxO set}
+  \item \textcolor{red}{$\eta'$ is the updated accumulator commitment for remaining UTxOs}
 \end{itemize}
 \textcolor{red}{The validator checks:}
 \begin{menumerate}
-  \item \textcolor{red}{State remains in $\stClosed$ with updated accumulators for remaining UTxOs:}
+  \item \textcolor{red}{State remains in $\stClosed$ with updated accumulator for remaining UTxOs:}
   \[
-	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n',\pi_{\eta},\pi_{\alpha\Delta},\pi_{\omega\Delta}]{\stPartialFanout} (\stClosed',\cid,\hydraKeys,\Tcontest,v, s,\eta',\eta'_{\alpha\Delta},\eta'_{\omega\Delta},\contesters,\tfinal)}
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\contesters,\tfinal) \xrightarrow[m,\pi]{\stPartialFanout} (\stClosed',\cid,\hydraKeys,\Tcontest,v, s,\eta',\contesters,\tfinal)}
   \]
-  \item \textcolor{red}{The first $m$ outputs are distributing a subset of funds according to $\eta$. That is,
-  the exclusion proof $\pi_{\eta}$ verifies that the distributed outputs $S_{\eta} = \{o_1, \ldots, o_m\}$ 
+  \item \textcolor{red}{The $m$ outputs are distributing a subset of funds according to the unified accumulator $\eta$. That is,
+  the exclusion proof $\pi$ verifies that the distributed outputs $S = \{o_1, \ldots, o_m\}$ 
   can be removed from the accumulator $\eta$:}
   \[
-	\textcolor{red}{\accVerifyPartial(\eta, S_{\eta}, \pi_{\eta}) = \true}
+	\textcolor{red}{\accVerifyPartial(\eta, S, \pi) = \true}
   \]
-  \item \textcolor{red}{The following $n$ outputs are distributing a subset of funds according to
-  $\eta_\alpha\Delta$. That is, the exclusion proof $\pi_{\alpha\Delta}$ verifies that the distributed 
-  outputs $S_{\alpha\Delta} = \{o_{m+1}, \ldots, o_{m+n}\}$ can be removed from the accumulator $\eta_{\alpha\Delta}$:}
-  \[
-	\textcolor{red}{\accVerifyPartial(\eta_{\alpha\Delta}, S_{\alpha\Delta}, \pi_{\alpha\Delta}) = \true}
-  \]
-  \item \textcolor{red}{The next $n'$ outputs are distributing a subset of funds according to
-  $\eta_\omega\Delta$. That is, the exclusion proof $\pi_{\omega\Delta}$ verifies that the distributed 
-  outputs $S_{\omega\Delta} = \{o_{m+n+1}, \ldots, o_{m+n+n'}\}$ can be removed from the accumulator $\eta_{\omega\Delta}$:}
-  \[
-	\textcolor{red}{\accVerifyPartial(\eta_{\omega\Delta}, S_{\omega\Delta}, \pi_{\omega\Delta}) = \true}
-  \]
-  \item \textcolor{red}{The outgoing $\stClosed'$ datum contains the updated accumulator commitments 
-  $\eta'$, $\eta'_{\alpha\Delta}$, $\eta'_{\omega\Delta}$ that correctly represent the remaining UTxOs 
-  after removing the distributed sets from each respective accumulator.}
+  \item \textcolor{red}{The outgoing $\stClosed'$ datum contains the updated accumulator commitment 
+  $\eta'$ that correctly represents the remaining UTxOs after removing the distributed set.}
   \item \textcolor{red}{Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.}
   \item \textcolor{red}{All tokens are burnt
   $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.}

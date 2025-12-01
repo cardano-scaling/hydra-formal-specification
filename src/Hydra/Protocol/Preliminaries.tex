@@ -269,6 +269,7 @@ uses partial fanout to distribute subsets of UTxOs across multiple transactions.
 \begin{itemize}
 	\item \textcolor{red}{$\accSetup$ generates public parameters for the accumulator system}
 	\item \textcolor{red}{$\accCommit(U)$ creates a commitment to a UTxO set $U$}
+	\item \textcolor{red}{$\accCombine(C_1, C_2)$ combines two accumulator commitments $C_1$ and $C_2$ into a single commitment representing the union of their UTxO sets}
 	\item \textcolor{red}{$\accWitness(C, u)$ generates a membership witness for UTxO $u$ in commitment $C$}
 	\item \textcolor{red}{$\accVerify(C, u, w)$ verifies that witness $w$ proves $u$ is in commitment $C$}
 	\item \textcolor{red}{$\accExclude(C, S)$ generates an exclusion proof for subset $S$ from commitment $C$}
@@ -288,7 +289,9 @@ uses partial fanout to distribute subsets of UTxOs across multiple transactions.
 \textcolor{red}{\noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
 to partial distribution when full fanout exceeds transaction limits. The accumulator provides
 cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
-available for future distribution.}
+available for future distribution. Additionally, the $\accCombine$ operation allows multiple
+accumulator commitments (such as the main UTxO set, incremented UTxOs, and decremented UTxOs)
+to be unified into a single commitment during the close transition, simplifying the fanout procedure.}
 
 %%% Local Variables:
 %%% mode: latex
