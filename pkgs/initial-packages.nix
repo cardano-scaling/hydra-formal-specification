@@ -17,16 +17,16 @@ let
 
       agda = withPackages [ ];
 
-      abstract-set-theory = callPackage ./pkgs/abstract-set-theory.nix { };
+      abstract-set-theory = callPackage ./abstract-set-theory.nix { };
 
-      formal-ledger = callPackage ./pkgs/formal-ledger.nix { };
+      formal-ledger = callPackage ./formal-ledger.nix { };
 
-      standard-library = callPackage ./pkgs/standard-library.nix { };
+      standard-library = callPackage ./standard-library.nix { };
       inherit (pkgs.haskellPackages) ghcWithPackages;
 
-      standard-library-classes = callPackage ./pkgs/standard-library-classes.nix { };
+      standard-library-classes = callPackage ./standard-library-classes.nix { };
 
-      standard-library-meta = callPackage ./pkgs/standard-library-meta.nix { };
+      standard-library-meta = callPackage ./standard-library-meta.nix { };
 
     };
 in
