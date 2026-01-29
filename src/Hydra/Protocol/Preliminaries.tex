@@ -83,6 +83,8 @@ Note that in the following, we make the parameter~$\msParams$ implicit and leave
 out the $ver$ suffix for verification key such that $k = k^{ver}$ for better
 readability.
 
+
+
 \subsection{Extended UTxO}\label{sec:eutxo}
 The Hydra Head protocol is specified to work on the so-called Extended UTxO (EUTxO) ledgers
 like Cardano.
@@ -251,6 +253,45 @@ formalism).
 % and point out that state input/outputs do represent a transition in the
 % statemachine from s' to s' etc.
 \todo{Add an example graph with a legend}
+
+\subsection{\textcolor{red}{BLS Accumulators for Partial Fanout}}\label{sec:bls-accumulators}
+
+\textcolor{red}{\noindent To enable partial fanout when UTxO sets are too large for a single transaction,
+the protocol uses BLS (Boneh-Lynn-Shacham) accumulators~\cite{BLS2001,acc2018} that support partial distribution
+proofs. This allows distributing a subset of UTxOs while proving that the remaining
+UTxOs are still valid and can be distributed in subsequent transactions.}
+
+\textcolor{red}{\noindent When UTxO sets exceed transaction size limits or other constraints, the protocol
+uses partial fanout to distribute subsets of UTxOs across multiple transactions.}
+
+\begin{definition}[\textcolor{red}{BLS Accumulator}]
+\textcolor{red}{A BLS accumulator scheme provides the following operations:}
+\begin{itemize}
+	\item \textcolor{red}{$\accSetup$ generates public parameters for the accumulator system}
+	\item \textcolor{red}{$\accCommit(U)$ creates a commitment to a UTxO set $U$}
+	\item \textcolor{red}{$\accCombine(C_1, C_2)$ combines two accumulator commitments $C_1$ and $C_2$ into a single commitment representing the union of their UTxO sets}
+	\item \textcolor{red}{$\accWitness(C, u)$ generates a membership witness for UTxO $u$ in commitment $C$}
+	\item \textcolor{red}{$\accVerify(C, u, w)$ verifies that witness $w$ proves $u$ is in commitment $C$}
+	\item \textcolor{red}{$\accExclude(C, S)$ generates an exclusion proof for subset $S$ from commitment $C$}
+	\item \textcolor{red}{$\accVerifyExclude(C, S, \pi)$ verifies that exclusion proof $\pi$ allows removal of $S$ from $C$}
+\end{itemize}
+\end{definition}
+
+\begin{definition}[\textcolor{red}{Partial Distribution}]
+\textcolor{red}{For a UTxO set $U$ and a subset $S \subseteq U$ to be distributed:}
+\begin{itemize}
+	\item \textcolor{red}{$\accUTxO(U)$ creates a BLS accumulator commitment to the UTxO set $U$}
+	\item \textcolor{red}{$\accPartial(U, S)$ creates an exclusion proof showing that subset $S$ can be distributed}
+	\item \textcolor{red}{$\accVerifyPartial(C, S, \pi)$ verifies that exclusion proof $\pi$ allows distribution of $S$ from commitment $C$}
+\end{itemize}
+\end{definition}
+
+\textcolor{red}{\noindent The BLS accumulator enables the protocol to handle large UTxO sets by automatically falling back
+to partial distribution when full fanout exceeds transaction limits. The accumulator provides
+cryptographic guarantees that distributed UTxOs are valid and that remaining UTxOs are still
+available for future distribution. Additionally, the $\accCombine$ operation allows multiple
+accumulator commitments (such as the main UTxO set, incremented UTxOs, and decremented UTxOs)
+to be unified into a single commitment during the close transition, simplifying the fanout procedure.}
 
 %%% Local Variables:
 %%% mode: latex
