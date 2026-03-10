@@ -2,15 +2,12 @@
 \section{On-chain Protocol}\label{sec:on-chain}
 \todo{Update figures}
 
-\todo{Open problem: ensure abort is always possible. e.g. by individual aborts or undoing commits}
-\todo{Open problem: ensure fanout is always possible, e.g. by limiting complexity of $U_0$}
-
-\noindent The following sections describe the the \emph{on-chain} protocol
+\noindent The following sections describe the \emph{on-chain} protocol
 controlling the life-cycle of a Hydra head, which can be intuitively described
 as a state machine (see Figure~\ref{fig:head-protocol-states}). Each transition
 in this state machine is represented and caused by a corresponding Hydra
 protocol transaction
-on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort{}~\ref{sec:abort-tx}, \mtxCollect{}~\ref{sec:collect-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
+on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
 
 \noindent Besides the main state transitions of the head protocol, there is
   the related ``deposit protocol'' with two transactions in support of
@@ -19,21 +16,14 @@ on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxCom{}~\ref{sec:commit-tx}, \mtxAbort
 % TODO: Could include a combined overview, slightly more detailed than Figure 1
 % of the transaction trace for the full life cycle maybe?
 
-\noindent The head protocol defines one minting policy script and three
-validator scripts:
+\noindent The head protocol defines one minting policy script and one
+validator script:
 \begin{itemize}
   \item $\muHead$ governs minting of state and participation tokens in
-  $\mtxInit{}$ and burning of these tokens in $\mtxAbort{}$ and
-  $\mtxFanout{}$.
-  \item $\nuInitial$ controls how UTxOs are committed to the head in
-  $\mtxCommit{}$ or when the head initialization is aborted via
-  $\mtxAbort{}$.
-  \item $\nuCommit$ controls the collection of committed UTxOs into the head in
-  $\mtxCollect$ or that funds are reimbursed in an $\mtxAbort{}$.
+  $\mtxInit{}$ and burning of these tokens in $\mtxFanout{}$.
   \item $\nuHead$ represents the main protocol state machine logic and ensures
-  contract continuity throughout $\mtxCollect{}$, $\mtxDecrement{}$,
-  \mtxIncrement{}, $\mtxClose{}$, $\mtxContest{}$ and
-  $\mtxFanout{}$.
+  contract continuity throughout $\mtxIncrement{}$, $\mtxDecrement{}$,
+  $\mtxClose{}$, $\mtxContest{}$ and $\mtxFanout{}$.
 \end{itemize}
 
 \noindent The deposit protocol defines one validator script:
@@ -54,11 +44,12 @@ by a single output reference parameter $\seed \in \tyOutRef$:
   \cid = \hash(\muHead(\seed))
 \]
 
+\todo{Update initTx.svg to show direct Open output with all tokens.}
 \begin{figure}
   \centering
   \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/initTx.svg}
-  \caption{\mtxInit{} transaction spending a seed UTxO, and producing the head
-	output in state $\stInitial$ and initial outputs for each participant.}\label{fig:initTx}
+  \caption{\mtxInit{} transaction spending a seed UTxO and producing the head
+	output directly in state $\stOpen$.}\label{fig:initTx}
 \end{figure}
 
 \noindent Two kinds of tokens are minted:
@@ -70,33 +61,35 @@ by a single output reference parameter $\seed \in \tyOutRef$:
   $\st = \{\cid \mapsto \texttt{HydraHeadV1} \mapsto 1\}$.
   \item One \emph{Participation Token (PT)} per participant
   $i \in \{1 \dots |\hydraKeys|  \}$ to be used for authenticating further
-  transactions and to ensure every participant can commit and cannot be
-  censored. The token name is the participant's verification key hash
+  transactions. The token name is the participant's verification key hash
   $\keyHash_{i} = \hash(\msVK_{i})$ of the verification key as received
   during protocol setup, i.e.
   $\pt_{i} = \{\cid \mapsto \keyHash_{i} \mapsto 1\}$.
 \end{itemize}
 
-\noindent Consequently, the \mtxInit{} transaction
+\noindent All minted tokens ($\st$ and all $\pt_{i}$) are placed directly into
+the head output, which is created in the $\stOpen$ state with an empty UTxO set.
+Consequently, the \mtxInit{} transaction
 \begin{itemize}
   \item has at least input $\seed$,
   \item mints the state thread token $\st$, and one $\pt$ for each of the $|\hydraKeys|$
   participants with policy $\cid$,
-  \item has $|\hydraKeys|$ initial outputs $o_{\mathsf{initial}_{i}}$ with datum $\datumInitial{} = \cid$,
   \item has one head output
   $o_{\mathsf{head}}$, which captures
-  the initial state of the protocol in the datum
+  the open state of the protocol in the datum
   \[
-	\datumHead = (\stInitial,\cid',\seed',\hydraKeys,\Tcontest)
+	\datumHead = (\stOpen,\cid',\seed',\hydraKeys,\Tcontest,v,\eta)
   \]
   where
   \begin{mitemize}
-	\item $\stInitial$ is a state identifier,
+	\item $\stOpen$ is the state identifier,
 	\item $\cid'$ is the unique currency id of this instance,
 	\item $\seed'$ is the output reference parameter of $\muHead$,
 	\item $\hydraKeys$ are the off-chain multi-signature keys from the setup
 	phase,
-	\item $\Tcontest$ is the contestation period.
+	\item $\Tcontest$ is the contestation period,
+	\item $v = 0$ is the initial snapshot version,
+	\item $\eta = \hash(\emptyset)$ is the hash of the (empty) initial UTxO set.
   \end{mitemize}
 \end{itemize}
 
@@ -110,15 +103,11 @@ $\mathsf{Burn}$ redeemer:
 	$(\seed, \cdot) \in \txInputs$
 	\item All entries of $\txMint$ are of this policy and of single quantity $\forall \{c \mapsto \cdot \mapsto q\} \in \txMint : c = \cid \land q = 1$
 	\item Right number of tokens are minted $|\txMint| = |\hydraKeys| + 1$
-	% TODO: |\txMint| may not be clear to the reader, maybe combine with item above, but be more explicit.
-	\item State token is sent to the head validator $\st \in \valHead$ % TODO: fact that it is governed by nuHead is a bit implicit here.
-	\item \textcolor{blue}{The correct number of initial outputs are present $|(\cdot, \nuInitial, \cdot) \in \txOutputs| = |\hydraKeys|$}
-	% XXX: this is implied by the ledger, so can be removed
-	\item All participation tokens are sent to the initial validator as an initial output $\forall i \in [1 \dots |\hydraKeys|] : \{\cid \mapsto \cdot \mapsto 1\} \in \valInitial{i}$
+	\item State token is sent to the head validator $\st \in \valHead$
+	\item All participation tokens are sent to the head output alongside the state token $\forall i \in [1 \dots |\hydraKeys|] : \pt_{i} \in \valHead$
 	\item The $\datum_{\mathsf{head}}$ contains own currency id $\cid = \cid'$ and the right seed reference $\seed = \seed'$
-	\item All initial outputs have a $\cid$ as their datum: $\forall i \in [1 \dots |\hydraKeys|] : \cid = \datumInitial{i}$
   \end{menumerate}
-  \item When evaluated with the $\mathsf{Burn}$ redeemer,\todo{move to abort/fanout?}
+  \item When evaluated with the $\mathsf{Burn}$ redeemer,
   \begin{menumerate}
 	\item All tokens for this policy in $\txMint$ need to be of negative quantity
 	$\forall \{\cid \mapsto \cdot \mapsto q\} \in \txMint : q < 0$.
@@ -126,215 +115,24 @@ $\mathsf{Burn}$ redeemer:
 \end{itemize}
 
 \noindent \textbf{Important:} The $\muHead$ minting policy only ensures
-uniqueness of $\cid$, that the right amount of tokens have been minted and sent
-to $\nuHead$ and $\nuInitial$ respectively, while these validators in turn
-ensure continuity of the contract. However, it is \textbf{crucial} that all head
-members check that head output always contains an $\st$ token of policy $\cid$
-which satisfies $\cid = \hash(\muHead(\seed))$. The $\seed$ from a head datum
-can be used to determine this. Also, head members should verify whether the
-correct verification key hashes are used in the $\pt$s and the initial state is
-consistent with parameters agreed during setup. See the initialTx behavior in
+uniqueness of $\cid$ and that the right amount of tokens have been minted and
+sent to $\nuHead$, while $\nuHead$ in turn ensures continuity of the contract.
+However, it is \textbf{crucial} that all head members check that head output
+always contains an $\st$ token of policy $\cid$ which satisfies
+$\cid = \hash(\muHead(\seed))$. The $\seed$ from a head datum can be used to
+determine this. Also, head members should verify whether the correct
+verification key hashes are used in the $\pt$s and the open state is consistent
+with parameters agreed during setup. See the initialTx behavior in
 Figure~\ref{fig:off-chain-prot} for details about these checks.\\
-
-\subsection{Commit Transaction}\label{sec:commit-tx}
-
-A \mtxCom{} transaction may be submitted by each participant
-$\forall i \in \{1 \dots |\hydraKeys|\}$ to commit some UTxO into the head or
-acknowledge to not commit anything. The transaction is depicted in
-Figure~\ref{fig:commitTx} and has the following structure:
-\begin{itemize}
-  \item One input spending from $\nuInitial$ with datum $\datumInitial{}$,
-  where value $\valInitial{i}$ holds a $\pt_i$, and the redeemer
-  $\redeemerInitial{} \in \tyOutRef^{*}$ is a list of output
-  references to be committed,
-  \item zero or more inputs with reference $\txOutRef_{\mathsf{committed}_{j}}$
-  spending output $o_{\mathsf{committed}_{j}}$ with
-  $\val_{\mathsf{committed}_{j}}$,
-  \item one output paying to $\nuCommit$ with value $\valCommit{i}$ and datum $\datumCommit{}$.
-\end{itemize}
-
-\noindent The $\nuInitial$ validator with $\datumInitial{} = \cid$ and
-$\redeemerInitial{} = \underline{\txOutRef}_{\mathsf{committed}}$ ensures that:
-\begin{menumerate}
-  \item All committed value is in the output
-  $\valCommit{i} \supseteq \valInitial{i} \cup (\bigcup_{j=1}^{m} \val_{\mathsf{committed}_{j}})$
-  \footnote{The $\supseteq$ is important for real world situations where the values
-	might not be exactly equal due to ledger constraints (i.e. to ensure a
-	minimum value on outputs).}
-  \item Currency id and committed outputs are recorded in the output datum
-  $\datumCommit{} = (\cid, C_{i})$, where
-  $C_{i} = \forall j \in \{1 \dots m\} : [(\txOutRef_{\mathsf{committed}_{j}},\bytes(o_{\mathsf{committed}_{j}}))]$
-  is a list of all committed UTxO recorded as tuples on-chain.
-  \item Transaction is signed by the right participant
-  $\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valInitial{} \Rightarrow \keyHash_{i} \in \txKeys$
-  \item No minting or burning $\txMint = \varnothing$
-\end{menumerate}
-
-\noindent The $\nuCommit$ validator ensures the output is collected by either a
-\mtxCCom{} in Section~\ref{sec:collect-tx} or \mtxAbort{} in
-Section~\ref{sec:abort-tx} transaction of the on-chain state machine, selected
-by the appropriate redeemer.
-
-\begin{figure}
-  \centering
-  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/commitTx.svg}
-  \caption{\mtxCom{} transaction spending an initial output and a single
-	committed output, and producing a commit output.}\label{fig:commitTx}
-\end{figure}
-\todo{update with multiple commits}
-
-\subsection{Abort Transaction}\label{sec:abort-tx}
-
-The \mtxAbort{} transaction (see Figure~\ref{fig:abortTx}) allows a
-party to abort the creation of a head and consists of
-\begin{itemize}
-  \item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
-  \item $\forall i \in \{1 \dots |\hydraKeys|\}$ inputs either
-  \begin{itemize}
-	\item spending from $\nuInitial$ with with $\pt_{i} \in \valInitial{i}$ and $\datumInitial{i} = \cid$, or
-	\item spending from $\nuCommit$ with with $\pt_{i} \in \valCommit{i}$ and $\datumCommit{i} = (\cid, C_{i})$,
-  \end{itemize}
-  \item outputs $o_{1} \dots o_{m}$ to redistribute already committed UTxOs.
-\end{itemize}
-
-Note that \mtxAbort{} represents a final transition of the state
-machine and hence there is no state machine output.
-
-\noindent Each spent $\nuInitial$ validator with $\datumInitial{i} = \cid$ and $\redeemerInitial{i} = \mathsf{abort}$ ensures that:
-\begin{menumerate}
-  \item The state token of currency $\cid$ is getting burned $\{\st \mapsto -1\} \subseteq \txMint$.
-\end{menumerate}
-
-\noindent Each spent $\nuCommit$ validator with $\datumCommit{i} = (\cid,\cdot)$ and $\redeemerCommit{i} = \mathsf{abort}$ ensures that:
-\begin{menumerate}
-  \item The state token of currency $\cid$ is getting burned $\{\st \mapsto -1\} \subseteq \txMint$.
-\end{menumerate}
-
-\noindent The $\muHead(\seed)$ minting policy governs the burning of tokens via
-redeemer $\mathsf{burn}$ that:
-\begin{menumerate}
-  \item All tokens in $\txMint$ need to be of negative quantity
-  $\forall \{\cid \mapsto \cdot \mapsto q\} \in \txMint : q < 0$.
-\end{menumerate}
-
-\noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{abort}, m)$, where $m$ is the number of outputs to
-reimburse, and checks:
-\begin{menumerate}
-  \item State is advanced from $\datumHead \sim \stInitial$ to terminal state
-  $\stFinal$:
-  \[
-	(\stInitial,\cid,\seed,\hydraKeys,\Tcontest) \xrightarrow[m]{\stAbort} \stFinal.
-  \]
-  \item All UTxOs committed into the head are reimbursed exactly as they were
-  committed. This is done by comparing hashes of serialised representations of
-  the $m$ reimbursing outputs $o_{1} \dots o_{m}$\footnote{Only the first $m$
-	outputs are used for reimbursing, while more outputs may be present in the
-	transaction, e.g for returning change.} with the canonically combined
-  committed UTxOs in $C_{i}$:
-  \[
-	\hash(\bigoplus_{j=1}^{m} \bytes(o_{j})) = \combine([C_{i} ~ | ~ \forall [1 \dots |\hydraKeys|], C_{i} \neq \bot])
-  \]
-
-  \item Transaction is signed by a participant $\exists \{\cid \mapsto \keyHash_{i} \mapsto -1\} \in \txMint \Rightarrow \keyHash_{i} \in \txKeys$.
-  \item All tokens are burnt
-  $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = |\hydraKeys| + 1$.
-\end{menumerate}
-
-\begin{figure}
-  \centering
-  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/abortTx.svg}
-  \caption{\mtxAbort{} transaction spending the $\stInitial$ state head
-	output and collecting all initial and commit outputs, which get reimbursed
-	by outputs $o_{1} \dots o_{m}$. Note that each $\pt$ may be in either, an
-	initial or commit output.}\label{fig:abortTx}
-\end{figure}
-
-\subsection{CollectCom Transaction}\label{sec:collect-tx}
-
-\noindent The \mtxCCom{} transaction (Figure~\ref{fig:collectComTx}) collects
-all the committed UTxOs to the same head. It has
-\begin{itemize}
-  \item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$,
-  \item $\forall i \in \{1 \dots |\hydraKeys|\}$ inputs spending commit outputs
-  $(\valCommit{i}, \nuCommit, \datumCommit{i})$ with $\pt_{i} \in \valCommit{i}$
-  and $\datumCommit{i} = (\cid, C_{i})$, and
-  \item one output paying to $\nuHead$ with value $\valHead'$ and
-  datum $\datumHead'$.
-\end{itemize}
-
-\noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = \mathsf{collect}$ and checks:
-\begin{menumerate}
-  \item State is advanced from $\datumHead \sim \stInitial$ to
-  $\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\Tcontest$ stay
-  unchanged and the new state is governed again by $\nuHead$
-  \[
-	(\stInitial,\cid,\seed,\hydraKeys,\Tcontest) \xrightarrow{\stCollect} (\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta)
-  \]
-  where snapshot version is initialized as $v = 0$.
-  \item Commits are collected in $\eta$
-  \[
-	\eta = U^{\#} = \combine([C_{1}, \dots, C_{n}])
-  \]
-  where $n = |\hydraKeys|$ and
-  \[
-	\combine(\underline{C}) = \hash(\mathsf{concat}({\sortOn(1, \mathsf{concat}(\underline{C}))}^{\downarrow2}))
-  \]
-  That is, given a list of committed UTxO $\underline{C}$, where each element is
-  a list of output references and the serialised representation of what was
-  committed, $\combine$ first concatenates all commits together, sorts this list
-  by the output references, concatenates all bytes and hashes the
-  result\footnote{Sorting is required to ensure a canonical representation which
-	can also be reproduced from the UTxO set later in the fanout.}.
-
-  \item All committed value captured and no value is extracted
-  \[
-	\valHead' = \valHead \cup (\bigcup_{i=1}^{n} \valCommit{i})
-  \]
-  \item Every participant had the chance to commit, by checking all tokens are
-  present in output\footnote{This is sufficient as a Head participant would
-	check off-chain whether a Head is initialized correctly with the right
-	number of tokens.}
-  % NOTE: Implemented slightly different as we would only count PTs and = n
-  \[
-	|\{\cid \rightarrow . \rightarrow 1\} \in \valHead'| = |\hydraKeys| + 1
-  \]
-  \item Transaction is signed by a participant
-  \[
-	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valCommit{i} \Rightarrow \keyHash_{i} \in \txKeys
-  \]
-  \item No minting or burning
-  \[
-	\txMint = \varnothing
-  \]
-\end{menumerate}
-
-\noindent Each spent $\nuCommit$ validator with $\datumCommit{i} = (\cid,\cdot)$ and $\redeemerCommit{i} = \mathsf{collect}$ ensures that:
-\begin{menumerate}
-  \item The state token of currency $\cid$ is present in the output value
-  \[
-	\st \in \valHead'
-  \]
-\end{menumerate}
-
-\begin{figure}
-  \centering
-  \includesvg[width=0.8\textwidth]{Hydra/Protocol/Figures/collectComTx.svg}
-  \caption{\mtxCCom{} transaction spending the head output in $\stInitial$
-	state and collecting from multiple commit outputs into a single
-	$\stOpen$ head output.}\label{fig:collectComTx}
-\end{figure}
-
 
 \subsection{Deposit Transaction}\label{sec:deposit-tx}
 
-\noindent The \mtxDeposit{} transaction initiates a (incremental) commit by
-locking funds in $\nuDeposit$ for later collection by the head protocol. Any
-transaction paying to $\nuDeposit$ is a \mtxDeposit{} transaction as there is no
-on-chain verification in \mtxDeposit{} transactions. Consequently, protocol
-actors \textbf{must ensure off-chain} that a valid datum is used when paying to
-the $\nuDeposit$ validator.\todo{explain why this is enough?} \\
+\noindent The \mtxDeposit{} transaction locks funds in $\nuDeposit$ for later
+collection into the head via an \mtxIncrement{} transaction. Any transaction
+paying to $\nuDeposit$ is a \mtxDeposit{} transaction as there is no on-chain
+verification in \mtxDeposit{} transactions. Consequently, protocol actors
+\textbf{must ensure off-chain} that a valid datum is used when paying to the
+$\nuDeposit$ validator.\todo{explain why this is enough?} \\
 
 \noindent A valid deposit output is governed by $\nuDeposit$ with value $\valDeposit$ and datum
 \[
@@ -346,7 +144,7 @@ where
   \item $t_{\mathsf{recover}}$ is a deadline after which the deposit can be recovered, and
   \item $C \in {(\txInputs \times \tyBytes)}^{*}$ is a list of transaction output
   references with along with serialized outputs that should become available in
-  the head (similar to commits in~\ref{sec:commit-tx}).
+  the head.
 \end{mitemize}
 
 \noindent Head protocol participants determine \textbf{off-chain} whether a
@@ -391,7 +189,7 @@ to recover, and checks:
 \begin{menumerate}
   \item All UTxOs are recovered exactly as they were deposited. This is done by
   comparing hashes of serialised representations of the $m$ recovering outputs
-  $o_{1} \dots o_{m}$ with the canonically combined committed UTxOs in $C$:
+  $o_{1} \dots o_{m}$ with the canonically combined deposited UTxOs in $C$:
   \[
     \hash(\bigoplus_{j=1}^{m} \bytes(o_{j})) = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
   \]
@@ -666,7 +464,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
   \]
   \item Transaction is signed by a participant
   \[
-	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valCommit{i} \Rightarrow \keyHash_{i} \in \txKeys
+	\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
   \]
   \item No minting or burning
   \[
@@ -802,7 +600,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 \]
 \item Transaction is signed by a participant
 \[
-  \exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valCommit{i} \Rightarrow \keyHash_{i} \in \txKeys
+  \exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
 \]
 \item No minting or burning
 \[
@@ -840,20 +638,23 @@ outputs to distribute from the $\stClosed$ state, and checks:
 	(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
   \]
   \item The first $m$ outputs are distributing funds according to $\eta$. That is,
-  the outputs exactly correspond to the UTxO canonically combined $U^{\#}$ (see
-  Section~\ref{sec:collect-tx}):
+  the outputs exactly correspond to the UTxO canonically combined $U^{\#}$:
   \[
 	\eta = U^{\#} = \hash(\bigoplus_{j=1}^{m} \bytes(o_{j}))
   \]
+  where $\combine$ produces a canonical hash from a UTxO set by sorting outputs
+  by their output references, concatenating their serialised representations,
+  and hashing the result\footnote{Sorting is required to ensure a canonical
+	representation which can be reproduced from the UTxO set.}.
   \item The following $n$ outputs are distributing funds according to
   $\eta_\alpha\Delta$. That is, the outputs exactly correspond to the UTxO canonically
-  combined $U^{\#}_{\alpha\Delta}$ (see Section~\ref{sec:collect-tx}):
+  combined $U^{\#}_{\alpha\Delta}$:
   \[
 	\eta_{\alpha\Delta} = U^{\#}_{\alpha\Delta} = \hash(\bigoplus_{j=m}^{m+n} \bytes(o_{j}))
   \]
   \item The next $n'$ outputs are distributing funds according to
   $\eta_\omega\Delta$. That is, the outputs exactly correspond to the UTxO canonically
-  combined $U^{\#}_{\omega\Delta}$ (see Section~\ref{sec:collect-tx}):
+  combined $U^{\#}_{\omega\Delta}$:
   \[
 	\eta_{\omega\Delta} = U^{\#}_{\omega\Delta} = \hash(\bigoplus_{j=m'}^{m+n'} \bytes(o_{j}))
   \]
