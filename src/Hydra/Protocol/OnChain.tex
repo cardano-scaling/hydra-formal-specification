@@ -460,7 +460,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
   to ensure the contestation deadline $\tfinal$ is at most $2*T$ in the future.
   \item Value in the head is preserved
   \[
-	\valHead' = \valHead
+	\valHead' \supseteq \valHead
   \]
   \item Transaction is signed by a participant
   \[
@@ -596,7 +596,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 \]
 \item Value in the head is preserved
 \[
-  \valHead' = \valHead
+  \valHead' \supseteq \valHead
 \]
 \item Transaction is signed by a participant
 \[
