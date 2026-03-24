@@ -190,6 +190,13 @@
 
 									% issue snapshot if we are leader
 									\If{$\hpLdr(s+1) = i \land \hatmT \neq \emptyset$}{
+										% Fall back to oldest active deposit when none is tracked yet,
+										% but only when no decommit is pending and the just-confirmed
+										% snapshot did not already include a deposit (to avoid
+										% double-posting incrementTx before CommitFinalized clears it).
+										\If{$\tx_\alpha = \bot \land \tx_\omega = \bot \land \bar{\mc S}.U_\alpha = \emptyset$}{
+											$\tx_\alpha \gets $ oldest $D \in \mathcal{D}$ with $D.\mathsf{status} = \mathsf{Active}$ \;
+										}
 										\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT,\tx_\alpha,\tx_\omega)$ \;
 									}
 								}
@@ -211,16 +218,30 @@
 
 						%%% DECREMENT
 						\On{$(\mathtt{decrementTx}, U, v)$ from chain}{
+							% Abort any in-flight snapshot: the version bump invalidates it.
+							% Reset $\hats$ so the re-trigger condition below holds.
+							$\hats \gets \bar{\mc S}.s$ \;
 							$\hatv \gets v$ \;
 							$\tx_{\omega} \gets \bot$ \;
+							% Re-trigger snapshot for pending txs using the new version.
+							\If{$\hpLdr(\bar{\mc S}.s + 1) = i \land \hatmT \neq \emptyset$}{
+								\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT,\tx_\alpha,\bot)$ \;
+							}
 						}
 						\vspace{12pt}
 
 						%%% INCREMENT
 						\On{$(\mathtt{incrementTx}, U, v)$ from chain}{
+							% Abort any in-flight snapshot: the version bump invalidates it.
+							% Reset $\hats$ so the re-trigger condition below holds.
+							$\hats \gets \bar{\mc S}.s$ \;
 							$\hatv \gets v$ \;
 							$\tx_\alpha \gets \bot$ \;
 							$\hatmL \gets \hatmL \cup U$ \;
+							% Re-trigger snapshot for pending txs using the new version.
+							\If{$\hpLdr(\bar{\mc S}.s + 1) = i \land \hatmT \neq \emptyset$}{
+								\Multi{} $(\hpRS,\hatv,\bar{\mc S}.s+1,\hatmT,\bot,\bot)$ \;
+							}
 						}
 						\vspace{12pt}
 
@@ -232,6 +253,10 @@
 							  }
 							  \ElseIf{$t > D.\mathsf{created} + T_{\mathsf{deposit}} $}{
 							    $D.\mathsf{status} \gets \mathsf{Active}$
+							    % Track newly-activated deposit when none is pending.
+							    \If{$\tx_\alpha = \bot \land \tx_\omega = \bot$}{
+							      $\tx_\alpha \gets D.\tx_\alpha$
+							    }
 							  }
 							}
 							\If{$\exists D \in \mathcal{D} : D.\mathsf{status} = \mathsf{Active}$}{

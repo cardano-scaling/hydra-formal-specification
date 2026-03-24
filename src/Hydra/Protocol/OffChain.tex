@@ -232,9 +232,11 @@ the configured deposit period $\Tdeposit$:
   \item $\mathsf{Expired}$ when deadline passed (or too soon): $t > t_{\text{deadline}} - \Tdeposit$
   \item $\mathsf{Active}$ when deposit settled enough: $t > t_{\text{created}} + \Tdeposit$
 \end{itemize}
-When deposits become $\mathsf{Active}$ and no other commit / decommit is
-pending, and the party is the next snapshot leader, it may request a new
-snapshot including the deposit transaction $\tx_{\alpha}$. \\
+When a deposit transitions to $\mathsf{Active}$ and no other commit or decommit
+is pending ($\tx_\alpha = \bot \land \tx_\omega = \bot$), the deposit is
+immediately tracked in $\tx_\alpha$ so it is not missed if no timer or
+transaction event arrives. If the party is the next snapshot leader and no
+snapshot is in-flight, it requests a new snapshot including $\tx_\alpha$. \\
 
 \dparagraph{$\hpRS$.}\quad Upon receiving request
 $(\hpRS,v,s,\underline{\tx}_{\mathsf{req}}, \tx_\alpha, \tx_\omega)$\footnote{Snapshot
@@ -287,16 +289,27 @@ transaction by providing the just confirmed snapshot with its digests of the
 active UTxO set $\eta$ and the to be removed UTxO set $\eta_{\omega}$. If, however, there
 was a pending commit, any participant can now submit an $\mathtt{incrementTx}$
 by providing the confirmed snapshot with its digests of the active UTxO set $\eta$
-and the UTxO set to be added $\eta_\alpha$. Lastly, if $\party_i$ is the next snapshot
-leader and there are already transactions to snapshot in $\hatmT$, a
-corresponding $\hpRS$ is distributed. \\
+and the UTxO set to be added $\eta_\alpha$. Lastly, if $\party_i$ is the next snapshot leader and there are already
+transactions to snapshot in $\hatmT$, a corresponding $\hpRS$ is distributed.
+When no deposit is currently tracked ($\tx_\alpha = \bot$), no decommit is
+pending ($\tx_\omega = \bot$), and the just-confirmed snapshot did not already
+include a deposit ($\bar{\mc S}.U_\alpha = \emptyset$), the leader picks the
+oldest active deposit from $\mathcal{D}$ to include in the chained snapshot,
+ensuring deposits that activated while a previous snapshot was in-flight are
+not silently dropped. \\
 
 \dparagraph{$\mathtt{decrementTx}$.}\quad Upon observing the \mtxDecrement{}
 transaction, which removed outputs $U$ from the head, the corresponding pending
 decrement transaction is cleared and the observed version $v$ is used for future
 snapshots by setting $\hatv \gets v$. Note that the version of the open head state
 is incremented on each \mtxDecrement{} transaction as described in
-Section~\ref{sec:decrement-tx}. \\
+Section~\ref{sec:decrement-tx}.
+Because the version bump invalidates any in-flight snapshot request, the seen
+snapshot counter is reset to the last confirmed value ($\hats \gets \bar{\mc
+S}.s$). If the receiving party is the next snapshot leader and there are pending
+transactions in $\hatmT$, it immediately multicasts a fresh $\hpRS$ using the
+new version $\hatv$, so the head does not stall waiting for a timer or a new
+incoming transaction. \\
 
 \dparagraph{$\mathtt{incrementTx}$.}\quad Upon observing the \mtxIncrement{}
   transaction, which added outputs $U$ to the head, the local ledger state
@@ -304,7 +317,10 @@ Section~\ref{sec:decrement-tx}. \\
   state $U_{\alpha}$ is cleared. Also the observed version $v$ is used for future
   snapshots by setting $\hatv = v$. Note that the version of the open head state
   is incremented on each \mtxIncrement{} transaction as described in
-  Section~\ref{sec:increment-tx}
+  Section~\ref{sec:increment-tx}.
+  As with \mtxDecrement{}, the seen snapshot counter is reset ($\hats \gets
+  \bar{\mc S}.s$) and the snapshot leader immediately sends a fresh $\hpRS$ for
+  any pending transactions in $\hatmT$ using the bumped version.
 
 \subsubsection{Closing the head}
 
