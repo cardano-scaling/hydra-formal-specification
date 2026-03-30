@@ -14,7 +14,7 @@ reactive system that processes three kinds of inputs:
 	      Section~\ref{sec:on-chain}, which are posted to the mainchain and can be
 	      observed by all actors:
 	      \begin{itemize}
-		      \item $\mathtt{initialTx}$: initiates and directly opens a head
+		      \item $\mathtt{initialTx}$: opens a head
 		      \item $\mathtt{depositTx}$: some UTxO was deposited to be incremented
 		      \item $\mathtt{recoverTx}$: deposited UTxO was recovered
 		      \item $\mathtt{incrementTx}$: adds UTxO to an open head
@@ -38,7 +38,7 @@ reactive system that processes three kinds of inputs:
 	      \end{itemize}
 	\item Commands issued by the participants themselves or on behalf of end-users and clients
 	      \begin{itemize}
-		      \item $\hpInit$: to start initialization of a head
+		      \item $\hpInit$: to open a head
 		      \item $\hpClose$: to request closure of an open head
 	      \end{itemize}
 \end{enumerate}
