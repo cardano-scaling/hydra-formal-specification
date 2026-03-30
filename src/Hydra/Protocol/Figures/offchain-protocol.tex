@@ -8,7 +8,7 @@
 			%%% Initializing the head
 			\begin{tabular}{c}
 				\adjustbox{valign=t,scale=\sfact}{
-					\begin{walgo}{1.0}
+					\begin{walgo}{0.65}
 						%%% INIT
 						\On{$(\hpInit)$ from client}{
 							$n \gets |\hydraKeys^{setup}|$ \;
@@ -18,8 +18,12 @@
 							$\Tdeposit \gets \Tdeposit^{setup}$ \;
 							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\Tcontest)$ \;
 						}
-						\vspace{12pt}
 
+					\end{walgo}
+				}
+
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.7}
 						\On{$(\gcChainInitial, \cid, \seed, \nop, \hydraKeysAgg, \cardanoKeys^{\#}, \Tcontest)$ from chain}{
 						\Req{} $\hydraKeysAgg=\msCombVK(\hydraKeys^{setup})$\;
 						\Req{} $\cardanoKeys^{\#}= [ \hash(k)~|~\forall k \in \cardanoKeys^{setup}]$\;
