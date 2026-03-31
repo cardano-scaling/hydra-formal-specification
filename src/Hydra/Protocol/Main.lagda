@@ -3,12 +3,13 @@
 \include{preamble}
 \include{macros}
 
-\title{\Large \textbf{Hydra HeadV1 Specification: Coordinated Head protocol}\\[2ex] DRAFT}
+\title{\Large \textbf{Hydra HeadV2 Specification: Coordinated Head protocol}\\[2ex] DRAFT}
 \author{
   Sebastian Nagel \texttt{sebastian.nagel@iohk.io} \and
   Sasha Bogicevic \texttt{sasha.bogicevic@iohk.io} \and
   Franco Testagrossa \texttt{franco.testagrossa@iohk.io} \and
-  Daniel Firth \texttt{daniel.firth@iohk.io}
+  Daniel Firth \texttt{daniel.firth@iohk.io} \and
+  Noon van der Silk \texttt{noon.vandersilk.io}
   % NOTE: add yourself
 }
 \begin{document}

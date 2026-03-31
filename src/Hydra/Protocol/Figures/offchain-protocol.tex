@@ -6,9 +6,9 @@
 		\medskip
 		\begin{tabular}{c}
 			%%% Initializing the head
-			\begin{tabular}{cc}
+			\begin{tabular}{c}
 				\adjustbox{valign=t,scale=\sfact}{
-					\begin{walgo}{0.7}
+					\begin{walgo}{0.65}
 						%%% INIT
 						\On{$(\hpInit)$ from client}{
 							$n \gets |\hydraKeys^{setup}|$ \;
@@ -18,44 +18,25 @@
 							$\Tdeposit \gets \Tdeposit^{setup}$ \;
 							$\PostTx{}~(\mtxInit, \nop, \hydraKeysAgg,\cardanoKeys,\Tcontest)$ \;
 						}
-						\vspace{12pt}
 
+					\end{walgo}
+				}
+
+				\adjustbox{valign=t,scale=\sfact}{
+					\begin{walgo}{0.7}
 						\On{$(\gcChainInitial, \cid, \seed, \nop, \hydraKeysAgg, \cardanoKeys^{\#}, \Tcontest)$ from chain}{
 						\Req{} $\hydraKeysAgg=\msCombVK(\hydraKeys^{setup})$\;
 						\Req{} $\cardanoKeys^{\#}= [ \hash(k)~|~\forall k \in \cardanoKeys^{setup}]$\;
 						\Req{} $\Tcontest=\Tcontest^{setup}$\;
 						\Req{} $\cid = \hash(\muHead(\seed))$ \;
+						% Head is directly open with empty UTxO
+						$\hatmL \gets \emptyset$ \;
+						$\bar{\mc S} \gets \Sno(0, 0, [], \emptyset, \emptyset , \emptyset)$ \;
+						$\hatv, \hats \gets 0$ \;
+						$\hatmT \gets \emptyset$ \;
+						$\tx_\omega \gets \bot$ \;
+						$\tx_\alpha \gets \bot$ \;
 						}
-					\end{walgo}
-				}
-				 &
-
-				\adjustbox{valign=t,scale=\sfact}{
-					\begin{walgo}{0.6}
-						\On{$(\gcChainCommit, j, U)$ from chain}{
-							$C_j \gets U $
-
-							\If{$\forall k \in [1..n]: C_k \neq \bot$}{
-								$\eta \gets \combine([C_1 \dots C_n])$ \;
-								$\PostTx{}~(\mtxCCom, \eta)$ \;
-							}
-						}
-
-						\vspace{12pt}
-
-						\On{$(\gcChainCollectCom, \eta_{0})$ from chain}{
-							% Implicitly means that all commits will defined as we cannot miss a commit (by assumption)
-							$\Uinit \gets \bigcup_{j=1}^{n} U_j$ \;
-							% $\Out~(\hpSnap,(0,U_0))$ \;
-							$\hatmL \gets \Uinit$ \;
-							$\bar{\mc S} \gets \Sno(0, 0, [], \Uinit, \emptyset , \emptyset)$ \;
-							$\hatv, \hats \gets 0$ \;
-							$\hatmT \gets \emptyset$ \;
-							$\tx_\omega \gets \bot$ \;
-							% NOTE: Actually a tx id, but does not matter
-							$\tx_\alpha \gets \bot$ \;
-						}
-
 					\end{walgo}
 				}
 			\end{tabular}

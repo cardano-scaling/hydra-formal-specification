@@ -186,28 +186,17 @@
 % == Transactions ==
 
 \newcommand{\mtxInit}{\textit{init}}
-\newcommand{\mtxCom}{\textit{commit}}
-\newcommand{\mtxCommit}{\textit{commit}}
-\newcommand{\mtxCCom}{\textit{collectCom}}
-\newcommand{\mtxCollect}{\textit{collectCom}}
 \newcommand{\mtxDeposit}{\textit{deposit}}
 \newcommand{\mtxRecover}{\textit{recover}}
 \newcommand{\mtxIncrement}{\textit{increment}}
 \newcommand{\mtxDecrement}{\textit{decrement}}
-\newcommand{\mtxAbort}{\textit{abort}}
 \newcommand{\mtxClose}{\textit{close}}
 \newcommand{\mtxContest}{\textit{contest}}
 \newcommand{\mtxFinalize}{\textit{finalize}}
 \newcommand{\mtxFanout}{\textit{fanout}}
-\newcommand{\mtxSplit}{\textit{split}}
-\newcommand{\mtxCSN}{\textit{collectSN}}
-\newcommand{\mtxCHT}{\textit{collectHT}}
-\newcommand{\mtxSN}{\textit{SN}}
-\newcommand{\mtxHT}{\textit{HT}}
 
 % == States ==
 
-\newcommand{\stInitial}{\mathsf{initial}}
 \newcommand{\stOpen}{\mathsf{open}}
 \newcommand{\stClosed}{\mathsf{closed}}
 \newcommand{\stSnap}{\mathsf{newestSN}}
@@ -221,11 +210,9 @@
 
 % == Inputs ==
 
-\newcommand{\stCollect}{\mathsf{collect}}
 \newcommand{\stClose}{\mathsf{close}}
 \newcommand{\stContest}{\mathsf{contest}}
 \newcommand{\stFanout}{\mathsf{fanout}}
-\newcommand{\stAbort}{\mathsf{abort}}
 
 
 % == Validators,values,datums,redeemers ==
@@ -235,16 +222,6 @@
 \newcommand{\valHead}{\val_{\mathsf{head}}}
 \newcommand{\datumHead}{\datum_{\mathsf{head}}}
 \newcommand{\redeemerHead}{\redeemer_{\mathsf{head}}}
-
-\newcommand{\nuInitial}{\nu_{\mathsf{initial}}}
-\newcommand{\valInitial}[1]{\val_{\mathsf{initial}_{#1}}}
-\newcommand{\datumInitial}[1]{\datum_{\mathsf{initial}_{#1}}}
-\newcommand{\redeemerInitial}[1]{\redeemer_{\mathsf{initial}_{#1}}}
-
-\newcommand{\nuCommit}{\nu_{\mathsf{commit}}}
-\newcommand{\valCommit}[1]{\val_{\mathsf{commit}_{#1}}}
-\newcommand{\datumCommit}[1]{\datum_{\mathsf{commit}_{#1}}}
-\newcommand{\redeemerCommit}[1]{\redeemer_{\mathsf{commit}_{#1}}}
 
 \newcommand{\nuDeposit}{\nu_\mathsf{deposit}}
 \newcommand{\valDeposit}{\val_{\mathsf{deposit}}}
@@ -425,13 +402,9 @@
 \newcommand{\gcClientTx}{\mathtt{clientTx}}
 \newcommand{\gcClientClose}{\mathtt{closeTx}}
 \newcommand{\gcChainInitial}{\mathtt{initialTx}}
-\newcommand{\gcChainCollectCom}{\mathtt{collectComTx}}
 \newcommand{\gcChainClose}{\mathtt{closeTx}}
 \newcommand{\gcChainContest}{\mathtt{contestTx}}
 \newcommand{\gcChainFanout}{\mathtt{fanoutTx}}
-\newcommand{\gcChainAbort}{\mathtt{abortTx}}
-\newcommand{\gcChainCommit}{\mathtt{commitTx}}
-\newcommand{\gcChainInitialTO}{\mathtt{chainInitialTimeOut}}
 \newcommand{\gcChainClosedTO}{\mathtt{chainClosedTimeOut}}
 
 \newcommand{\gcChainRef}{\mathsf{chain}}

@@ -23,47 +23,39 @@ These public keys are used for both, the authentication of head-related on-chain
 transactions that are restricted to head members (e.g., a non-member is not
 allowed to close the head) and for signing off-chain transactions in the head.
 
-The initiator then establishes the head by submitting an \emph{initial}
-transaction to the mainchain that contains the Hydra protocol parameters and
-mints special \emph{participation tokens (PT)} identifying the head members. The
-\emph{initial} transaction also initializes a state machine (see
-Fig.~\ref{fig:head-protocol-states}) that manages the ``transfer'' of UTxOs into
-the head and back. The state machine comprises the four states: $\stInitial$,
-$\stOpen$, $\stClosed$, and $\stFinal$. A \emph{state thread token (ST)} minted
-in \emph{initial} marks the head output and ensures contract
-continuity~\cite{eutxo}.
+The initiator then establishes and directly opens the head by submitting an
+\emph{init} transaction to the mainchain that contains the Hydra protocol
+parameters and mints special \emph{participation tokens (PT)} identifying the
+head members. The \emph{init} transaction initializes a state machine (see
+Fig.~\ref{fig:head-protocol-states}) that manages the life-cycle of UTxOs in the
+head. The state machine comprises the three states: $\stOpen$, $\stClosed$, and
+$\stFinal$. A \emph{state thread token (ST)} minted in \emph{init} marks the
+head output and ensures contract continuity~\cite{eutxo}.
 
 \input{Hydra/Protocol/Figures/head-protocol-states}
 
-Once the initial transaction appears on the mainchain, establishing the initial
-state $\stInitial$, each head member can attach a \mtxCom{} transaction, which
-locks (on the mainchain) the UTxOs that the party wants to commit to the head,
-or deliberately acknowledges to commit nothing.
-
-The commit transactions are subsequently collected by the \mtxCCom{} transaction
-causing a transition from $\stInitial$ to $\stOpen$. Once the $\stOpen$ state is
-confirmed, the head members start running the off-chain head protocol, which
-evolves the initial UTxO set (the union over all UTxOs committed by all head
-members) independently of the mainchain. For the case where some head members
-fail to post a \mtxCom{} transaction, the head can be aborted by going directly
-from $\stInitial$ to $\stFinal$.
+The head is opened with an empty UTxO set. Participants can then add funds to the
+head by creating \emph{deposit} transactions on the mainchain, which are
+subsequently incorporated into the head via \emph{increment} transactions (see
+Section~\ref{sec:deposit-tx} and~\ref{sec:increment-tx}). Once the $\stOpen$
+state is confirmed, the head members start running the off-chain head protocol,
+which evolves the UTxO set independently of the mainchain.
 
 
 \subsection{The Coordinated Head protocol}
 
-The actual Head protocol starts after the initialization phase with an initial
-set of UTxOs that is identical to the UTxOs locked on-chain via the \mtxCom{}
-and \mtxCCom{} transactions.
+The actual Head protocol starts once the head is open on-chain, with an initially
+empty UTxO set.
 
 The protocol processes off-chain transactions by distributing them between participants,
 while each party maintains their view of the local UTxO state. That is, the current
-set of UTxOs evolved from the initial UTxO set by applying transactions as they
+set of UTxOs evolved from the empty initial state by applying transactions as they
 are received from the other parties.
 
 To confirm transactions and allow for distribution of the resulting UTxO set
 without needing the whole transaction history, snapshots are created by the
 protocol participants. The initial snapshot $U_{0}$ corresponds to the initial
-UTxO set, while snapshots thereafter $\Uset_1,\Uset_2,\ldots$ are created with
+(empty) UTxO set, while snapshots thereafter $\Uset_1,\Uset_2,\ldots$ are created with
 monotonically increasing snapshot numbers.
 
 For this, the next snapshot leader (round-robin) requests his view of a new confirmed state to be
@@ -85,21 +77,19 @@ is now evidence that this state once existed during the head evolution.
 
 Besides processing ``normal'' transactions, participants can also request to
 withdraw some UTxO they can spend from the Head and make it available on main
-chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall process is also called
-``decommit''.
+chain via a \mtxDecrement{}~\ref{sec:decrement-tx} transaction --- the overall
+process is also called ``decommit''.
 
-The inverse of locking more UTxO on the mainchain and making it available
-	within the head is called (incremental) ``commit''. First, anyone may create a
-	deposit of one or more UTxO using a \mtxDeposit{}~\ref{sec:deposit-tx}
-	transaction. The head participants will observe this deposit and, once
-	settled, request off-chain agreement to include the deposited UTxO in the form
-	of a snapshot. With that agreement, an \mtxIncrement{}~\ref{sec:increment-tx}
-	transaction can be created and used to update the head state on the mainchain.
-	A deadline is associated with the deposit, which ensures that the UTxO is
-	locked up long enough to be safely consumed into the head without risk of
-	double spending. Should a deposit have not been picked up in time, a
-	\mtxRecover{}~\ref{sec:recover-tx} transaction allows anyone to unlock the
-	original UTxO.
+To add UTxO to an open head, anyone may create a deposit of one or more UTxO
+using a \mtxDeposit{}~\ref{sec:deposit-tx} transaction. The head participants
+will observe this deposit and, once settled, request off-chain agreement to
+include the deposited UTxO in the form of a snapshot. With that agreement, an
+\mtxIncrement{}~\ref{sec:increment-tx} transaction can be created and used to
+update the head state on the mainchain. A deadline is associated with the
+deposit, which ensures that the UTxO is locked up long enough to be safely
+consumed into the head without risk of double spending. Should a deposit have
+not been picked up in time, a \mtxRecover{}~\ref{sec:recover-tx} transaction
+allows anyone to unlock the original UTxO.
 
 \subsection{Closing the head}
 
@@ -133,7 +123,8 @@ differences to the original Head protocol in~\cite{hydrahead20} are:
 	\item No hanging transactions due to `coordination'.
 	\item No acknowledgement nor confirmation of transactions.
 	\item No confirmation message for snapshots (two-round local confirmation).
-	\item Allow for incremental commits and decommits while head is open.
+	\item Allow for deposits and decommits while head is open.
+	\item No initialization phase: head opens directly with empty UTxO, funds added via deposits.
 \end{itemize}
 
 %%% Local Variables:
