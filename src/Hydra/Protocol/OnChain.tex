@@ -7,7 +7,7 @@ controlling the life-cycle of a Hydra head, which can be intuitively described
 as a state machine (see Figure~\ref{fig:head-protocol-states}). Each transition
 in this state machine is represented and caused by a corresponding Hydra
 protocol transaction
-on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, and \mtxFanout{}~\ref{sec:fanout-tx}. \\
+on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, \mtxDecrement{}~\ref{sec:decrement-tx}, \mtxClose{}~\ref{sec:close-tx}, \mtxContest{}~\ref{sec:contest-tx}, \mtxPartialFanout{}~\ref{sec:partial-fanout-tx}, \mtxFanout{}~\ref{sec:fanout-tx}, and \mtxFinalPartialFanout{}~\ref{sec:final-partial-fanout-tx}. \\
 
 \noindent Besides the main state transitions of the head protocol, there is
 the related ``deposit protocol'' with two transactions in support of
@@ -20,10 +20,12 @@ the related ``deposit protocol'' with two transactions in support of
 validator script:
 \begin{itemize}
 	\item $\muHead$ governs minting of state and participation tokens in
-	      $\mtxInit{}$ and burning of these tokens in $\mtxFanout{}$.
+	      $\mtxInit{}$ and burning of these tokens in $\mtxFanout{}$ and
+	      $\mtxFinalPartialFanout{}$.
 	\item $\nuHead$ represents the main protocol state machine logic and ensures
 	      contract continuity throughout $\mtxIncrement{}$, $\mtxDecrement{}$,
-	      $\mtxClose{}$, $\mtxContest{}$ and $\mtxFanout{}$.
+	      $\mtxClose{}$, $\mtxContest{}$, $\mtxPartialFanout{}$, $\mtxFanout{}$,
+	      and $\mtxFinalPartialFanout{}$.
 \end{itemize}
 
 \noindent The deposit protocol defines one validator script:
@@ -32,6 +34,13 @@ validator script:
 	      claimed correctly into a head via \mtxIncrement{} or recovered after
 	      the deadline has passed in a \mtxRecover{} transaction.
 \end{itemize}
+
+\noindent \textcolor{red}{The protocol uses BLS accumulators (see Section~\ref{sec:bls-accumulator}) to commit
+to UTxO sets in a way that enables partial fanout when UTxO sets exceed transaction size limits.
+Accumulator commitments are included in the multi-signatures verified by \mtxClose{} and \mtxContest{}.
+\mtxFanout{} verifies the entire UTxO set against the accumulator in a single check, while
+\mtxPartialFanout{} and \mtxFinalPartialFanout{} use exclusion proofs to verify and distribute
+subsets of UTxOs across multiple transactions.} \\
 
 \subsection{Init transaction}\label{sec:init-tx}
 
@@ -238,9 +247,9 @@ $\redeemerDeposit = (\mathsf{claim}, \mathsf{\cid})$ and ensures:
 \noindent The state-machine validator $\nuHead$ is spent with
 $\redeemerHead = (\mathsf{increment}, \xi, s, \txOutRef_{\mathsf{increment}})$,
 where $\xi$ is a multi-signature of the increment snapshot which authorizes
-addition of deposited UTxO, $s$ is the snapshot number and
-$\txOutRef_{\mathsf{deposit}}$ points to the claimed deposit. The validator
-checks:
+addition of deposited UTxO, $s$ is the snapshot number, and
+$\txOutRef_{\mathsf{deposit}}$ points to the claimed deposit.
+The validator checks:
 \begin{menumerate}
 	\item State is advanced from $\datumHead \sim \stOpen$ to
 	$\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeysAgg,\nop,\Tcontest$
@@ -256,15 +265,18 @@ checks:
 	\[
 		\txOutRef_{\mathsf{increment}} = \txOutRef_{\mathsf{deposit}}
 	\]
-	\item $\xi$ is a valid multi-signature of the new head state $\eta'$
+	\item $\xi$ is a valid multi-signature of the new snapshot state
 	\[
-		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta_\alpha || \bot),\xi) = \true
+		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta_\alpha || \bot || \red{A}),\xi) = \true
 	\]
-	where $\eta_\alpha$ is the digest of all deposited UTxO in $C$ sorted by their output
-	references
+	where $\eta_\alpha$ is the hash of all deposited UTxO in $C$
 	\[
-		\eta_\alpha = \hash(\mathsf{concat}({\sortOn(1, C)}^{\downarrow2}))
+		\eta_\alpha = \hash(\bigoplus_{j=1}^{m} \bytes(c_j))
 	\]
+	and \red{$A$ is the BLS accumulator commitment of the new snapshot (see Section~\ref{sec:bls-accumulator}):
+	\[
+		A = \accUTxO(U')
+	\]}
 	\item The value in the head output is increased accordingly
 	\[
 		\valHead \cup \valDeposit = \valHead'
@@ -296,10 +308,10 @@ a party to remove a UTxO from an already open head and consists of:
 \end{itemize}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{decrement}, \xi, s, m)$, where $\xi$ is a multi-signature of
-the decrement snapshot which authorizes removal of some UTxO, $s$ is the
-used snapshot number and $m$ is the number of outputs to distribute. The
-validator checks:
+$\redeemerHead = (\mathsf{decrement}, \xi, s, m)$, where $\xi$ is a
+multi-signature of the decrement snapshot which authorizes removal of some UTxO,
+$s$ is the used snapshot number, and $m$ is the number of outputs to distribute.
+The validator checks:
 \begin{menumerate}
 	\item State is advanced from $\datumHead \sim \stOpen$ to
 	$\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\Tcontest$ stay
@@ -311,14 +323,18 @@ validator checks:
 	\[
 		v' = v + 1
 	\]
-	\item $\xi$ is a valid multi-signature of the new snapshot state $\eta'$
+	\item $\xi$ is a valid multi-signature of the new snapshot state
 	\[
-		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \eta\alpha || \eta_\omega),\xi) = \true
+		\msVfy(\hydraKeys,(\cid || v || s || \eta' || \bot || \eta_\omega || \red{A}),\xi) = \true
 	\]
-	where $\eta_\omega$ is the digest of all removed UTxO
+	where $\eta_\omega$ is the hash of all removed UTxO
 	\[
-		\eta_\omega = \hash(\bigoplus_{j=2}^{m+1} \bytes(o_{j}))
+		\eta_\omega = \hash(\bigoplus_{j=2}^{m+1} \bytes(o_j))
 	\]
+	and \red{$A$ is the BLS accumulator commitment of the new snapshot UTxO together with the decommitted outputs (see Section~\ref{sec:bls-accumulator}):
+	\[
+		A = \accUTxO(U' \cup U_\omega)
+	\]}
 	\item The value in the head output is decreased accordingly
 	\[
 		\valHead' \cup (\bigcup_{j=2}^{m+1} \val_{j}) = \valHead
@@ -360,14 +376,19 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	$\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
 	stay unchanged and the new state is governed again by $\nuHead$
 	\[
-		(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \eta_\alpha\Delta', \eta_\omega\Delta', \contesters,\tfinal)
+		(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v,s',\eta_{\mathsf{snap}},\red{\eta_\alpha,\eta_\omega,A},\contesters,\tfinal)
 	\]
+	where the closed datum stores the snapshot UTxO hash $\eta_{\mathsf{snap}}$, and \red{three new fields: $\eta_\alpha$ (hash of committed UTxO, or $\bot$), $\eta_\omega$ (hash of decommitted UTxO, or $\bot$), and $A = \accUTxO(\cdot)$ the BLS accumulator commitment used for partial fanout verification.} These fields are set by the closer as described in each case below.
 	\item Last known open state version is recorded in closed state
 	\[
 		v' = v
 	\]
 
-	\item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi) \cup (\mathsf{UnusedInc}, \xi, \eta_\alpha) \cup (\mathsf{UnusedDec}, \xi) \cup (\mathsf{UsedInc}, \xi)  \cup (\mathsf{UsedDec}, \xi, \eta_\omega) $, where $\xi$ is a multi-signature of the closing snapshot and $\eta_\alpha$ and $\eta_\omega$ are the digests of the UTxO to increment or decrement respectively, six cases are distinguished:
+	\item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi, A) \cup (\mathsf{UnusedInc}, \xi, \eta_\alpha, A) \cup (\mathsf{UnusedDec}, \xi, A) \cup (\mathsf{UsedInc}, \xi, \eta_\alpha, A) \cup (\mathsf{UsedDec}, \xi, \eta_\omega, A)$, where $\xi$ is a multi-signature of the closing snapshot, $\eta_\alpha$ and $\eta_\omega$ are hashes of the committed or decommitted UTxO, and \red{$A$ is the BLS accumulator commitment}, six cases are distinguished.
+	In all cases except $\mathsf{Initial}$, \red{the accumulator $A$ in the redeemer must equal the accumulator commitment $A' = \accUTxO(\cdot)$ stored in the closed datum:
+	\[
+		A = A'
+	\]}
 	\begin{menumerate}
 		\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 		\[
@@ -377,67 +398,42 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 			s' = 0
 		\]
 		\[
-			\eta' = \eta
+			\eta_{\mathsf{snap}} = \eta
 		\]
-		\item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and both UTxO to increment and decrement must be empty in the closed state.
+		\item $\mathsf{Any}$: Closing snapshot refers to current state version $v$ and no pending increment or decrement. Closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$.
 		\[
-			\eta_\alpha\Delta' = \eta_\alpha = \bot
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \bot || \bot || \red{A}),\xi) = \true
 		\]
+		\item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$; a pending deposit was not included in the snapshot. Closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$. The $\eta_\alpha$ value is provided by the redeemer\footnote{$\eta_\alpha$ is needed to verify the signature but is not stored in the closed state (the deposit remains unclaimed).}.
 		\[
-			\eta_\omega\Delta' = \eta_\omega = \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-		\]
-		\item $\mathsf{UnusedInc}$: Closing snapshot refers to current state version $v$ and any UTxO to increment must not be recorded in the closed state.
-		\[
-			\eta_\alpha  \neq \bot
+			\eta_\alpha \neq \bot
 		\]
 		\[
-			\eta_\alpha\Delta' = \bot
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \eta_\alpha || \bot || \red{A}),\xi) = \true
+		\]
+		\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$; a pending decommit is included. The $\eta_\omega$ value is read from the closed datum set by the closer\footnote{$\eta_\omega$ is needed to verify the signature and is stored in the closed datum so that fanout can distribute these outputs.}.
+		\[
+			\eta_\omega \neq \bot
 		\]
 		\[
-			\eta_\omega\Delta' = \eta\omega = \bot
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \bot || \eta_\omega || \red{A}),\xi) = \true
+		\]
+		The closed datum has $\eta_\alpha = \bot$ and stores $\eta_\omega$ for later fanout distribution.
+		\item $\mathsf{UsedInc}$: Closing snapshot refers to the previous state $v - 1$; the deposited UTxO is already included in the snapshot. The $\eta_\alpha$ value is provided by the redeemer and must equal $\eta_\alpha$ stored in the closed datum.
+		\[
+			\eta_\alpha \neq \bot
 		\]
 		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\mathsf{snap}} || \eta_\alpha || \bot || \red{A}),\xi) = \true
 		\]
-		where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
-		\item $\mathsf{UnusedDec}$: Closing snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
+		The closed datum stores $\eta_\alpha$ (the committed UTxO hash) and has $\eta_\omega = \bot$, so fanout distributes the committed UTxO as a separate batch.
+		\item $\mathsf{UsedDec}$: Closing snapshot refers to the previous state $v - 1$; the decommitted UTxO has already been removed. Closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$. The $\eta_\omega$ value is provided by the redeemer\footnote{$\eta_\omega$ is needed to verify the signature but is not stored in the closed state (the decommit was already distributed).}.
 		\[
-			\eta_\alpha\Delta' = \eta_\alpha = \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \eta_\omega \neq \bot
+			\eta_\omega \neq \bot
 		\]
 		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\mathsf{snap}} || \bot || \eta_\omega || \red{A}),\xi) = \true
 		\]
-		\todo{this is hard to understand}
-		\item $\mathsf{UsedInc}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
-		\[
-			\eta_\alpha\Delta' = \eta_\alpha \neq \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \eta_\omega = \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
-		\]
-		\item $\mathsf{UsedDec}$: Closing snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
-		\[
-			\eta_\alpha\Delta' = \eta_\alpha = \bot
-		\]
-		\[
-			\eta_\omega \neq  \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
-		\]
-		where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
 	\end{menumerate}
 	% TODO: detailed CDDL definition of msg
 
@@ -472,6 +468,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\]
 \end{menumerate}
 
+
 \subsection{Contest Transaction}\label{sec:contest-tx}
 
 The \mtxContest{} transaction (see Figure~\ref{fig:contestTx}) is posted by a
@@ -493,11 +490,11 @@ transaction has
 $\redeemerHead = (\mathsf{contest}, \mathsf{ContestType})$, where
 $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 \begin{menumerate}
-	\item State is advanced from $\datumHead \sim \stOpen$ to
+	\item State is advanced from $\datumHead \sim \stClosed$ to
 	$\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
 	stay unchanged and the new state is governed again by $\nuHead$
 	\[
-		(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\eta_\alpha\Delta',\eta\omega\Delta',\contesters',\tfinal')
+		(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\red{\eta_\alpha,\eta_\omega,A},\contesters,\tfinal) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v,s',\eta',\red{\eta_\alpha',\eta_\omega',A'},\contesters',\tfinal')
 	\]
 
 	\item Last known open state version stays recorded in closed state
@@ -509,70 +506,43 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\[
 		s' > s
 	\]
-	\item Based on the redeemer $\mathsf{ContestType} = (\mathsf{Current}, \xi) (\mathsf{UnusedInc}, \xi, \eta_\alpha) \cup (\mathsf{UnusedDec}, \xi) \cup (\mathsf{UsedInc}, \xi)  \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the contesting snapshot and $\eta_\alpha$ and $\eta_\omega$ are the digests of the UTxO to increment or decrement respectively, five cases are distinguished:
+	\item Based on the redeemer $\mathsf{ContestType} = (\mathsf{Current}, \xi, A) \cup (\mathsf{UnusedInc}, \xi, \eta_\alpha, A) \cup (\mathsf{UnusedDec}, \xi, A) \cup (\mathsf{UsedInc}, \xi, A) \cup (\mathsf{UsedDec}, \xi, \eta_\omega, A)$, where $\xi$ is a multi-signature of the contesting snapshot, $\eta_\alpha$ and $\eta_\omega$ are hashes of committed or decommitted UTxO, and \red{$A$ is the BLS accumulator commitment}, five cases are distinguished (mirroring the CloseType cases).
+	In all cases, \red{the accumulator $A$ in the redeemer must equal the accumulator commitment stored in the new closed datum.}
 
 	\begin{menumerate}
-		\item $\mathsf{Current}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment or decrement must be $\bot$ in the closed state.
+		\item $\mathsf{Current}$: No pending increment or decrement. New closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$.
 		\[
-			\eta_\alpha\Delta' = \eta_\alpha =  \bot
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \bot || \bot || \red{A}),\xi) = \true
+		\]
+		\item $\mathsf{UnusedInc}$: A pending deposit was not included in the snapshot. New closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$. The $\eta_\alpha$ value is provided by the redeemer.
+		\[
+			\eta_\alpha \neq \bot
 		\]
 		\[
-			\eta_\omega\Delta' = \eta_\omega =  \bot
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \eta_\alpha || \bot || \red{A}),\xi) = \true
+		\]
+		\item $\mathsf{UnusedDec}$: A pending decommit is included. The $\eta_\omega$ value is read from the new closed datum set by the contester.
+		\[
+			\eta_\omega \neq \bot
 		\]
 		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v || s' || \eta_{\mathsf{snap}} || \bot || \eta_\omega || \red{A}),\xi) = \true
 		\]
-		%% FIXME: \red{\item ...} does not work
-		\item $\mathsf{UnusedInc}$: Contesting snapshot refers to current state version $v$ and any UTxO to increment must be $\bot$ in the closed state.
+		The new closed datum has $\eta_\alpha = \bot$ and stores $\eta_\omega$.
+		\item $\mathsf{UsedInc}$: The deposited UTxO is already included in the snapshot. The new closed datum stores $\eta_\alpha$ (the committed UTxO hash) and has $\eta_\omega = \bot$.
 		\[
-			\eta_\alpha  \neq \bot
-		\]
-		\[
-			\eta_\alpha\Delta' = \bot
+			\eta_\alpha \neq \bot
 		\]
 		\[
-			\eta_\omega\Delta' = \eta\omega = \bot
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\mathsf{snap}} || \eta_\alpha || \bot || \red{A}),\xi) = \true
+		\]
+		\item $\mathsf{UsedDec}$: The decommitted UTxO has already been removed. New closed datum has $\eta_\alpha = \bot$, $\eta_\omega = \bot$. The $\eta_\omega$ value is provided by the redeemer.
+		\[
+			\eta_\omega \neq \bot
 		\]
 		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha || \eta_\omega),\xi) = \true
+			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta_{\mathsf{snap}} || \bot || \eta_\omega || \red{A}),\xi) = \true
 		\]
-		where $\eta_\alpha$ is provided by the redeemer \footnote{$\eta_\alpha$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
-
-		\item $\mathsf{UnusedDec}$: Contesting snapshot refers to current state version $v$ and any UTxO to decrement need to be present in the closed state too.
-		\[
-			\eta_\alpha\Delta' = \eta_\alpha = \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \eta_\omega \neq \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
-		\]
-		\item $\mathsf{UsedInc}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to increment must be recorded in the closed state.
-		\[
-			\eta_\alpha\Delta' = \eta_\alpha \neq \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \eta_\omega = \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha || \eta_\omega ),\xi) = \true
-		\]
-
-		\item $\mathsf{UsedDec}$: Contesting snapshot refers the previous state $v - 1$ and any UTxO to decrement must not be recorded in the closed state.
-		\[
-			\eta_\alpha\Delta' = \eta_\alpha = \bot
-		\]
-		\[
-			\eta_\omega \neq  \bot
-		\]
-		\[
-			\eta_\omega\Delta' = \bot
-		\]
-		\[
-			\msVfy(\hydraKeys,(\cid || v - 1 || s' || \eta' || \eta_\alpha|| \eta_\omega),\xi) = \true
-		\]
-		where $\eta_\omega$ is provided by the redeemer\footnote{$\eta_\omega$ needs to be provided to verify the signature, but is otherwise not relevant for the closed state}.
 	\end{menumerate}
 	% TODO: detailed CDDL definition of msg
 
@@ -608,11 +578,91 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\]
 \end{menumerate}
 
+\subsection{\red{Partial Fan-Out Transaction}}\label{sec:partial-fanout-tx}
+
+{\color{red}
+When the snapshot UTxO set $U$ is too large to distribute in a single
+\mtxFanout{} transaction, the head can be finalized incrementally. A sequence
+of \mtxPartialFanout{} transactions each distribute a chunk of UTxOs while
+keeping the head locked, after which a \mtxFinalPartialFanout{} transaction
+distributes the remaining outputs and burns all tokens.
+
+\subsubsection{Fan-Out Progress State}\label{sec:fanout-progress-state}
+
+During partial fan-out the head output transitions into the
+$\stFanoutProgress$ state with datum
+\[
+  \datumHead = (\stFanoutProgress,\cid,\hydraKeys,\tfinal,A)
+\]
+where
+\begin{mitemize}
+  \item $A$ is the BLS accumulator commitment
+        (see Section~\ref{sec:bls-accumulator}), reflecting the remaining outputs
+        yet to be distributed. On the first partial fan-out step $A$ is taken
+        directly from the $\stClosed$ datum; each subsequent
+        step stores the updated $A'$ after removing the just-distributed
+        chunk.
+\end{mitemize}
+
+\subsubsection{Partial Fan-Out Transaction}\label{sec:partial-fanout-step}
+
+\todo{Add partialFanoutTx.svg figure}
+
+\noindent A \mtxPartialFanout{} transaction distributes the next chunk of $m$ UTxOs
+from the head in canonical order. It consists of
+\begin{itemize}
+  \item one input spending from $\nuHead$ holding the $\st$ with $\datumHead$
+        in state $\stClosed$ or $\stFanoutProgress$, and
+  \item one output paying to $\nuHead$ with value $\valHead'$ and datum
+        $\datumHead'$ in state $\stFanoutProgress$,
+  \item outputs $o_1 \dots o_m$ distributing the chunk of UTxOs.
+\end{itemize}
+
+\noindent The state-machine validator $\nuHead$ is spent with
+$\redeemerHead = (\stPartialFanout, m, \mathit{crsRef})$, where $m$ is the
+number of outputs to distribute and $\mathit{crsRef}$ references the common
+reference string, and checks:
+\begin{menumerate}
+  \item State is advanced to $\datumHead' \sim \stFanoutProgress$ with head
+        parameters and updated BLS accumulator commitment. When spending from $\stClosed$
+        (using $A$ from that datum as the initial accumulator):
+        \[
+          (\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta_{\mathsf{snap}},\eta_\alpha,\eta_\omega,A,\contesters,\tfinal)
+          \xrightarrow[m,\mathit{crsRef}]{\stPartialFanout}
+          (\stFanoutProgress,\cid,\hydraKeys,\tfinal,A')
+        \]
+        When spending from $\stFanoutProgress$:
+        \[
+          (\stFanoutProgress,\cid,\hydraKeys,\tfinal,A)
+          \xrightarrow[m,\mathit{crsRef}]{\stPartialFanout}
+          (\stFanoutProgress,\cid,\hydraKeys,\tfinal,A')
+        \]
+  \item Transaction is posted after the contestation deadline
+        \[
+          \txValidityMin > \tfinal
+        \]
+  \item The new accumulator commitment $A'$ (from $\datumHead'$) serves as
+        an exclusion witness: it verifies that the distributed outputs were correctly
+        removed from $A$:
+        \[
+          \updateVfy(A,\; A',\; \{o_1, \dots, o_m\},\; \mathit{crs}) = \true
+        \]
+  \item Value in the head output is decreased by exactly the distributed outputs
+        \[
+          \valHead' + \bigcup_{j=1}^{m} \val(o_j) = \valHead
+        \]
+  \item No minting or burning
+        \[
+          \txMint = \varnothing
+        \]
+\end{menumerate}
+}
+
 \subsection{Fan-Out Transaction}\label{sec:fanout-tx}
 
 Once the contestation phase is over, a head may be finalized by posting a
-\mtxFanout{} transaction (see Figure~\ref{fig:fanoutTx}), which
-distributes UTxOs from the head according to the latest state. It consists of
+\mtxFanout{} transaction (see Figure~\ref{fig:fanoutTx}), which distributes
+UTxOs from the head according to the latest state. It consists of
 \begin{itemize}
 	\item one input spending from $\nuHead$ holding the $\st$, and
 	\item outputs $o_{1} \dots o_{m+n+n'}$ to distribute UTxOs.
@@ -629,39 +679,67 @@ hence there is no state machine output.
 \end{figure}
 
 \noindent The state-machine validator $\nuHead$ is spent with
-$\redeemerHead = (\mathsf{fanout}, m, n, n')$, where $m$, $n$ and $n'$ are
-outputs to distribute from the $\stClosed$ state, and checks:
+$\redeemerHead = (\mathsf{fanout}, m, n, n', \red{\pi, \mathit{crsRef}})$, where $m$ is
+the number of main UTxO outputs, \red{$n$ and $n'$ are the number of committed and decommitted UTxO outputs respectively, $\pi$ is a BLS membership proof and
+$\mathit{crsRef}$ references the common reference string}, and checks:
 \begin{menumerate}
-	\item State is advanced from $\datumHead \sim \stClosed$ to terminal state
-	$\stFinal$: % XXX: What does this actually mean?
+	\item State is advanced to the terminal state $\stFinal$ from $\stClosed$:
 	\[
-		(\stClosed,\cid,\hydraKeys,\Tcontest,v, s,\eta,\eta_\alpha\Delta,\eta_\omega\Delta,\contesters,\tfinal) \xrightarrow[m,n,n']{\stFanout} \stFinal
+		(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta_{\mathsf{snap}},\red{\eta_\alpha,\eta_\omega,A},\contesters,\tfinal)
+		\xrightarrow[m,n,n',\red{\pi,\mathit{crsRef}}]{\stFanout} \stFinal
 	\]
-	\item The first $m$ outputs are distributing funds according to $\eta$. That is,
-	the outputs exactly correspond to the UTxO canonically combined $U^{\#}$:
+	\item Fanned-out UTxOs match the hashes recorded in the closed state:
 	\[
-		\eta = U^{\#} = \hash(\bigoplus_{j=1}^{m} \bytes(o_{j}))
+		\hash(\bigoplus_{j=1}^{m} \bytes(o_j)) = \eta_{\mathsf{snap}}
 	\]
-	where $\combine$ produces a canonical hash from a UTxO set by sorting outputs
-	by their output references, concatenating their serialised representations,
-	and hashing the result\footnote{Sorting is required to ensure a canonical
-		representation which can be reproduced from the UTxO set.}.
-	\item The following $n$ outputs are distributing funds according to
-	$\eta_\alpha\Delta$. That is, the outputs exactly correspond to the UTxO canonically
-	combined $U^{\#}_{\alpha\Delta}$:
 	\[
-		\eta_{\alpha\Delta} = U^{\#}_{\alpha\Delta} = \hash(\bigoplus_{j=m}^{m+n} \bytes(o_{j}))
+		\red{\hash(\bigoplus_{j=m+1}^{m+n} \bytes(o_j)) = \eta_\alpha}
 	\]
-	\item The next $n'$ outputs are distributing funds according to
-	$\eta_\omega\Delta$. That is, the outputs exactly correspond to the UTxO canonically
-	combined $U^{\#}_{\omega\Delta}$:
 	\[
-		\eta_{\omega\Delta} = U^{\#}_{\omega\Delta} = \hash(\bigoplus_{j=m'}^{m+n'} \bytes(o_{j}))
+		\red{\hash(\bigoplus_{j=m+n+1}^{m+n+n'} \bytes(o_j)) = \eta_\omega}
+	\]
+	\item \red{All distributed outputs are verified against the BLS accumulator commitment:
+	\[
+		\membershipVfy(A,\; \{o_1, \dots, o_{m+n+n'}\},\; \pi,\; \mathit{crs}) = \true
+	\]}
+	\item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
+	\item All tokens are burnt
+	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = |\hydraKeys| + 1$.
+\end{menumerate}
+
+\subsection{\red{Final Partial Fan-Out Transaction}}\label{sec:final-partial-fanout-tx}
+
+{\color{red}
+After one or more $\mtxPartialFanout{}$ steps, the head is finalized by posting a
+$\mathsf{finalPartialFanout}$ transaction, which distributes the remaining UTxOs
+and burns all head tokens. It consists of
+\begin{itemize}
+	\item one input spending from $\nuHead$ holding the $\st$ in state
+	      $\stFanoutProgress$, and
+	\item outputs $o_1 \dots o_m$ distributing the remaining UTxOs.
+\end{itemize}
+
+\noindent The state-machine validator $\nuHead$ is spent with
+$\redeemerHead = (\mathsf{finalPartialFanout}, m, \pi, \mathit{crsRef})$, where
+$m$ is the number of remaining outputs, $\pi$ is a membership proof for those
+outputs, and $\mathit{crsRef}$ references the common reference string, and checks:
+\begin{menumerate}
+	\item State is advanced to the terminal state $\stFinal$ from
+	$\stFanoutProgress$:
+	\[
+		(\stFanoutProgress,\cid,\hydraKeys,\tfinal,A)
+		\xrightarrow[m,\pi,\mathit{crsRef}]{\mathsf{finalPartialFanout}} \stFinal
+	\]
+	\item The $m$ remaining outputs are verified against the accumulator commitment $A$ from the
+	$\stFanoutProgress$ datum:
+	\[
+		\membershipVfy(A,\; \{o_1, \dots, o_m\},\; \pi,\; \mathit{crs}) = \true
 	\]
 	\item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
 	\item All tokens are burnt
-	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
+	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = |\hydraKeys| + 1$.
 \end{menumerate}
+}
 
 \noindent The $\muHead(\seed)$ minting policy governs the burning of tokens via
 redeemer $\mathsf{burn}$ that:

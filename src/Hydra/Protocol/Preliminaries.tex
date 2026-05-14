@@ -251,6 +251,35 @@ formalism).
 % input/outputs do represent a transition in the statemachine from s' to s' etc.
 \todo{Add an example graph with a legend}
 
+\subsection{\red{BLS Accumulator}}\label{sec:bls-accumulator}
+
+{\color{red}
+To enable efficient membership proofs for large UTxO sets, the protocol uses a
+cryptographic accumulator based on BLS12-381 pairing-friendly elliptic curves~\cite{BLS2001} and
+KZG polynomial commitments~\cite{KZG10}. The accumulator commits to a combined
+ordered sequence of outputs from the snapshot UTxO set and any pending
+increment/decrement outputs, enabling succinct proofs for partial fan-out.
+
+The accumulator scheme~\cite{acc2018} uses the following operations:
+\begin{itemize}
+  \item $A \gets \accUTxO(U, U_\alpha, U_\omega)$ computes a combined accumulator
+        commitment from the main snapshot UTxO set $U$, the pending increment UTxO
+        set $U_\alpha$, and the pending decrement UTxO set $U_\omega$. All three sets
+        are ordered canonically and committed to together.
+  \item $\pi \gets \membershipProof(S, A, \mathit{crs})$ computes a membership
+        proof certifying that the set of outputs $S$ appears in the accumulator with
+        commitment $A$, using a common reference string $\mathit{crs}$.
+  \item $\membershipVfy(A, S, \pi, \mathit{crs}) \in \tyBool$ verifies that outputs
+        $S$ form a subset of the accumulated set with commitment $A$, using
+        membership proof $\pi$ and common reference string $\mathit{crs}$.
+  \item $\updateVfy(A, A', S, \mathit{crs}) \in \tyBool$ verifies that $A'$ is the
+        accumulator obtained from $A$ by removing the set of outputs $S$.
+\end{itemize}
+
+\noindent A trusted setup ceremony provides the common reference string
+$\mathit{crs}$, referenced in transactions via $\mathit{crsRef}$.
+}
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "main"

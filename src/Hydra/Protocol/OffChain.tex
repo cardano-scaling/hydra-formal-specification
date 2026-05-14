@@ -7,7 +7,15 @@ changes to the original protocol. While the on-chain part already describes the
 full life-cycle of a Hydra head on-chain, this section completes the picture by
 defining how the protocol behaves off-chain and notably the relationship between
 on- and off-chain semantics. Participants of the protocol are also called Hydra
-head members, parties or simply protocol actors. The protocol is specified as a
+head members, parties or simply protocol actors.
+
+\noindent \textcolor{red}{The off-chain protocol coordinates BLS accumulator operations (see Section~\ref{sec:bls-accumulator})
+for partial fanout support. When UTxO sets are too large for single transactions (see Section~\ref{sec:bls-accumulator}
+for limits details), the off-chain protocol automatically falls back to partial distribution using
+exclusion proofs, ensuring all UTxOs can be distributed across multiple transactions
+while maintaining cryptographic integrity.}
+
+The protocol is specified as a
 reactive system that processes three kinds of inputs:
 \begin{enumerate}
 	\item On-chain protocol transactions as introduced in
@@ -21,8 +29,9 @@ reactive system that processes three kinds of inputs:
 		      \item $\mathtt{decrementTx}$: removes UTxO from an open head
 		      \item $\mathtt{closeTx}$: closes a head
 		      \item $\mathtt{contestTx}$: contests a closed head
-		            % NOTE: fanout not mentioned because not needed in off-chain protocol
-		            % description
+		      \item \textcolor{red}{$\mathtt{partialFanoutTx}$: distributes a subset of UTxOs from a closed head (intermediate)}
+		      \item $\mathtt{fanoutTx}$: distributes all UTxOs from a closed head (final, no pending partial fanout)
+		      \item \textcolor{red}{$\mathtt{finalPartialFanoutTx}$: distributes the last subset and finalizes a partially fanned-out head}
 	      \end{itemize}
 	      Also, a special input when time advanced on chain may be used:
 	      \begin{itemize}
@@ -110,6 +119,7 @@ party's local state consists of the following variables:
 \begin{itemize}
 	\item $\hatv$: Last seen open state version.
 	\item $\hats$: Sequence number of latest seen snapshot.
+	\item $\hatmU$: UTxO set of the latest seen (in-flight) snapshot, used when collecting acknowledgements in $\hpAS$.
 	\item $\hatSigma \in {(\tyNatural \times \tyBytes)}^{*}$: Accumulator of
 	      signatures of the latest seen snapshot, indexed by parties.
 	\item $\hatmL$: UTxO set representing the local ledger state resulting from
@@ -134,12 +144,13 @@ party's local state consists of the following variables:
 			      $\bar{\mc S}.U$        & snapshotted UTxO set                                        \\ \hline
 			      $\bar{\mc S}.U_\alpha$ & pending UTxO to increment                                   \\ \hline
 			      $\bar{\mc S}.U_\omega$ & pending UTxO to decrement                                   \\ \hline
+			      $\bar{\mc S}.A$         & \red{BLS accumulator commitment $A = \accUTxO(U \cup U_\alpha \cup U_\omega)$} \\ \hline
 			      $\bar{\mc S}.\sigma$   & multisignature                                              \\ \hline
 		      \end{tabular}
 	      \end{center}
 \end{itemize}
 
-where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega)$ initializes a
+where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega, A)$ initializes a
 new snapshot object with $\bar{\mathcal{S}}.\sigma = \emptyset$. \\
 
 Additionally, deposit objects are created using
@@ -178,7 +189,7 @@ seen head state version $\hatv = 0$, and the snapshot number $\hats = 0$. No
 deposit transaction $\tx_{\alpha} = \bot$ and no decrement transaction
 $\tx_{\omega} = \bot$ are pending, and the last confirmed snapshot is
 initialized accordingly
-$\bar{\mc S} \gets \Sno(0, 0, [], \emptyset, \emptyset, \emptyset)$.
+$\bar{\mc S} \gets \Sno(0, 0, [], \emptyset, \emptyset, \emptyset, \red{\accUTxO(\emptyset)})$.
 
 \subsubsection{Processing transactions off-chain}
 
@@ -256,10 +267,9 @@ snapshot as
 $U \gets U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}}$. Then,
 $\party_i$ creates a signature $\msSig_i$ using their signing key
 $\hydraSigningKey$ on a message comprised by the $\cid$, the new snapshot number
-$\hats$, the new $\eta$ resulting from canonically combining $U$ (see
-Section~\ref{sec:close-tx} for details), and either $\eta_{\alpha}$ or
-$\eta_{\omega}$ derived from deposited $U_{\alpha}$ or decommit transaction
-$\tx_{\omega}$ respectively. The signature is sent to all head members via
+$\hats$, and the \red{BLS accumulator commitments} $\eta = \red{\accUTxO}(U)$,
+$\eta_\alpha = \red{\accUTxO}(U_\alpha)$, $\eta_\omega = \red{\accUTxO}(\mathsf{outputs}(\tx_\omega))$
+(see Section~\ref{sec:bls-accumulator}). The signature is sent to all head members via
 message $(\hpAS,\hats,\msSig_i)$. Finally, the local ledger state $\hatmL$ and
 pending transaction set $\hatmT$ get pruned by re-applying all locally pending
 transactions $\hatmT$ to the just requested snapshot's UTxO set iteratively and
@@ -274,14 +284,12 @@ if the signature from each party has been collected, $\party_i$ aggregates the
 multisignature $\msCSig$ and $\Req$ it to be valid (constructing the signed
 message as in $\hpRS$). If everything is fine, the snapshot can be considered
 confirmed by creating the snapshot object
-$\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_{\alpha}, \mathsf{outputs}(\tx_{\omega}))$
+$\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_{\alpha}, \mathsf{outputs}(\tx_{\omega}), \accUTxO(\hatmU))$
 and storing the multi-signature $\msCSig$ in it for later reference. In case
 there is a pending decommit, any participant can now submit a \mtxDecrement{}
-transaction by providing the just confirmed snapshot with its digests of the
-active UTxO set $\eta$ and the to be removed UTxO set $\eta_{\omega}$. If, however, there
-was a pending deposit, any participant can now submit an $\mathtt{incrementTx}$
-by providing the confirmed snapshot with its digests of the active UTxO set $\eta$
-and the UTxO set to be added $\eta_\alpha$. Lastly, if $\party_i$ is the next snapshot
+transaction providing the confirmed snapshot accumulator commitments. If, however,
+there was a pending deposit, any participant can now submit an $\mathtt{incrementTx}$
+by providing the confirmed snapshot accumulator commitments. Lastly, if $\party_i$ is the next snapshot
 leader and there are already transactions to snapshot in $\hatmT$, a
 corresponding $\hpRS$ is distributed. \\
 
@@ -304,21 +312,37 @@ Section~\ref{sec:increment-tx}
 
 \dparagraph{$\hpClose$.}\quad In order to close a head, a client issues the
 $\hpClose$ input which uses the latest confirmed snapshot $\bar{\mc S}$ to
-create the new $\eta$-state from the last confirmed UTxO set, the digest of
-either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$), and the certificate
-$\xi$ using the corresponding multi-signature. With these, the $\mtxClose$ transaction
-can be constructed and posted. See Section~\ref{sec:close-tx} for details about this
+construct the $\mtxClose$ transaction using the accumulator commitments and
+the certificate $\xi$ from the corresponding
+multi-signature. See Section~\ref{sec:close-tx} for details about this
 transaction. \\
 
 \dparagraph{$\mathtt{closeTx}/\mathtt{contestTx}$.}\quad When a party observes
-the head getting closed or contested, the $\eta$-state extracted from the
-\mtxClose{} or \mtxContest{} transaction represents the latest head status that
-has been aggregated on-chain so far (by a sequence of \mtxClose{} and
+the head getting closed or contested, the on-chain snapshot represents the latest head status
+aggregated so far (by a sequence of \mtxClose{} and
 \mtxContest{} transactions). If the last confirmed (off-chain) snapshot is newer
-than the observed (on-chain) snapshot number $s_{c}$, an updated $\eta$-state,
-along with the digest of either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$),
-and certificate $\xi$ is constructed and posted in a \mtxContest{} transaction (see
-Section~\ref{sec:contest-tx}).
+than the observed (on-chain) snapshot number $s_{c}$, a \mtxContest{} transaction
+is posted with the certificate $\xi$ and accumulator commitments (see Section~\ref{sec:contest-tx}). \\
+
+\subsubsection{Finalizing the head}
+
+\dparagraph{$\mathtt{fanoutTx}$.}\quad Once the contestation deadline $\tfinal$
+has passed, any party may finalize the head by posting a $\mtxFanout{}$ transaction.
+This is possible when the confirmed snapshot UTxO set $\bar{\mc S}.U$ is small enough to
+distribute in a single transaction. The head transitions to $\stFinal$, burning all head
+tokens and paying all UTxOs to their respective owners. \\
+
+\dparagraph{\textcolor{red}{$\mathtt{partialFanoutTx}$.}}\quad \red{When the
+confirmed snapshot UTxO set $\bar{\mc S}.U$ is too large to distribute in a single
+transaction, a party instead posts a sequence of $\mtxPartialFanout{}$ transactions,
+each distributing the next chunk of UTxOs using the BLS accumulator commitment stored
+in the closed datum, with an exclusion proof generated using
+$\membershipProof(S, A, \mathit{crs})$ for each chunk $S$. The head remains in
+$\stClosed$ with an updated accumulator reflecting the remaining UTxOs after each
+partial fanout. After all UTxOs are distributed, a $\mathtt{finalPartialFanoutTx}$
+transaction distributes the last chunk and burns all head tokens, transitioning the
+head to $\stFinal$. Off-chain coordination of partial fanout is handled similarly
+to the nominal fanout case.}
 
 \subsection{Rollbacks and protocol changes}\label{sec:rollbacks}
 \todo{Explain why rollbacks are no problem to increment/decrement}

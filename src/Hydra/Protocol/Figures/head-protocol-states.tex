@@ -10,17 +10,21 @@
   \end{tikzpicture}
   \newline
   \newline
-  \begin{tikzpicture}[>=stealth,auto,node distance=2.8cm, initial text=$\mathsf{init}$, every
-    state/.style={text width=10mm, align=center}]
+  \begin{tikzpicture}[>=stealth,auto,node distance=3cm, initial text=$\mathsf{init}$, every
+    state/.style={text width=12mm, align=center}]
     \node[state, initial] (open) {$\stOpen$};
     \node[state] (closed) [right of=open] {$\stClosed$};
     \node[state, accepting] (final) [right of=closed] {$\stFinal$};
+    \node[state, text width=18mm] (fanoutProgress) at (4.5,-2.8) {$\stFanoutProgress$};
 
     \path[->] (open) edge [bend left=20] node {$\stClose$} (closed);
     \path[->] (open) edge [loop above] node {$\mathsf{increment}$} (open);
     \path[->] (open) edge [loop below] node {$\mathsf{decrement}$} (open);
     \path[->] (closed) edge [bend left=20] node {$\stFanout$} (final);
     \path[->] (closed) edge [loop above] node {$\stContest$} (closed);
+    \path[->] (closed) edge node [left] {$\stPartialFanout$} (fanoutProgress);
+    \path[->] (fanoutProgress) edge [loop below] node {$\stPartialFanout$} (fanoutProgress);
+    \path[->] (fanoutProgress) edge node [right] {$\stFinalPartialFanout$} (final);
   \end{tikzpicture}
 
   \caption{Mainchain state diagram for this version of the Hydra protocol.}\label{fig:head-protocol-states}
