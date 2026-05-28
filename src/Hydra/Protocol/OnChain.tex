@@ -38,9 +38,9 @@ validator script:
 \noindent \textcolor{red}{The protocol uses BLS accumulators (see Section~\ref{sec:bls-accumulator}) to commit
 to UTxO sets in a way that enables partial fanout when UTxO sets exceed transaction size limits.
 Accumulator commitments are included in the multi-signatures verified by \mtxClose{} and \mtxContest{}.
-\mtxFanout{} verifies the entire UTxO set against the accumulator in a single check, while
-\mtxPartialFanout{} and \mtxFinalPartialFanout{} use exclusion proofs to verify and distribute
-subsets of UTxOs across multiple transactions.} \\
+\mtxFanout{} uses hash-based verification and does not check the accumulator; the accumulator is used
+only by \mtxPartialFanout{} and \mtxFinalPartialFanout{}, which use KZG divisibility checks to verify
+and distribute subsets of UTxOs across multiple transactions.} \\
 
 \subsection{Init transaction}\label{sec:init-tx}
 
@@ -373,17 +373,14 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 		(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta,\red{A}) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v,s',\eta_{\mathsf{snap}},\red{\eta_\alpha,\eta_\omega,A},\contesters,\tfinal)
 	\]
-	where the closed datum stores the snapshot UTxO hash $\eta_{\mathsf{snap}}$, \red{$\eta_\alpha$ (hash of committed UTxO, or $\bot$), $\eta_\omega$ (hash of decommitted UTxO, or $\bot$), and $A$ the BLS accumulator commitment carried forward from the input open datum.} The fields $\eta_\alpha$ and $\eta_\omega$ are set by the closer as described in each case below.
+	where the closed datum stores the snapshot UTxO hash $\eta_{\mathsf{snap}}$, \red{$\eta_\alpha$ (hash of committed UTxO, or $\bot$), $\eta_\omega$ (hash of decommitted UTxO, or $\bot$), and $A$ the BLS accumulator commitment for the closing snapshot.} The fields $\eta_\alpha$ and $\eta_\omega$ are set by the closer as described in each case below.
 	\item Last known open state version is recorded in closed state
 	\[
 		v' = v
 	\]
 
 	\item Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi) \cup (\mathsf{UnusedInc}, \xi, \eta_\alpha) \cup (\mathsf{UnusedDec}, \xi) \cup (\mathsf{UsedInc}, \xi, \eta_\alpha) \cup (\mathsf{UsedDec}, \xi, \eta_\omega)$, where $\xi$ is a multi-signature of the closing snapshot and $\eta_\alpha$, $\eta_\omega$ are hashes of the committed or decommitted UTxO, six cases are distinguished.
-	\red{In all cases except $\mathsf{Initial}$, the BLS accumulator commitment $A$ is taken from the input open datum and stored unchanged in the closed output datum:
-	\[
-		A_{\mathsf{closed}} = A_{\mathsf{open}}
-	\]}
+	\red{In all cases except $\mathsf{Initial}$, the closer provides the BLS accumulator commitment $A$ for the closing snapshot in the output closed datum. Its correctness is enforced by the multi-signature: each case below includes the hash of $A$ in the verified message, so the parties' signatures bind $A = \accUTxO(U \cup U_\alpha \cup U_\omega)$ to the closing snapshot.}
 	\begin{menumerate}
 		\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 		\[
@@ -714,8 +711,9 @@ and burns all head tokens. It consists of
 
 \noindent The state-machine validator $\nuHead$ is spent with
 $\redeemerHead = (\mathsf{finalPartialFanout}, m, \pi)$, where
-$m$ is the number of remaining outputs and $\pi$ is a membership proof for those
-outputs, and checks:
+$m$ is the number of remaining outputs and $\pi$ is a BLS12-381 G1 element (the
+quotient commitment, playing the role of the residual accumulator after removal),
+and checks:
 \begin{menumerate}
 	\item State is advanced to the terminal state $\stFinal$ from
 	$\stFanoutProgress$:
@@ -723,11 +721,20 @@ outputs, and checks:
 		(\stFanoutProgress,\cid,\hydraKeys,\tfinal,A)
 		\xrightarrow[m,\pi]{\mathsf{finalPartialFanout}} \stFinal
 	\]
-	\item The $m$ remaining outputs are verified against the accumulator commitment $A$ from the
-	$\stFanoutProgress$ datum:
+	\item At least one output is distributed
 	\[
-		\membershipVfy(A,\; \{o_1, \dots, o_m\},\; \pi,\; \mathit{crs}) = \true
+		m > 0
 	\]
+	\item The $m$ outputs are verified to be \emph{all} remaining elements of $A$, using the
+	same KZG divisibility check as $\mtxPartialFanout{}$ but with the empty accumulator
+	$A_\varnothing$ (the BLS12-381 G1 generator, representing no remaining elements) as the
+	expected residual:
+	\[
+		\updateVfy(A,\; A_\varnothing,\; \{o_1, \dots, o_m\},\; \mathit{crs}) = \true
+	\]
+	Enforcing the residual equals $A_\varnothing$ guarantees no elements remain in $A$
+	after the distributed set is removed, preventing partial distributions that would
+	abandon UTxOs. In the redeemer, $\pi = A_\varnothing$ (the G1 generator).
 	\item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
 	\item All tokens are burnt
 	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = |\hydraKeys| + 1$.

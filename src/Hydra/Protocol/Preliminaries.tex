@@ -254,30 +254,38 @@ formalism).
 \subsection{\red{BLS Accumulator}}\label{sec:bls-accumulator}
 
 {\color{red}
-To enable efficient membership proofs for large UTxO sets, the protocol uses a
-cryptographic accumulator based on BLS12-381 pairing-friendly elliptic curves~\cite{BLS2001} and
+To enable efficient verification for large UTxO sets, the protocol uses a
+cryptographic accumulator based on pairing-friendly elliptic curves and
 KZG polynomial commitments~\cite{KZG10}. The accumulator commits to a combined
 ordered sequence of outputs from the snapshot UTxO set and any pending
 increment/decrement outputs, enabling succinct proofs for partial fan-out.
 
-The accumulator scheme~\cite{acc2018} uses the following operations:
+\noindent\textbf{UTxO hashing.}\quad For a UTxO set $U$, the hash $\hash(U)$ is computed by
+sorting outputs canonically by their output references, serialising each output, concatenating
+the results, and hashing:
+\[
+  \hash(U) = \hash\!\left(\bigoplus_{o \,\in\, \sortOn(\mathsf{outRef},\, U)} \bytes(o)\right)
+\]
+Canonical ordering is required so that all parties compute the same hash from the same UTxO set.
+
+\noindent\textbf{Accumulator operations.}\quad The following operations are used:
 \begin{itemize}
-  \item $A \gets \accUTxO(U, U_\alpha, U_\omega)$ computes a combined accumulator
-        commitment from the main snapshot UTxO set $U$, the pending increment UTxO
-        set $U_\alpha$, and the pending decrement UTxO set $U_\omega$. All three sets
-        are ordered canonically and committed to together.
-  \item $\pi \gets \membershipProof(S, A, \mathit{crs})$ computes a membership
-        proof certifying that the set of outputs $S$ appears in the accumulator with
-        commitment $A$, using a common reference string $\mathit{crs}$.
-  \item $\membershipVfy(A, S, \pi, \mathit{crs}) \in \tyBool$ verifies that outputs
-        $S$ form a subset of the accumulated set with commitment $A$, using
-        membership proof $\pi$ and common reference string $\mathit{crs}$.
+  \item $A \gets \accUTxO(U)$ computes an accumulator commitment (a BLS12-381 G1 element) to
+        a UTxO set $U$. When committing to a snapshot with pending increments $U_\alpha$ and
+        decrements $U_\omega$, the combined set $U \cup U_\alpha \cup U_\omega$ is passed.
+  \item $A_\varnothing$ denotes the \emph{empty accumulator}: the BLS12-381 G1 generator,
+        representing a commitment to the empty set.
   \item $\updateVfy(A, A', S, \mathit{crs}) \in \tyBool$ verifies that $A'$ is the
-        accumulator obtained from $A$ by removing the set of outputs $S$.
+        accumulator obtained from $A$ by removing the set of outputs $S$, using the
+        common reference string $\mathit{crs}$. Concretely, this is a KZG pairing check
+        $e(A, G_2) = e(A', P_S(\tau) \cdot G_2)$, where $P_S(X) = \prod_{s_i \in S}(X - s_i)$
+        and the $s_i$ are integer encodings of the output hashes.
 \end{itemize}
 
-\noindent A trusted setup ceremony provides the common reference string
-$\mathit{crs}$, referenced in transactions via $\mathit{crsRef}$.
+\noindent A trusted setup ceremony provides the common reference string $\mathit{crs}$.
+The protocol uses the EIP-4844 KZG trusted setup as $\mathit{crs}$, delivered
+on-chain via a dedicated reference script output ($\mathtt{vCRS}$) to avoid
+re-embedding the large G2 points in every transaction.
 }
 
 %%% Local Variables:
