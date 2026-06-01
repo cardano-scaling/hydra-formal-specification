@@ -283,6 +283,12 @@ The plain $\hash$ function denotes a generic collision-resistant hash applied to
         and the $s_i$ are integer encodings of the output hashes.
 \end{itemize}
 
+\noindent\red{\textbf{Accumulator commitments in signed messages.}\quad When an accumulator commitment
+$A$ appears as a component of a multi-signature message, it is first serialised to a
+canonical bytestring $\bytes(A)$ before concatenation with the other message components.
+The serialisation must be deterministic so that all parties produce the same bytestring
+from the same commitment.}
+
 \noindent A trusted setup ceremony provides the common reference string $\mathit{crs}$.
 The protocol uses the EIP-4844 KZG trusted setup as $\mathit{crs}$, delivered
 on-chain via a dedicated reference script output ($\mathtt{vCRS}$) to avoid
