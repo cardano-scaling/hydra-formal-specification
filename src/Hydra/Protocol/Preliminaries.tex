@@ -260,13 +260,14 @@ KZG polynomial commitments~\cite{KZG10}. The accumulator commits to a combined
 ordered sequence of outputs from the snapshot UTxO set and any pending
 increment/decrement outputs, enabling succinct proofs for partial fan-out.
 
-\noindent\textbf{UTxO hashing.}\quad For a UTxO set $U$, the hash $\hash(U)$ is computed by
-sorting outputs canonically by their output references, serialising each output, concatenating
-the results, and hashing:
+\noindent\textbf{UTxO hashing.}\quad For a UTxO set $U$, the canonical hash $\combine(U)$ is computed by
+sorting outputs by their output references, serialising each output, concatenating the results,
+and hashing:
 \[
-  \hash(U) = \hash\!\left(\bigoplus_{o \,\in\, \sortOn(\mathsf{outRef},\, U)} \bytes(o)\right)
+  \combine(U) = \hash\!\left(\bigoplus_{o \,\in\, \sortOn(\mathsf{outRef},\, U)} \bytes(o)\right)
 \]
-Canonical ordering is required so that all parties compute the same hash from the same UTxO set.
+Canonical ordering is required so that all parties compute the same digest from the same UTxO set.
+The plain $\hash$ function denotes a generic collision-resistant hash applied to a bytestring.
 
 \noindent\textbf{Accumulator operations.}\quad The following operations are used:
 \begin{itemize}

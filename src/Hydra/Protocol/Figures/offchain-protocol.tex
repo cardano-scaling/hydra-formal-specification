@@ -111,11 +111,12 @@
 								}
 								\Req{$U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}} \not= \bot$} \;
 								$U \gets U_{\mathsf{active}} \applytx \underline{\tx}_{\mathsf{req}}$ \;
+								$\hatmU \gets U$ \;
 								$\hats \gets s$ \;
 								% TODO: DRY message creation
-								$\eta \gets \hash(U)$ \;
-								$\eta_\alpha \gets \hash(U_\alpha)$ \;
-								$\eta_\omega \gets \hash(\mathsf{outputs}(\tx_\omega))$ \;
+								$\eta \gets \combine(U)$ \;
+								$\eta_\alpha \gets \combine(U_\alpha)$ \;
+								$\eta_\omega \gets \combine(\mathsf{outputs}(\tx_\omega))$ \;
 								$A \gets \accUTxO(U \cup U_\alpha \cup \mathsf{outputs}(\tx_\omega))$ \;
 								$\msSig_i \gets \msSign(\hydraSigningKey, (\cid || v || \hats || \eta || \eta_\alpha || \eta_\omega || A))$ \;
 								% TODO: use a seen snapshot to keep track of things easier
@@ -151,9 +152,9 @@
 
 									% TODO: DRY message creation
 									$U_\omega \gets \mathsf{outputs}(\tx_\omega)$ \;
-									$\eta \gets \hash(\hatmU)$ \;
-									$\eta_\alpha \gets \hash(U_\alpha)$ \;
-									$\eta_\omega \gets \hash(U_\omega)$ \;
+									$\eta \gets \combine(\hatmU)$ \;
+									$\eta_\alpha \gets \combine(U_\alpha)$ \;
+									$\eta_\omega \gets \combine(U_\omega)$ \;
 									$A \gets \accUTxO(\hatmU \cup U_\alpha \cup U_\omega)$ \;
 									% NOTE: Implementation differs here and
 									% below as it stores seen version in seen
@@ -165,12 +166,12 @@
 									%$\Out~(\hpSnap,(\bar{\mc S}.s,\bar{\mc S}.U))$ \;
 									$\forall \tx \in \mT_{\mathsf{req}} : \Out (\hpConf,\tx)$ \;
 
-									\If{${\bar S}.U_\omega \ne \bot$}{
-										$\PostTx{}~(\mathtt{decrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega)$ \;
+									\If{$\bar{\mc S}.U_\omega \ne \bot$}{
+										$\PostTx{}~(\mathtt{decrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega, \bar{\mc S}.A)$ \;
 									}
 
-									\If{${\bar S}.U_\alpha \ne \bot$}{
-										$\PostTx{}~(\mathtt{incrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega)$ \;
+									\If{$\bar{\mc S}.U_\alpha \ne \bot$}{
+										$\PostTx{}~(\mathtt{incrementTx}, \hatv, \hats, \eta, \eta_\alpha, \eta_\omega, \bar{\mc S}.A)$ \;
 									}
 
 									% issue snapshot if we are leader
@@ -271,9 +272,9 @@
 				\begin{walgo}{0.6}
 					% CLOSE from client
 					\On{$(\hpClose)$ from client}{
-						$\eta \gets \hash(\bar{\mc S}.U)$ \;
-						$\eta_\alpha \gets \hash(\bar{\mc S}.U_\alpha)$ \;
-						$\eta_\omega \gets \hash(\bar{\mc S}.U_\omega)$ \;
+						$\eta \gets \combine(\bar{\mc S}.U)$ \;
+						$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha)$ \;
+						$\eta_\omega \gets \combine(\bar{\mc S}.U_\omega)$ \;
 						$\xi \gets \bar{\mc S}.\sigma$ \;
 						% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
 						$\PostTx{}~(\mtxClose, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta, \eta_\alpha, \eta_\omega, \bar{\mc S}.A, \xi)$ \;
@@ -285,9 +286,9 @@
 					% CLOSE TX
 					\On{$(\gcChainClose, \eta) \lor (\gcChainContest, s_{c}, \eta)$ from chain}{
 						\If{$\bar{\mc S}.s > s_{c}$}{
-							$\eta \gets \hash(\bar{\mc S}.U)$ \;
-							$\eta_\alpha \gets \hash(\bar{\mc S}.U_\alpha)$ \;
-							$\eta_\omega \gets \hash(\bar{\mc S}.U_\omega)$ \;
+							$\eta \gets \combine(\bar{\mc S}.U)$ \;
+							$\eta_\alpha \gets \combine(\bar{\mc S}.U_\alpha)$ \;
+							$\eta_\omega \gets \combine(\bar{\mc S}.U_\omega)$ \;
 							$\xi \gets \bar{\mc S}.\sigma$ \;
 							% XXX: \hatv needed to distinguish between CloseType redeemer, explain how exactly?
 							$\PostTx{}~(\mtxContest, \hatv, \bar{\mc S}.v, \bar{\mc S}.s, \eta, \eta_\alpha, \eta_\omega, \bar{\mc S}.A, \xi)$ \;
