@@ -15,12 +15,16 @@
     \node[state, initial] (open) {$\stOpen$};
     \node[state] (closed) [right of=open] {$\stClosed$};
     \node[state, accepting] (final) [right of=closed] {$\stFinal$};
+    \textcolor{red}{\node[state] (fprogress) [below of=closed] {$\stFanoutProgress$};}
 
     \path[->] (open) edge [bend left=20] node {$\stClose$} (closed);
     \path[->] (open) edge [loop above] node {$\mathsf{increment}$} (open);
     \path[->] (open) edge [loop below] node {$\mathsf{decrement}$} (open);
     \path[->] (closed) edge [bend left=20] node {$\stFanout$} (final);
     \path[->] (closed) edge [loop above] node {$\stContest$} (closed);
+    \textcolor{red}{\path[->] (closed) edge node {$\stPartialFanout$} (fprogress);}
+    \textcolor{red}{\path[->] (fprogress) edge [loop below] node {$\stPartialFanout$} (fprogress);}
+    \textcolor{red}{\path[->] (fprogress) edge node {$\stFinalPartialFanout$} (final);}
   \end{tikzpicture}
 
   \caption{Mainchain state diagram for this version of the Hydra protocol.}\label{fig:head-protocol-states}

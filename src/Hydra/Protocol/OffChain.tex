@@ -21,8 +21,9 @@ reactive system that processes three kinds of inputs:
 		      \item $\mathtt{decrementTx}$: removes UTxO from an open head
 		      \item $\mathtt{closeTx}$: closes a head
 		      \item $\mathtt{contestTx}$: contests a closed head
-		            % NOTE: fanout not mentioned because not needed in off-chain protocol
-		            % description
+		      \item \textcolor{red}{$\mathtt{fanoutTx}$: distributes all UTxOs from a closed head in one step}
+		      \item \textcolor{red}{$\mathtt{partialFanoutTx}$: distributes a subset of UTxOs, transitioning to $\stFanoutProgress$ (intermediate)}
+		      \item \textcolor{red}{$\mathtt{finalPartialFanoutTx}$: distributes the last subset and burns tokens (terminal from $\stFanoutProgress$)}
 	      \end{itemize}
 	      Also, a special input when time advanced on chain may be used:
 	      \begin{itemize}
@@ -277,11 +278,11 @@ confirmed by creating the snapshot object
 $\bar{\mc S} \gets \Sno(\hatv, \hats, \hatmT, \hatmU, U_{\alpha}, \mathsf{outputs}(\tx_{\omega}))$
 and storing the multi-signature $\msCSig$ in it for later reference. In case
 there is a pending decommit, any participant can now submit a \mtxDecrement{}
-transaction by providing the just confirmed snapshot with its digests of the
-active UTxO set $\eta$ and the to be removed UTxO set $\eta_{\omega}$. If, however, there
+transaction by providing the just confirmed snapshot with its accumulator
+commitment $\eta'$ for the updated UTxO set. If, however, there
 was a pending deposit, any participant can now submit an $\mathtt{incrementTx}$
-by providing the confirmed snapshot with its digests of the active UTxO set $\eta$
-and the UTxO set to be added $\eta_\alpha$. Lastly, if $\party_i$ is the next snapshot
+by providing the confirmed snapshot with its accumulator commitment $\eta'$
+for the updated UTxO set. Lastly, if $\party_i$ is the next snapshot
 leader and there are already transactions to snapshot in $\hatmT$, a
 corresponding $\hpRS$ is distributed. \\
 
@@ -304,9 +305,8 @@ Section~\ref{sec:increment-tx}
 
 \dparagraph{$\hpClose$.}\quad In order to close a head, a client issues the
 $\hpClose$ input which uses the latest confirmed snapshot $\bar{\mc S}$ to
-create the new $\eta$-state from the last confirmed UTxO set, the digest of
-either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$), and the certificate
-$\xi$ using the corresponding multi-signature. With these, the $\mtxClose$ transaction
+construct the accumulator commitment $\eta'$ for the closing UTxO state
+and the certificate $\xi$ using the corresponding multi-signature. With these, the $\mtxClose$ transaction
 can be constructed and posted. See Section~\ref{sec:close-tx} for details about this
 transaction. \\
 
@@ -315,10 +315,20 @@ the head getting closed or contested, the $\eta$-state extracted from the
 \mtxClose{} or \mtxContest{} transaction represents the latest head status that
 has been aggregated on-chain so far (by a sequence of \mtxClose{} and
 \mtxContest{} transactions). If the last confirmed (off-chain) snapshot is newer
-than the observed (on-chain) snapshot number $s_{c}$, an updated $\eta$-state,
-along with the digest of either increment or decrement UTxO set ($\eta_\alpha$ or $\eta_\omega$),
-and certificate $\xi$ is constructed and posted in a \mtxContest{} transaction (see
+than the observed (on-chain) snapshot number $s_{c}$, an updated accumulator
+commitment $\eta'$ and certificate $\xi$ are constructed and posted in a \mtxContest{} transaction (see
 Section~\ref{sec:contest-tx}).
+
+\textcolor{red}{\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
+transaction, all UTxOs are distributed and the head transitions to $\stFinal$ state.}
+
+\textcolor{red}{\dparagraph{$\mathtt{partialFanoutTx}$.}\quad Upon observing a $\mtxPartialFanout{}$
+transaction, the distributed UTxOs are removed from the local state tracking and the head transitions
+to the $\stFanoutProgress$ state with an updated accumulator commitment for the remaining UTxOs.
+Upon observing a $\mtxFinalPartialFanout{}$ transaction, the remaining UTxOs are distributed and
+the head transitions to $\stFinal$ state.
+\todo{Add detailed off-chain protocol for partial fanout coordination, including
+selection strategy for UTxO subsets and when to use $\mtxPartialFanout{}$ versus $\mtxFinalPartialFanout{}$.}}
 
 \subsection{Rollbacks and protocol changes}\label{sec:rollbacks}
 \todo{Explain why rollbacks are no problem to increment/decrement}
