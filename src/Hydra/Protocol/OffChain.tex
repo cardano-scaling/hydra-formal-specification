@@ -134,14 +134,14 @@ party's local state consists of the following variables:
 			      $\bar{\mc S}.\mT$      & list of transactions relating this snapshot to the previous \\ \hline
 			      $\bar{\mc S}.U$        & snapshotted UTxO set                                        \\ \hline
 			      $\bar{\mc S}.U_\alpha$ & pending UTxO to increment                                   \\ \hline
-			      $\bar{\mc S}.U_\omega$ & pending UTxO to decrement                                   \\ \hline
-			      $\bar{\mc S}.\sigma$   & multisignature                                              \\ \hline
+			      $\bar{\mc S}.U_\omega$           & pending UTxO to decrement                                        \\ \hline
+			      $\bar{\mc S}.{\eta'}^{\#}$       & hash of the accumulator commitment over the snapshotted UTxO set \\ \hline
 		      \end{tabular}
 	      \end{center}
 \end{itemize}
 
 where constructor $\text{snObj}(v, n, T, U, U_\alpha, U_\omega)$ initializes a
-new snapshot object with $\bar{\mathcal{S}}.\sigma = \emptyset$. \\
+new snapshot object with $\bar{\mathcal{S}}.{\eta'}^{\#} = \bot$. \\
 
 Additionally, deposit objects are created using
 $\text{depositObj}(U, t_{\text{created}}, t_{\text{deadline}}, \text{status})$
@@ -322,13 +322,22 @@ Section~\ref{sec:contest-tx}).
 \textcolor{red}{\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
 transaction, all UTxOs are distributed and the head transitions to $\stFinal$ state.}
 
-\textcolor{red}{\dparagraph{$\mathtt{partialFanoutTx}$.}\quad Upon observing a $\mtxPartialFanout{}$
-transaction, the distributed UTxOs are removed from the local state tracking and the head transitions
-to the $\stFanoutProgress$ state with an updated accumulator commitment for the remaining UTxOs.
-Upon observing a $\mtxFinalPartialFanout{}$ transaction, the remaining UTxOs are distributed and
-the head transitions to $\stFinal$ state.
-\todo{Add detailed off-chain protocol for partial fanout coordination, including
-selection strategy for UTxO subsets and when to use $\mtxPartialFanout{}$ versus $\mtxFinalPartialFanout{}$.}}
+\textcolor{red}{\dparagraph{$\mathtt{partialFanoutTx}$.}}\quad \textcolor{red}{When a head needs to be finalized,
+the node first attempts to post a single \mtxFanout{} transaction distributing all UTxOs at once.
+If the full UTxO set does not fit within the transaction size or script execution budget, the node
+falls back to partial fanout: it performs a binary search over batch sizes to find the largest
+batch that fits within protocol limits, minimising the total number of fanout steps. Concretely, for
+a remaining set of $N$ UTxOs, it searches $[1, N-1]$ using ceiling-division midpoints (biasing
+toward larger batches) and selects the largest $n$ for which the transaction satisfies both the size
+limit and the script execution budget.}
+
+\textcolor{red}{A batch of size $n < N$ is posted as an intermediate $\mtxPartialFanout{}$ transaction, which
+distributes $n$ UTxOs, updates the accumulator commitment to cover only the remaining $N - n$
+UTxOs, and transitions the head to the $\stFanoutProgress$ state. The procedure repeats: after
+each $\mtxPartialFanout{}$ observation the node again attempts to finalize all remaining UTxOs in
+one step; if they still do not fit, another binary search determines the next batch size.
+$\mtxFinalPartialFanout{}$ is used for the last batch when all remaining UTxOs fit in a single
+transaction, burning all head tokens and transitioning to $\stFinal$.}
 
 \subsection{Rollbacks and protocol changes}\label{sec:rollbacks}
 \todo{Explain why rollbacks are no problem to increment/decrement}

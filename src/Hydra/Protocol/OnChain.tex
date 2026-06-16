@@ -13,7 +13,8 @@ on-chain: \mtxInit{}~\ref{sec:init-tx}, \mtxIncrement{}~\ref{sec:increment-tx}, 
 
 \noindent Besides the main state transitions of the head protocol, there is
 the related ``deposit protocol'' with two transactions in support of
-\mtxIncrement{}: \mtxDeposit{}~\ref{sec:deposit-tx} and \mtxRecover{}~\ref{sec:recover-tx}. \\
+\mtxIncrement{}: \mtxDeposit{}~\ref{sec:deposit-tx} and \mtxRecover{}~\ref{sec:recover-tx}.
+There is also a \mtxDecrement{} transaction~\ref{sec:decrement-tx} that allows for taking funds from the Head back to L1. \\
 
 % TODO: Could include a combined overview, slightly more detailed than Figure 1
 % of the transaction trace for the full life cycle maybe?
@@ -268,10 +269,14 @@ checks:
 	\[
 		\valHead \cup \valDeposit = \valHead'
 	\]
-	\item Transaction is signed by a participant\todo{Redundant to snapshot sig?}
+	\item Transaction is signed by a participant
 	\[
 		\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
 	\]
+	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved across the state transition:
+	\[
+		\mathsf{ovhd}' = \mathsf{ovhd}
+	\]}
 \end{menumerate}
 
 
@@ -320,10 +325,14 @@ validator checks:
 	\[
 		\valHead' \cup (\bigcup_{j=2}^{m+1} \val_{j}) = \valHead
 	\]
-	\item Transaction is signed by a participant\todo{Redundant to snapshot sig?}
+	\item Transaction is signed by a participant
 	\[
 		\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
 	\]
+	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved across the state transition:
+	\[
+		\mathsf{ovhd}' = \mathsf{ovhd}
+	\]}
 \end{menumerate}
 
 \begin{figure}
@@ -440,6 +449,11 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 		\txMint = \varnothing
 	\]
+	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is propagated unchanged from the open datum to the closed datum:
+	\[
+		\mathsf{ovhd}' = \mathsf{ovhd}
+	\]
+	where $\mathsf{ovhd}$ is the ADA in the head UTxO not belonging to any L2 UTxO (minimum-UTxO overhead), set at initialisation time and invariant for the head's lifetime.}
 \end{menumerate}
 
 \subsection{Contest Transaction}\label{sec:contest-tx}
@@ -537,6 +551,10 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\[
 		\txMint = \varnothing
 	\]
+	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved in the output closed datum:
+	\[
+		\mathsf{ovhd}' = \mathsf{ovhd}
+	\]}
 \end{menumerate}
 
 \subsection{Fan-Out Transaction}\label{sec:fanout-tx}
@@ -576,6 +594,93 @@ The validator checks:
 	\item Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.
 	\item All tokens are burnt
 	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
+	\item \textcolor{red}{The head input value is fully conserved:
+	\[
+		\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ovhd}
+	\]
+	where $\mathsf{ovhd}$ is the ADA overhead carried from the closed datum, and $\val_{\mathsf{burned}}$ is the value of all burned head tokens.}
+\end{menumerate}
+
+\subsubsection{Intermediate Partial Fan-Out Transaction}\label{sec:partial-fanout-tx}
+
+\textcolor{red}{When UTxO sets exceed transaction size limits, the protocol distributes UTxOs across
+multiple transactions using partial fanout. Each intermediate step distributes a subset of UTxOs and
+transitions the head into the $\stFanoutProgress$ state, which carries only the fields needed for
+subsequent steps:}
+\[
+  \textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd})}
+\]
+\textcolor{red}{where $\tfinal$ is the contestation deadline (carried from $\stClosed$), $\eta$ is the
+current accumulator commitment, and $\mathsf{ovhd}$ is the ADA overhead in the head UTxO not
+belonging to any L2 UTxO (propagated from the closed datum).}
+
+\textcolor{red}{An intermediate partial fanout transaction consists of:}
+\begin{itemize}
+  \item \textcolor{red}{one input spending from $\nuHead$ in state $\stClosed$ or $\stFanoutProgress$, and}
+  \item \textcolor{red}{a continuing head output at index 0 in state $\stFanoutProgress$ with updated accumulator, and}
+  \item \textcolor{red}{outputs $o_{1} \dots o_{m}$ at indices $1 \dots m$ distributing a subset of UTxOs.}
+\end{itemize}
+
+\noindent \textcolor{red}{The state-machine validator $\nuHead$ is spent with
+$\redeemerHead = (\mathsf{partialFanout}, m, \mathsf{crsRef})$, where $m$ is the number of UTxO outputs to distribute in this step and $\mathsf{crsRef}$ is the output reference of the reference input holding the CRS.}
+The validator checks:
+\begin{menumerate}
+  \item \textcolor{red}{$m > 0$ (no zero-output batches).}
+  \item \textcolor{red}{State transitions into $\stFanoutProgress$ with updated accumulator. For a $\stClosed$ input:}
+  \[
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ovhd})}
+  \]
+  \textcolor{red}{For a $\stFanoutProgress$ input:}
+  \[
+	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd}) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ovhd})}
+  \]
+  \item \textcolor{red}{The new accumulator $\eta'$ (from the output datum) is not the G1 generator — all elements have \emph{not} yet been removed (use $\stFinalPartialFanout$ for the last batch):}
+  \[
+    \textcolor{red}{\eta' \neq G_1}
+  \]
+  \item \textcolor{red}{No minting or burning $\txMint = \varnothing$.}
+  \item \textcolor{red}{Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.}
+  \item \textcolor{red}{Parameters $\cid$, $\hydraKeys$, $\tfinal$, and $\mathsf{ovhd}$ are preserved in the output $\stFanoutProgress$ datum.}
+  \item \textcolor{red}{Value is conserved: head input value equals head output value plus all distributed outputs:}
+  \[
+    \textcolor{red}{\val_{\mathsf{head}}^{\mathsf{in}} = \val_{\mathsf{head}}^{\mathsf{out}} \oplus \bigoplus_{i=1}^{m} \val(o_i)}
+  \]
+  \item \textcolor{red}{The new accumulator $\eta'$ from the output datum correctly represents the remaining UTxOs after removing $S = \{o_1, \ldots, o_m\}$. The output datum value serves as the exclusion witness:}
+  \[
+	\textcolor{red}{\accVerifyExclude(\eta, S, \eta') = \true}
+  \]
+\end{menumerate}
+
+\subsubsection{Final Partial Fan-Out Transaction}\label{sec:final-partial-fanout-tx}
+
+\textcolor{red}{Once all UTxOs except the last batch have been distributed via $\stPartialFanout$ steps,
+the final step burns all head tokens and distributes the remaining UTxOs.
+A final partial fanout transaction consists of:}
+\begin{itemize}
+  \item \textcolor{red}{one input spending from $\nuHead$ in state $\stFanoutProgress$, and}
+  \item \textcolor{red}{outputs $o_{1} \dots o_{m}$ distributing the remaining UTxOs (no continuing head output).}
+\end{itemize}
+
+\noindent \textcolor{red}{The state-machine validator $\nuHead$ is spent with
+$\redeemerHead = (\mathsf{finalPartialFanout}, m, \pi, \mathsf{crsRef})$, where $m$ is the number of UTxO outputs, $\pi$ is the KZG membership witness, and $\mathsf{crsRef}$ is the CRS reference.}
+The validator checks:
+\begin{menumerate}
+  \item \textcolor{red}{$m > 0$ (prevents fund theft via a zero-output proof bypass).}
+  \item \textcolor{red}{State is advanced from $\stFanoutProgress$ to terminal state $\stFinal$:}
+  \[
+	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd}) \xrightarrow[m,\pi]{\stFinalPartialFanout} \stFinal}
+  \]
+  \item \textcolor{red}{All head tokens are burnt
+  $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.}
+  \item \textcolor{red}{Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.}
+  \item \textcolor{red}{The $m$ distributed outputs are verified as members of the accumulator $\eta$ using the membership witness $\pi$:}
+  \[
+	\textcolor{red}{\accVerify(\eta, \{o_1, \ldots, o_m\}, \pi) = \true}
+  \]
+  \item \textcolor{red}{Value is conserved:}
+  \[
+    \textcolor{red}{\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ovhd}}
+  \]
 \end{menumerate}
 
 \subsubsection{Intermediate Partial Fan-Out Transaction}\label{sec:partial-fanout-tx}
