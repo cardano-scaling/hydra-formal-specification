@@ -14,14 +14,14 @@
   <text x="115" y="57" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="80" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="98" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">closed, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T,</text>
-  <text x="115" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">η, η<tspan baseline-shift="-25%" font-size="8">Δ</tspan>, C, t<tspan baseline-shift="-25%" font-size="8">final</tspan>, v</text>
+  <text x="115" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s, η, C, t<tspan baseline-shift="-25%" font-size="8">final</tspan>, v, ovhd</text>
   <rect x="285" y="30" width="215" height="130" rx="2" fill="white" stroke="#1a1a1a" stroke-width="2"/>
   <rect x="286" y="31" width="213" height="27" rx="0" fill="#FFEA94" stroke="none" stroke-width="0"/>
   <text x="392" y="49" text-anchor="middle" font-family="serif" font-size="13" fill="#1a1a1a" font-weight="bold">contestTx</text>
   <line x1="285" y1="58" x2="500" y2="58" stroke="#1a1a1a" stroke-width="1.5"/>
   <line x1="381" y1="58" x2="381" y2="94" stroke="#1a1a1a" stroke-width="0.8"/>
   <text x="333" y="73" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">contest</text>
-  <text x="333" y="86" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">ξ,η<tspan baseline-shift="-25%" font-size="8">α</tspan>,η<tspan baseline-shift="-25%" font-size="8">ω</tspan></text>
+  <text x="333" y="86" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">ξ, η#</text>
   <text x="440" y="80" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">o<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <line x1="285" y1="94" x2="500" y2="94" stroke="#1a1a1a" stroke-width="0.6"/>
   <text x="392" y="109" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">t<tspan baseline-shift="-25%" font-size="8">min</tspan>, t<tspan baseline-shift="-25%" font-size="8">max</tspan></text>
@@ -37,7 +37,7 @@
   <text x="687" y="37" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="687" y="60" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val′<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="687" y="78" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">closed, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T,</text>
-  <text x="687" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">η′, η<tspan baseline-shift="-25%" font-size="8">Δ</tspan>′, C′, t′<tspan baseline-shift="-25%" font-size="8">final</tspan>, v′</text>
+  <text x="687" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s′, η′, C′, t′<tspan baseline-shift="-25%" font-size="8">final</tspan>, v′, ovhd</text>
   <path d="M215,81 C242,81 268,95 285,95" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
   <path d="M500,95 C528,95 552,67 575,67" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
   <circle cx="575" cy="67" r="4" fill="white" stroke="#1a1a1a" stroke-width="1.4"/>
