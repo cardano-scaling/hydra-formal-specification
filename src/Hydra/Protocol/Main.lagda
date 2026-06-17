@@ -9,7 +9,8 @@
   Sasha Bogicevic \texttt{sasha.bogicevic@iohk.io} \and
   Franco Testagrossa \texttt{franco.testagrossa@iohk.io} \and
   Daniel Firth \texttt{daniel.firth@iohk.io} \and
-  Noon van der Silk \texttt{noon.vandersilk.io}
+  Noon van der Silk \texttt{noon.vandersilk.io} \and
+  Veronika Romashkina \texttt{veronika.romashkina@iohk.io} 
   % NOTE: add yourself
 }
 \begin{document}
