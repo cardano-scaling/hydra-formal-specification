@@ -75,7 +75,7 @@ Consequently, the \mtxInit{} transaction
 	      $o_{\mathsf{head}}$, which captures
 	      the open state of the protocol in the datum
 	      \[
-		      \datumHead = (\stOpen,\cid',\seed',\hydraKeys,\Tcontest,v,\eta,\mathsf{ovhd})
+		      \datumHead = (\stOpen,\cid',\seed',\hydraKeys,\Tcontest,v,\eta,\mathsf{ada\_o})
 	      \]
 	      where
 	      \begin{mitemize}
@@ -250,7 +250,7 @@ checks:
 	$\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeysAgg,\nop,\Tcontest$
 	stay unchanged and the new state is governed again by $\nuHead$:
 	\[
-		(\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v,\eta,\mathsf{ovhd}) \xrightarrow[\xi, s, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v',\eta',\mathsf{ovhd})
+		(\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v,\eta,\mathsf{ada\_o}) \xrightarrow[\xi, s, \txOutRef_{\mathsf{increment}}]{\mathsf{increment}} (\stOpen,\cid,\hydraKeysAgg,\nop,\Tcontest,v',\eta',\mathsf{ada\_o})
 	\]
 	\item New version $v'$ is incremented correctly
 	\[
@@ -274,9 +274,9 @@ checks:
 	\[
 		\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
 	\]
-	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved across the state transition:
+	\item \textcolor{red}{The ADA overhead $\mathsf{ada\_o}$ is preserved across the state transition:
 	\[
-		\mathsf{ovhd}' = \mathsf{ovhd}
+		\mathsf{ada\_o}' = \mathsf{ada\_o}
 	\]}
 \end{menumerate}
 
@@ -310,7 +310,7 @@ validator checks:
 	$\datumHead' \sim \stOpen$, parameters $\cid,\hydraKeys,\Tcontest$ stay
 	unchanged and the new state is governed again by $\nuHead$
 	\[
-		(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta,\mathsf{ovhd}) \xrightarrow[\xi, s, m]{\mathsf{decrement}} (\stOpen,\cid,\hydraKeys,\Tcontest,v',\eta',\mathsf{ovhd})
+		(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta,\mathsf{ada\_o}) \xrightarrow[\xi, s, m]{\mathsf{decrement}} (\stOpen,\cid,\hydraKeys,\Tcontest,v',\eta',\mathsf{ada\_o})
 	\]
 	\item New version $v'$ is incremented correctly
 	\[
@@ -330,9 +330,9 @@ validator checks:
 	\[
 		\exists \{\cid \mapsto \keyHash_{i} \mapsto 1\} \in \valHead' \Rightarrow \keyHash_{i} \in \txKeys
 	\]
-	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved across the state transition:
+	\item \textcolor{red}{The ADA overhead $\mathsf{ada\_o}$ is preserved across the state transition:
 	\[
-		\mathsf{ovhd}' = \mathsf{ovhd}
+		\mathsf{ada\_o}' = \mathsf{ada\_o}
 	\]}
 \end{menumerate}
 
@@ -361,7 +361,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	$\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
 	stay unchanged and the new state is governed again by $\nuHead$
 	\[
-		\textcolor{red}{(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta,\mathsf{ovhd}) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \contesters,\tfinal,\mathsf{ovhd})}
+		\textcolor{red}{(\stOpen,\cid,\hydraKeys,\Tcontest,v,\eta,\mathsf{ada\_o}) \xrightarrow[\mathsf{CloseType}]{\stClose} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta', \contesters,\tfinal,\mathsf{ada\_o})}
 	\]
 	\textcolor{red}{The closed state carries a single unified accumulator $\eta'$ that combines the snapshotted UTxO set with any pending increment or decrement UTxOs using $\accCombine$.}
 	\item Last known open state version is recorded in closed state
@@ -444,11 +444,11 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 	\[
 		\txMint = \varnothing
 	\]
-	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is propagated unchanged from the open datum to the closed datum:
+	\item \textcolor{red}{The ADA overhead $\mathsf{ada\_o}$ is propagated unchanged from the open datum to the closed datum:
 	\[
-		\mathsf{ovhd}' = \mathsf{ovhd}
+		\mathsf{ada\_o}' = \mathsf{ada\_o}
 	\]
-	where $\mathsf{ovhd}$ is the ADA in the head UTxO not belonging to any L2 UTxO (minimum-UTxO overhead), set at initialisation time and unchanged for the head's lifetime.}
+	where $\mathsf{ada\_o}$ is the ADA in the head UTxO not belonging to any L2 UTxO (minimum-UTxO overhead), set at initialisation time and unchanged for the head's lifetime.}
 \end{menumerate}
 
 \begin{figure}[H]
@@ -476,7 +476,7 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	$\datumHead' \sim \stClosed$, parameters $\cid,\hydraKeys,\Tcontest$
 	stay unchanged and the new state is governed again by $\nuHead$
 	\[
-		\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal,\mathsf{ovhd}) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\contesters',\tfinal',\mathsf{ovhd})}
+		\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal,\mathsf{ada\_o}) \xrightarrow[\mathsf{ContestType}]{\stContest} (\stClosed,\cid,\hydraKeys,\Tcontest,v',s',\eta',\contesters',\tfinal',\mathsf{ada\_o})}
 	\]
 	\textcolor{red}{The closed state carries a single unified accumulator $\eta'$ computed using $\accCombine$ based on the contest type.}
 
@@ -546,9 +546,9 @@ $\mathsf{ContestType}$ is a hint how to verify the snapshot and checks:
 	\[
 		\txMint = \varnothing
 	\]
-	\item \textcolor{red}{The ADA overhead $\mathsf{ovhd}$ is preserved in the output closed datum:
+	\item \textcolor{red}{The ADA overhead $\mathsf{ada\_o}$ is preserved in the output closed datum:
 	\[
-		\mathsf{ovhd}' = \mathsf{ovhd}
+		\mathsf{ada\_o}' = \mathsf{ada\_o}
 	\]}
 \end{menumerate}
 
@@ -591,9 +591,9 @@ The validator checks:
 	$|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.
 	\item \textcolor{red}{The head input value is fully conserved:
 	\[
-		\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ovhd}
+		\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ada\_o}
 	\]
-	where $\mathsf{ovhd}$ is the ADA overhead carried from the closed datum, and $\val_{\mathsf{burned}}$ is the value of all burned head tokens.}
+	where $\mathsf{ada\_o}$ is the ADA overhead carried from the closed datum, and $\val_{\mathsf{burned}}$ is the value of all burned head tokens.}
 \end{menumerate}
 
 \begin{figure}[H]
@@ -610,10 +610,10 @@ multiple transactions using partial fanout. Each intermediate step distributes a
 transitions the head into the $\stFanoutProgress$ state, which carries only the fields needed for
 subsequent steps:}
 \[
-  \textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd})}
+  \textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ada\_o})}
 \]
 \textcolor{red}{where $\tfinal$ is the contestation deadline (carried from $\stClosed$), $\eta$ is the
-current accumulator commitment, and $\mathsf{ovhd}$ is the ADA overhead in the head UTxO not
+current accumulator commitment, and $\mathsf{ada\_o}$ is the ADA overhead in the head UTxO not
 belonging to any L2 UTxO (propagated from the closed datum).}
 
 \textcolor{red}{An intermediate partial fanout transaction (see Figure~\ref{fig:partialFanoutTx}) consists of:}
@@ -630,11 +630,11 @@ The validator checks:
   \item \textcolor{red}{$m > 0$ (no zero-output batches).}
   \item \textcolor{red}{State transitions into $\stFanoutProgress$ with updated accumulator. For a $\stClosed$ input:}
   \[
-	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ovhd})}
+	\textcolor{red}{(\stClosed,\cid,\hydraKeys,\Tcontest,v,s,\eta,\contesters,\tfinal) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ada\_o})}
   \]
   \textcolor{red}{For a $\stFanoutProgress$ input:}
   \[
-	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd}) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ovhd})}
+	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ada\_o}) \xrightarrow[m]{\stPartialFanout} (\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta',\mathsf{ada\_o})}
   \]
   \item \textcolor{red}{The new accumulator $\eta'$ (from the output datum) is not the G1 generator — all elements have \emph{not} yet been removed (use $\stFinalPartialFanout$ for the last batch):}
   \[
@@ -642,7 +642,7 @@ The validator checks:
   \]
   \item \textcolor{red}{No minting or burning $\txMint = \varnothing$.}
   \item \textcolor{red}{Transaction is posted after contestation deadline $\txValidityMin > \tfinal$.}
-  \item \textcolor{red}{Parameters $\cid$, $\hydraKeys$, $\tfinal$, and $\mathsf{ovhd}$ are preserved in the output $\stFanoutProgress$ datum.}
+  \item \textcolor{red}{Parameters $\cid$, $\hydraKeys$, $\tfinal$, and $\mathsf{ada\_o}$ are preserved in the output $\stFanoutProgress$ datum.}
   \item \textcolor{red}{Value is conserved: head input value equals head output value plus all distributed outputs:}
   \[
     \textcolor{red}{\val_{\mathsf{head}}^{\mathsf{in}} = \val_{\mathsf{head}}^{\mathsf{out}} \oplus \bigoplus_{i=1}^{m} \val(o_i)}
@@ -677,7 +677,7 @@ The validator checks:
   \item \textcolor{red}{$m > 0$ (prevents fund theft via a zero-output proof bypass).}
   \item \textcolor{red}{State is advanced from $\stFanoutProgress$ to terminal state $\stFinal$:}
   \[
-	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ovhd}) \xrightarrow[m,\pi]{\stFinalPartialFanout} \stFinal}
+	\textcolor{red}{(\stFanoutProgress,\cid,\hydraKeys,\tfinal,\eta,\mathsf{ada\_o}) \xrightarrow[m,\pi]{\stFinalPartialFanout} \stFinal}
   \]
   \item \textcolor{red}{All head tokens are burnt
   $|\{\cid \mapsto \cdot \mapsto -1\} \in \txMint| = n + 1$.}
@@ -688,7 +688,7 @@ The validator checks:
   \]
   \item \textcolor{red}{Value is conserved:}
   \[
-    \textcolor{red}{\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ovhd}}
+    \textcolor{red}{\val_{\mathsf{head}}^{\mathsf{in}} = \bigoplus_{i=1}^{m} \val(o_i) \oplus \val_{\mathsf{burned}} \oplus \mathsf{ada\_o}}
   \]
 \end{menumerate}
 
