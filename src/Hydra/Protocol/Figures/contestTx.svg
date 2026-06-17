@@ -14,7 +14,7 @@
   <text x="115" y="57" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="80" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="98" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">closed, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T,</text>
-  <text x="115" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s, η, C, t<tspan baseline-shift="-25%" font-size="8">final</tspan>, v, ovhd</text>
+  <text x="115" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s, η, C, t<tspan baseline-shift="-25%" font-size="8">final</tspan>, v, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <rect x="285" y="30" width="215" height="130" rx="2" fill="white" stroke="#1a1a1a" stroke-width="2"/>
   <rect x="286" y="31" width="213" height="27" rx="0" fill="#FFEA94" stroke="none" stroke-width="0"/>
   <text x="392" y="49" text-anchor="middle" font-family="serif" font-size="13" fill="#1a1a1a" font-weight="bold">contestTx</text>
@@ -37,7 +37,7 @@
   <text x="687" y="37" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="687" y="60" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val′<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="687" y="78" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">closed, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T,</text>
-  <text x="687" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s′, η′, C′, t′<tspan baseline-shift="-25%" font-size="8">final</tspan>, v′, ovhd</text>
+  <text x="687" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">s′, η′, C′, t′<tspan baseline-shift="-25%" font-size="8">final</tspan>, v′, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <path d="M215,81 C242,81 268,95 285,95" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
   <path d="M500,95 C528,95 552,67 575,67" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
   <circle cx="575" cy="67" r="4" fill="white" stroke="#1a1a1a" stroke-width="1.4"/>

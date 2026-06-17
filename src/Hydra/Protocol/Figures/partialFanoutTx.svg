@@ -15,7 +15,7 @@
   <text x="120" y="57" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="120" y="80" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="120" y="98" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">fprogress, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>,</text>
-  <text x="120" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η, ovhd</text>
+  <text x="120" y="112" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <!-- partialFanoutTx box -->
   <rect x="295" y="25" width="235" height="215" rx="2" fill="white" stroke="#1a1a1a" stroke-width="2"/>
   <rect x="296" y="26" width="233" height="27" rx="0" fill="#FFEA94" stroke="none" stroke-width="0"/>
@@ -43,7 +43,7 @@
   <text x="727" y="37" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="727" y="60" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val′<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="727" y="78" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">fprogress, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>,</text>
-  <text x="727" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η′, ovhd</text>
+  <text x="727" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η′, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <!-- arrows -->
   <path d="M225,81 C252,81 272,77 295,77" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
   <circle cx="530" cy="79" r="4" fill="white" stroke="#1a1a1a" stroke-width="1.4"/>

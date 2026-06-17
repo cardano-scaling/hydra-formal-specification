@@ -33,7 +33,7 @@
   <line x1="18" y1="240" x2="213" y2="240" stroke="#1a1a1a" stroke-width="0.8"/>
   <text x="115" y="182" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <!-- left column: datum -->
-  <text x="67" y="218" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Open HP v<tspan baseline-shift="-25%" font-size="8">0</tspan> η<tspan baseline-shift="-25%" font-size="8">0</tspan> ovhd</text>
+  <text x="67" y="218" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Open HP v<tspan baseline-shift="-25%" font-size="8">0</tspan> η<tspan baseline-shift="-25%" font-size="8">0</tspan> ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <!-- right column: redeemer -->
   <text x="164" y="210" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Increment ξ<tspan baseline-shift="-25%" font-size="8">3</tspan> 3</text>
   <text x="164" y="223" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">TxOutRef</text>
@@ -59,7 +59,7 @@
   <line x1="492" y1="152" x2="732" y2="152" stroke="#1a1a1a" stroke-width="0.8"/>
   <text x="612" y="97" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <!-- left column: datum -->
-  <text x="552" y="132" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Open HP v<tspan baseline-shift="-25%" font-size="8">1</tspan> η<tspan baseline-shift="-25%" font-size="8">3</tspan> ovhd</text>
+  <text x="552" y="132" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Open HP v<tspan baseline-shift="-25%" font-size="8">1</tspan> η<tspan baseline-shift="-25%" font-size="8">3</tspan> ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <!-- bottom value row -->
   <text x="612" y="165" text-anchor="middle" font-family="serif" font-size="9" fill="#1a1a1a" font-style="italic">ST, PT<tspan baseline-shift="-25%" font-size="7">alice</tspan>..PT<tspan baseline-shift="-25%" font-size="7">carol</tspan>, 31 ada</text>
   <!-- arrows -->

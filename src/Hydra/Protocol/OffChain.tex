@@ -21,9 +21,9 @@ reactive system that processes three kinds of inputs:
 		      \item $\mathtt{decrementTx}$: removes UTxO from an open head
 		      \item $\mathtt{closeTx}$: closes a head
 		      \item $\mathtt{contestTx}$: contests a closed head
-		      \item \textcolor{red}{$\mathtt{fanoutTx}$: distributes all UTxOs from a closed head in one step}
-		      \item \textcolor{red}{$\mathtt{partialFanoutTx}$: distributes a subset of UTxOs, transitioning to $\stFanoutProgress$ (intermediate)}
-		      \item \textcolor{red}{$\mathtt{finalPartialFanoutTx}$: distributes the last subset and burns tokens (terminal from $\stFanoutProgress$)}
+		      \item $\mathtt{fanoutTx}$: distributes all UTxOs from a closed head in one step
+		      \item $\mathtt{partialFanoutTx}$: distributes a subset of UTxOs, transitioning to $\stFanoutProgress$ (intermediate)
+		      \item $\mathtt{finalPartialFanoutTx}$: distributes the last subset and burns tokens (terminal from $\stFanoutProgress$)
 	      \end{itemize}
 	      Also, a special input when time advanced on chain may be used:
 	      \begin{itemize}
@@ -319,25 +319,25 @@ than the observed (on-chain) snapshot number $s_{c}$, an updated accumulator
 commitment $\eta'$ and certificate $\xi$ are constructed and posted in a \mtxContest{} transaction (see
 Section~\ref{sec:contest-tx}).
 
-\textcolor{red}{\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
-transaction, all UTxOs are distributed and the head transitions to $\stFinal$ state.}
+\dparagraph{$\mathtt{fanoutTx}$.}\quad Upon observing a \mtxFanout{}
+transaction, all UTxOs are distributed and the head transitions to $\stFinal$ state.
 
-\textcolor{red}{\dparagraph{$\mathtt{partialFanoutTx}$.}}\quad \textcolor{red}{When a head needs to be finalized,
+\dparagraph{$\mathtt{partialFanoutTx}$.}\quad When a head needs to be finalized,
 the node first attempts to post a single \mtxFanout{} transaction distributing all UTxOs at once.
 If the full UTxO set does not fit within the transaction size or script execution budget, the node
 falls back to partial fanout: it performs a binary search over batch sizes to find the largest
 batch that fits within protocol limits, minimising the total number of fanout steps. Concretely, for
 a remaining set of $N$ UTxOs, it searches $[1, N-1]$ using ceiling-division midpoints (biasing
 toward larger batches) and selects the largest $n$ for which the transaction satisfies both the size
-limit and the script execution budget.}
+limit and the script execution budget.
 
-\textcolor{red}{A batch of size $n < N$ is posted as an intermediate $\mtxPartialFanout{}$ transaction, which
+A batch of size $n < N$ is posted as an intermediate $\mtxPartialFanout{}$ transaction, which
 distributes $n$ UTxOs, updates the accumulator commitment to cover only the remaining $N - n$
 UTxOs, and transitions the head to the $\stFanoutProgress$ state. The procedure repeats: after
 each $\mtxPartialFanout{}$ observation the node again attempts to finalize all remaining UTxOs in
 one step; if they still do not fit, another binary search determines the next batch size.
 $\mtxFinalPartialFanout{}$ is used for the last batch when all remaining UTxOs fit in a single
-transaction, burning all head tokens and transitioning to $\stFinal$.}
+transaction, burning all head tokens and transitioning to $\stFinal$.
 
 \subsection{Rollbacks and protocol changes}\label{sec:rollbacks}
 \todo{Explain why rollbacks are no problem to increment/decrement}

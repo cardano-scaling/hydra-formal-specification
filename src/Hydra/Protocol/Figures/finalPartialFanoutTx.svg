@@ -15,7 +15,7 @@
   <text x="115" y="97" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="120" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="138" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">fprogress, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>,</text>
-  <text x="115" y="152" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η, ovhd</text>
+  <text x="115" y="152" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">t<tspan baseline-shift="-25%" font-size="8">final</tspan>, η, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <!-- finalPartialFanoutTx box -->
   <rect x="285" y="20" width="250" height="258" rx="2" fill="white" stroke="#1a1a1a" stroke-width="2"/>
   <rect x="286" y="21" width="248" height="27" rx="0" fill="#FFEA94" stroke="none" stroke-width="0"/>
