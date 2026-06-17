@@ -369,7 +369,7 @@ $\mathsf{CloseType}$ is a hint against which open state to close and checks:
 		v' = v
 	\]
 
-	\item \textcolor{red}{Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi, {\eta'}^{\#}) \cup (\mathsf{Unused}, \xi, {\eta'}^{\#}) \cup (\mathsf{Used}, \xi, {\eta'}^{\#})$, where $\xi$ is a multi-signature of the closing snapshot and ${\eta'}^{\#} = (\eta')^{\#}$ is the hash of the unified accumulator commitment stored in the output datum, four cases are distinguished. In each case the closed state carries a single unified accumulator $\eta'$:}
+	\item \textcolor{red}{Based on the redeemer $\mathsf{CloseType} = \mathsf{Initial} \cup (\mathsf{Any}, \xi, {\eta'}^{\#}) \cup (\mathsf{Unused}, \xi, {\eta'}^{\#}) \cup (\mathsf{Used}, \xi, {\eta'}^{\#})$, where $\xi$ is a multi-signature of the closing snapshot and ${\eta'}^{\#}$ is the hash of the unified accumulator commitment stored in the output datum, four cases are distinguished. In each case the closed state carries a single unified accumulator $\eta'$:}
 	\begin{menumerate}
 		\item $\mathsf{Initial}$: The initial snapshot is used to close the head and open state was not updated. No signatures are available and it suffices to check
 		\[
