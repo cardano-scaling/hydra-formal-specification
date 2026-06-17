@@ -19,7 +19,7 @@
   <text x="68" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">DL</text>
   <text x="68" y="105" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">[Commit]</text>
   <!-- right column: redeemer -->
-  <text x="168" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Recover</text>
+  <text x="168" y="92" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Recover m</text>
   <!-- bottom value row -->
   <text x="118" y="131" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">22 ada</text>
   <path d="M218,105 C218,-10 568,-10 568,35" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="4,3"/>

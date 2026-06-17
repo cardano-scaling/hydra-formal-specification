@@ -30,7 +30,7 @@
   <text x="518" y="88" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">DL,</text>
   <text x="518" y="101" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">[Commit]</text>
   <!-- right column: redeemer -->
-  <text x="620" y="88" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Claim cid</text>
+  <text x="620" y="88" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">Claim</text>
   <!-- bottom row: value -->
   <text x="570" y="125" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">22 ada</text>
   <!-- dotted arc from input box to output box -->

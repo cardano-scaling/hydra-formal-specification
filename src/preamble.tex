@@ -20,6 +20,7 @@
 \usepackage{xifthen}
 % Keep figures in same section
 \usepackage[section]{placeins}
+\usepackage{float}
 \usepackage{pifont}
 \usepackage{multirow}
 \usepackage{tikz}
@@ -37,7 +38,8 @@
 \usepackage{footnote}
 \makesavenoteenv{tabular}
 \makesavenoteenv{table}
-\makesavenoteenv{figure}
+% NOTE: figure savenote env conflicts with float's [H] specifier, leaking a
+% group per figure; figures here carry no footnotes, so it is not registered.
 
 \usepackage{stmaryrd} % fancy double square brackets
 \usepackage{todonotes}

@@ -251,6 +251,23 @@ formalism).
 % input/outputs do represent a transition in the statemachine from s' to s' etc.
 \todo{Add an example graph with a legend}
 
+\subsection{KZG Accumulators}\label{sec:accumulators}
+
+\noindent An accumulator scheme over a universe $\mathcal{U}$ is a set of algorithms where
+\begin{itemize}
+  \item $\accSetup$ generates public parameters (the common reference string),
+  \item $\eta \gets \accUTxO(U)$ constructs an accumulator commitment from a UTxO set $U \subseteq \mathcal{U}$,
+  \item $\eta' \gets \accCombine(\eta_1, \eta_2)$ combines two accumulator commitments into one,
+  \item $\pi \gets \accWitness(\eta, S, U \setminus S)$ produces a membership witness $\pi$ proving that $S \subseteq U$,
+  \item $\accVerify(\eta, S, \pi) \in \tyBool$ verifies a membership witness for subset $S$,
+  \item $\eta' \gets \accExclude(\eta, S)$ removes subset $S$ from the accumulator, yielding the updated commitment $\eta'$, which itself serves as the exclusion witness, and
+  \item $\accVerifyExclude(\eta, S, \eta') \in \tyBool$ verifies that $\eta'$ is the correct accumulator after removing $S$ from $\eta$.
+\end{itemize}
+
+The security property guarantees that a valid membership witness can only be produced for sets genuinely committed under $\eta$, and a valid exclusion witness can only be produced when the subset was genuinely removed.
+
+The implementation uses KZG polynomial commitments~\cite{KZG10} over the BLS12-381 elliptic curve.
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "main"

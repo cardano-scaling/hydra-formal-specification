@@ -14,7 +14,7 @@
   <line x1="18" y1="116" x2="213" y2="116" stroke="#1a1a1a" stroke-width="0.8"/>
   <text x="115" y="87" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="115" y="110" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
-  <text x="115" y="128" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">open, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T, η, v</text>
+  <text x="115" y="128" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">open, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n, T, η, v, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <rect x="290" y="35" width="210" height="186" rx="2" fill="white" stroke="#1a1a1a" stroke-width="2"/>
   <rect x="291" y="36" width="208" height="27" rx="0" fill="#FFEA94" stroke="none" stroke-width="0"/>
   <text x="395" y="54" text-anchor="middle" font-family="serif" font-size="13" fill="#1a1a1a" font-weight="bold">decrementTx</text>
@@ -42,7 +42,7 @@
   <text x="677" y="52" text-anchor="middle" font-family="serif" font-size="12" fill="#1a1a1a" font-style="italic" font-weight="bold">ν<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="677" y="75" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a" font-style="italic">val′<tspan baseline-shift="-25%" font-size="8">head</tspan></text>
   <text x="677" y="93" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">open, cid, k̃<tspan baseline-shift="-25%" font-size="8">H</tspan>, n,</text>
-  <text x="677" y="107" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">T, η′, v′</text>
+  <text x="677" y="107" text-anchor="middle" font-family="serif" font-size="10" fill="#1a1a1a">T, η′, v′, ₳<tspan baseline-shift="-25%" font-size="8">o</tspan></text>
   <text x="507" y="134" text-anchor="start" font-family="serif" font-size="16" fill="#1a1a1a">}</text>
   <text x="524" y="134" text-anchor="start" font-family="serif" font-size="11" fill="#1a1a1a" font-style="italic">U<tspan baseline-shift="-25%" font-size="9">ω</tspan></text>
   <path d="M213,104 C245,104 275,100 290,100" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
