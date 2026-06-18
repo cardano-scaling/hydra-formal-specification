@@ -1,3 +1,8 @@
+> [!Note]
+>
+> Moved back into the [Hydra](https://github.com/cardano-scaling/hydra) repo.
+
+
 # hydra-formal-specification
 
 Agda specification for the hydra-protocol.
